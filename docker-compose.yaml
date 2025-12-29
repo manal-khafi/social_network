@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: db_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: socielle_network
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - app_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: back_end/Dockerfile
+    container_name: backend_app
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "3500:3500"
+    environment:
+      DATABASE_URL: postgresql://postgres:root@db:5432/socielle_network
+    networks:
+      - app_network
+    volumes:
+      - ./backend_app:/usr/src/app:cached   # Montre ton code local pour dRev
+      - backend_node_modules:/usr/src/app/node_modules  # Node modules persistants
+
+  frontend:
+    build:
+      context: .
+      dockerfile: front_end/Dockerfile
+    container_name: frontend_app
+    restart: always
+    depends_on:
+      - backend
+      - db
+    ports:
+      - "5173:5173"
+    networks:
+      - app_network
+    volumes:
+      - ./frontend_app:/usr/src/app:cached  # Montre ton code local pour dev
+      - frontend_node_modules:/usr/src/app/node_modules 
+
+volumes:
+  pgdata:
+  backend_node_modules:
+  frontend_node_modules:
+
+networks:
+  app_network:
+    name: sociel_network

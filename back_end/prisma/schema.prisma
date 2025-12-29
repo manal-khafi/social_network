@@ -1,0 +1,449 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FollowStatus {
+  pending
+  accepted
+  rejected
+}
+
+enum PostVisibility {
+  public
+  private
+  friends
+}
+
+enum StoryContentType {
+  image
+  video
+  text
+}
+
+enum MessageType {
+  text
+  image
+  video
+  file
+}
+
+enum MessageStatusEnum {
+  sent
+  delivered
+  read
+}
+
+enum CommunityMemberStatus {
+  active
+  banned
+  muted
+}
+
+enum GroupMemberStatus {
+  active
+  banned
+  muted
+}
+
+enum JoinRequestStatus {
+  pending
+  approved
+  rejected
+}
+
+model User {
+  id            String   @id @default(uuid())
+  username      String   @unique
+  email         String   @unique
+  password_hash String
+  display_name  String
+  bio           String?
+  avatar_url    String?
+  is_private    Boolean  @default(false)
+  is_verified   Boolean  @default(false)
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  sentFollows              Follow[]                  @relation("Follower")
+  receivedFollows          Follow[]                  @relation("Followed")
+  sentBlocks               Block[]                   @relation("Blocker")
+  receivedBlocks           Block[]                   @relation("Blocked")
+  posts                    Post[]
+  comments                 Comment[]
+  likes                    Like[]
+  shares                   Share[]
+  reposts                  Repost[]
+  saves                    Save[]
+  stories                  Story[]
+  storyViews               StoryView[]
+  conversationParticipants ConversationParticipant[]
+  sentMessages             Message[]                 @relation("Sender")
+  messageStatuses          MessageStatus[]
+  communities              Community[]               @relation("Creator")
+  communityMembers         CommunityMember[]
+  groupMembers             GroupMember[]
+  joinRequests             JoinRequest[]
+  notifications            Notification[]
+}
+
+model Follow {
+  id         String       @id @default(uuid())
+  created_at DateTime     @default(now())
+  status     FollowStatus @default(pending)
+
+  follower_id String
+  followed_id String
+
+  follower User @relation("Follower", fields: [follower_id], references: [id])
+  followed User @relation("Followed", fields: [followed_id], references: [id])
+
+  @@unique([follower_id, followed_id])
+}
+
+model Block {
+  id         String   @id @default(uuid())
+  created_at DateTime @default(now())
+
+  blocker_id String
+  blocked_id String
+
+  blocker User @relation("Blocker", fields: [blocker_id], references: [id])
+  blocked User @relation("Blocked", fields: [blocked_id], references: [id])
+
+  @@unique([blocker_id, blocked_id])
+}
+
+model Post {
+  id         String         @id @default(uuid())
+  content    String?
+  media_urls Json?
+  is_deleted Boolean        @default(false)
+  visibility PostVisibility @default(public)
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+
+  // Relations
+  comments Comment[]
+  likes    Like[]
+  shares   Share[]
+  reposts  Repost[]
+  saves    Save[]
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  content    String
+  is_deleted Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user_id           String
+  post_id           String
+  parent_comment_id String?
+
+  user          User     @relation(fields: [user_id], references: [id])
+  post          Post     @relation(fields: [post_id], references: [id])
+  parentComment Comment? @relation("CommentReplies", fields: [parent_comment_id], references: [id])
+
+  // Relations
+  replies Comment[] @relation("CommentReplies")
+  likes   Like[]
+}
+
+model Like {
+  id         String   @id @default(uuid())
+  created_at DateTime @default(now())
+
+  user_id    String
+  post_id    String?
+  comment_id String?
+
+  user    User     @relation(fields: [user_id], references: [id])
+  post    Post?    @relation(fields: [post_id], references: [id])
+  comment Comment? @relation(fields: [comment_id], references: [id])
+
+  @@unique([user_id, post_id, comment_id])
+}
+
+model Share {
+  id             String   @id @default(uuid())
+  shared_content String?
+  created_at     DateTime @default(now())
+
+  user_id String
+  post_id String
+
+  user User @relation(fields: [user_id], references: [id])
+  post Post @relation(fields: [post_id], references: [id])
+}
+
+model Repost {
+  id         String   @id @default(uuid())
+  caption    String?
+  created_at DateTime @default(now())
+
+  user_id          String
+  original_post_id String
+
+  user         User @relation(fields: [user_id], references: [id])
+  originalPost Post @relation(fields: [original_post_id], references: [id])
+}
+
+model Save {
+  id       String   @id @default(uuid())
+  saved_at DateTime @default(now())
+
+  user_id String
+  post_id String
+
+  user User @relation(fields: [user_id], references: [id])
+  post Post @relation(fields: [post_id], references: [id])
+
+  @@unique([user_id, post_id])
+}
+
+model Story {
+  id             String           @id @default(uuid())
+  content_url    String
+  duration_hours Int              @default(24)
+  is_archived    Boolean          @default(false)
+  content_type   StoryContentType
+  created_at     DateTime         @default(now())
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+
+  // Relations
+  views StoryView[]
+}
+
+model StoryView {
+  id        String   @id @default(uuid())
+  viewed_at DateTime @default(now())
+
+  story_id  String
+  viewer_id String
+
+  story  Story @relation(fields: [story_id], references: [id])
+  viewer User  @relation(fields: [viewer_id], references: [id])
+
+  @@unique([story_id, viewer_id])
+}
+
+model Conversation {
+  id         String   @id @default(uuid())
+  title      String?
+  is_group   Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  // Relations
+  messages     Message[]
+  participants ConversationParticipant[]
+}
+
+model ConversationParticipant {
+  id              String @id @default(uuid())
+  conversation_id String
+  user_id         String
+
+  conversation Conversation @relation(fields: [conversation_id], references: [id])
+  user         User         @relation(fields: [user_id], references: [id])
+
+  @@unique([conversation_id, user_id])
+}
+
+model Message {
+  id           String      @id @default(uuid())
+  content      String?
+  is_edited    Boolean     @default(false)
+  is_deleted   Boolean     @default(false)
+  message_type MessageType @default(text)
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @updatedAt
+
+  conversation_id String
+  sender_id       String
+
+  conversation Conversation @relation(fields: [conversation_id], references: [id])
+  sender       User         @relation("Sender", fields: [sender_id], references: [id])
+
+  // Relations
+  statuses MessageStatus[]
+}
+
+model MessageStatus {
+  id         String            @id @default(uuid())
+  updated_at DateTime          @default(now())
+  status     MessageStatusEnum @default(sent)
+
+  message_id String
+  user_id    String
+
+  message Message @relation(fields: [message_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+
+  @@unique([message_id, user_id])
+}
+
+model Community {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  banner_url  String?
+  is_private  Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  created_by String
+  creator    User   @relation("Creator", fields: [created_by], references: [id])
+
+  // Relations
+  members      CommunityMember[]
+  groups       Group[]
+  joinRequests JoinRequest[]
+}
+
+model CommunityMember {
+  id        String                @id @default(uuid())
+  joined_at DateTime              @default(now())
+  status    CommunityMemberStatus @default(active)
+
+  community_id String
+  user_id      String
+  role_id      String?
+
+  community Community @relation(fields: [community_id], references: [id])
+  user      User      @relation(fields: [user_id], references: [id])
+  role      Role?     @relation(fields: [role_id], references: [id])
+
+  @@unique([community_id, user_id])
+}
+
+model Group {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  is_private  Boolean  @default(false)
+  max_members Int?
+  created_at  DateTime @default(now())
+
+  community_id String
+  community    Community @relation(fields: [community_id], references: [id])
+
+  // Relations
+  members      GroupMember[]
+  joinRequests JoinRequest[]
+}
+
+model GroupMember {
+  id        String            @id @default(uuid())
+  joined_at DateTime          @default(now())
+  status    GroupMemberStatus @default(active)
+
+  group_id String
+  user_id  String
+  role_id  String?
+
+  group Group @relation(fields: [group_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id])
+  role  Role? @relation(fields: [role_id], references: [id])
+
+  @@unique([group_id, user_id])
+}
+
+model JoinRequest {
+  id           String            @id @default(uuid())
+  message      String?
+  requested_at DateTime          @default(now())
+  reviewed_at  DateTime?
+  status       JoinRequestStatus @default(pending)
+
+  user_id      String
+  community_id String?
+  group_id     String?
+
+  user      User       @relation(fields: [user_id], references: [id])
+  community Community? @relation(fields: [community_id], references: [id])
+  group     Group?     @relation(fields: [group_id], references: [id])
+}
+
+model Role {
+  id             String   @id @default(uuid())
+  name           String   @unique
+  description    String?
+  is_system_role Boolean  @default(false)
+  created_at     DateTime @default(now())
+
+  // Relations
+  communityMembers CommunityMember[]
+  groupMembers     GroupMember[]
+  rolePermissions  RolePermission[]
+}
+
+model Permission {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  name        String
+  description String?
+  module      String
+
+  // Relations
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id         String   @id @default(uuid())
+  granted_at DateTime @default(now())
+
+  role_id       String
+  permission_id String
+
+  role       Role       @relation(fields: [role_id], references: [id])
+  permission Permission @relation(fields: [permission_id], references: [id])
+
+  @@unique([role_id, permission_id])
+}
+
+model TypeNotification {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  name        String
+  description String?
+  template    String?
+
+  // Relations
+  notifications Notification[]
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  source_id   String?
+  source_type String?
+  title       String
+  message     String
+  is_read     Boolean  @default(false)
+  metadata    Json?
+  created_at  DateTime @default(now())
+
+  user_id              String
+  type_notification_id String
+
+  user             User             @relation(fields: [user_id], references: [id])
+  typeNotification TypeNotification @relation(fields: [type_notification_id], references: [id])
+}
