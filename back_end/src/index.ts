@@ -1,5 +1,11 @@
 import express from "express";
 import cors from 'cors';
+import admin from "firebase-admin"; 
+
+// Initialisation Firebase
+admin.initializeApp({ 
+  credential: admin.credential.cert("./.serviceAccountKey.json"), 
+});
 
 
 const port= 3500;
@@ -23,6 +29,9 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
+// social routes
+import socialRoutes from "./routes/social.routes";
+app.use("/api/auth", socialRoutes);
 
 app.listen(port, async ()=>{
     console.log(`port connected en http://localhost:${port}`)
