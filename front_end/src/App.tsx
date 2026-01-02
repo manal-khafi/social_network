@@ -1,8 +1,16 @@
+import { Provider } from "react-redux";
+import { store } from "./store";
+import { ForgotPassword } from "./components/Auth/ForgotPassword";
+
 function App() {
+  const handleBack = () => {
+    // Implémentez la logique de retour ici (ex: navigation)
+    console.log("Retour à la page précédente");
+  };
   return (
-    <div className="flex items-center justify-center h-screen bg-pink-500 text-white">
-      <h1 className="text-5xl font-bold">Tailwind Is More OK 🚀</h1>
-    </div>
+    <Provider store={store}>
+      <ForgotPassword onBack={handleBack} />
+    </Provider>
   );
 }
 

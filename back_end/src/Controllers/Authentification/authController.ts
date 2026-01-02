@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { AuthService } from "../../Service/authService";
+import { forgotPassword } from "../../Service/authService";
 
-export const forgotPassword = async (req: Request, res: Response) => {
+export const forgotPasswordController = async (req: Request, res: Response) => {
   const { email } = req.body;
 
   if (!email) {
@@ -9,8 +9,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
   }
 
   try {
-    await AuthService.forgotPassword(email);
-    return res.json({
+    await forgotPassword(email);
+    return res.status(200).json({
       message: "Email de réinitialisation envoyé si le compte existe",
     });
   } catch (err) {
