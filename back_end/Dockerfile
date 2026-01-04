@@ -1,27 +1,22 @@
 FROM node:24-alpine
 
-# Installer openssl et certificats racine
-# RUN apk add --no-cache openssl ca-certificates
-
 WORKDIR /usr/src/app
 
-# Copier package files
+# Copier les fichiers de dépendances
 COPY package*.json ./
-COPY package-lock.json ./
-
-# Copier prisma schema
-COPY prisma ./prisma/
 
 # Installer dépendances
-RUN npm i
+RUN npm install
 
-# Générer Prisma client
+# Copier Prisma schema
+COPY prisma ./prisma/
+
+# Générer Prisma Client
 RUN npx prisma generate
 
-# Copier le reste de l'application
+# Copier le reste de l'application (sans node_modules)
 COPY . .
 
 EXPOSE 3500
 
-# Pour dev
 CMD ["npm", "run", "dev"]

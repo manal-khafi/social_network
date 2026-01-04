@@ -1,22 +1,26 @@
-# Dependencies
-node_modules
-npm-debug.log*
+# Ignore node_modules at root only
+/node_modules
+
+# Allow node_modules inside backend & frontend
+!/backend/node_modules
+!/frontend/node_modules
+
+# Logs
+logs
+*.log
+
+# Build outputs
+/dist
+/build
+*.tsbuildinfo
+
+# Prisma DB files
+*.db
+*.db-journal
 
 # Environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Build outputs
-dist
-build
-*.tsbuildinfo
-
-# Prisma
-*.db
-*.db-journal
+.env.*
 
 # IDE
 .vscode
@@ -28,13 +32,9 @@ build
 .DS_Store
 Thumbs.db
 
-# Logs
-logs
-*.log
+# Misc
+*.pem
 
 # Coverage
 coverage
 .nyc_output
-
-# Misc
-*.pem

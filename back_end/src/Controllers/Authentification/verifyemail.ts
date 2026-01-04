@@ -40,7 +40,7 @@ const verifyEmail = async (req: Request, res: Response) => {
     // Mettre à jour l'utilisateur
     await prisma.user.update({
       where: { id: user.id },
-      data: { isVerified: true },
+      data: { is_verified: true },
     });
 
     return res.json({ success: true, message: "Email vérifié avec succès !" });
