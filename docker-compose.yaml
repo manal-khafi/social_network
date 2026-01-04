@@ -1,7 +1,10 @@
+version: '3.8'
+
 services:
   db:
     image: postgres:17
     container_name: db_postgres
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
@@ -12,47 +15,67 @@ services:
       - "5433:5432"
     networks:
       - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
-    build:
-      context: .
-      dockerfile: back_end/Dockerfile
+    build: ./back_end
     container_name: backend_app
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "3500:3500"
     environment:
-      DATABASE_URL: postgresql://postgres:root@db:5432/socielle_network
+      DATABASE_URL: postgresql://postgres:root@db:5432/socielle_network?schema=public
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: imanemharach@gmail.com
+      SMTP_PASS: "qrhiyehjndrvqzld"
+      JWT_SECRET: ariqerhtuzerj
+      NODE_ENV: development
     networks:
       - app_network
     volumes:
-      - ./back_end:/usr/src/app   # Monte le code local pour dev
-      - backend_node_modules:/usr/src/app/node_modules  # Node modules persistants
+      - ./back_end:/app
+      - backend_node_modules:/app/node_modules
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:  
+    - "smtp.gmail.com:142.250.102.108"
+    command: sh -c "
+      echo 'En attente de la base de données...' &&
+      sleep 5 &&
+      npx prisma generate &&
+      npx prisma db push --accept-data-loss &&
+      npm run dev"
 
   frontend:
-    build:
-      context: .
-      dockerfile: front_end/Dockerfile
+    build: ./front_end
     container_name: frontend_app
     restart: always
     depends_on:
       - backend
-      - db
     ports:
       - "5173:5173"
     networks:
       - app_network
     volumes:
-      - ./front_end:/usr/src/app  # Monte le code local pour dev
-      - frontend_node_modules:/usr/src/app/node_modules 
+      - ./front_end:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3500
 
 volumes:
   pgdata:
   backend_node_modules:
-  frontend_node_modules:
 
 networks:
   app_network:
+    driver: bridge
     name: sociel_network

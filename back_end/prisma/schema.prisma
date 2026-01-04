@@ -74,8 +74,12 @@ model User {
   is_private    Boolean  @default(false)
   is_verified   Boolean  @default(false)
   is_active     Boolean  @default(true)
+  last_login    DateTime @default(now())
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
+
+  role_id String?
+  role    Role? @relation(fields: [role_id], references: [id])
 
   // Relations
   sentFollows              Follow[]                  @relation("Follower")
@@ -391,6 +395,7 @@ model Role {
   created_at     DateTime @default(now())
 
   // Relations
+  users User[]
   communityMembers CommunityMember[]
   groupMembers     GroupMember[]
   rolePermissions  RolePermission[]

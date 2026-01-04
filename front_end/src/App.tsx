@@ -1,8 +1,22 @@
+import AuthView from './Views/authentification';
+import {Route, Routes} from 'react-router-dom';
+import VerifyEmail from './Componenets/Authentification/auth/verifyEmil';
+import RedirectByRole from './RedirectByRole';
+import Home from './Componenets/Home/Home';
+
 function App() {
   return (
-    <div className="flex items-center justify-center h-screen bg-pink-500 text-white">
-      <h1 className="text-5xl font-bold">Tailwind Is More OK 🚀</h1>
-    </div>
+    <>
+       <Routes>
+      <Route path="/" element={<AuthView />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/redirect" element={<RedirectByRole />} />
+
+
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/index" element={<Home />} />
+    </Routes>
+    </>
   );
 }
 

@@ -1,13 +1,21 @@
+# Use Node.js 24 for frontend
 FROM node:24-alpine
+
+# Set working directory
 WORKDIR /usr/src/app
 
-COPY front_end/package*.json ./
-COPY front_end/tsconfig*.json ./
-COPY front_end/vite.config.ts ./
-COPY front_end/postcss.config.js ./
+# Copy package files
+COPY package*.json ./
+COPY package-lock.json ./
 
+# Install dependencies
 RUN npm ci
-COPY front_end/. ./
 
+# Copy the rest of the application
+COPY . .
+
+# Expose port
 EXPOSE 5173
+
+# Start development server
 CMD ["npm", "run", "dev"]
