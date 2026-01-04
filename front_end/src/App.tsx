@@ -3,6 +3,7 @@ import {Route, Routes} from 'react-router-dom';
 import VerifyEmail from './Componenets/Authentification/auth/verifyEmil';
 import RedirectByRole from './RedirectByRole';
 import Home from './Componenets/Home/Home';
+import Dashboard from './Componenets/Home/Dashboard';
 
 function App() {
   return (
