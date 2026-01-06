@@ -2,7 +2,9 @@ import { Request, Response } from "express";
 import { verifyResetToken, resetPassword } from "../../Service/authService";
 
 export const verifyResetTokenController = async (req: Request, res: Response) => {
-  const { token } = req.query;
+  const { token } = req.params;
+  console.log(token);
+  
   if (!token) return res.status(400).json({ success: false, message: "Token requis" });
 
   const user = await verifyResetToken(token as string);

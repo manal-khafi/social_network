@@ -18,11 +18,31 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsLoading(false);
-    setIsSuccess(true);
-    console.log("Reset password for:", email);
+
+    try {
+      const response = await fetch(
+        "http://localhost:3500/api/authentification/forgot-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(data.message);
+        setIsSuccess(true);
+      } else {
+        alert(`Error: ${data.message}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Server error. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSuccess) {
@@ -43,7 +63,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           >
             <CircleCheck size={80} className="text-[#226d68]" />
           </motion.div>
-          
+
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -52,7 +72,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           >
             Check Your Email
           </motion.h2>
-          
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -62,7 +82,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
             We've sent a password reset link to <br />
             <span className="text-[#18534f]">{email}</span>
           </motion.p>
-          
+
           <AuthButton variant="secondary" onClick={onSwitchToLogin}>
             Back to Login
           </AuthButton>

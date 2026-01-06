@@ -1,10 +1,14 @@
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 
-dotenv.config(); // <- Très important : doit être ici en premier !
+dotenv.config();
 
-export const createSimpleTransporter = () => {
-  return nodemailer.createTransport({
+let Transporter: nodemailer.Transporter | null = null;
+
+export const initializeEmailService = async () => {
+  if (Transporter) return Transporter;
+
+  Transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
@@ -17,17 +21,16 @@ export const createSimpleTransporter = () => {
       rejectUnauthorized: false,
     },
   });
+
+  await Transporter.verify();
+  console.log("✅ Serveur SMTP connecté avec succès");
+
+  return Transporter;
 };
 
-// Création APRÈS dotenv
-export let Transporter = createSimpleTransporter();
-
-export const initializeEmailService = async () => {
-  try {
-    await Transporter.verify();
-    console.log("✅ Serveur SMTP connecté avec succès");
-  } catch (error) {
-    console.error("❌ Erreur SMTP :", error);
+export const getTransporter = async () => {
+  if (!Transporter) {
+    await initializeEmailService();
   }
-  return Transporter;
+  return Transporter!;
 };

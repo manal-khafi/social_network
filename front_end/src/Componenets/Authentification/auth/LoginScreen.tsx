@@ -23,13 +23,36 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // await new Promise((resolve) => setTimeout(resolve, 2000));
-    const url= 'http://localhost:3500/api/authentification/login';
-    const fetchingLogin = await fetch(url, {method:'POST', body: JSON.stringify(formData), headers:{'Content-Type': 'application/json'}});
-    console.log(fetchingLogin);
+
+    try {
+      const url = 'http://localhost:3500/api/authentification/login';
+      const response = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({
+          email: formData.emailOrUsername, // backend expects 'email'
+          password: formData.password,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+      console.log(data);
+
+      if (data.success) {
+        alert(data.message);
+        localStorage.setItem("token", data.token);
+        window.location.href = data.redirectTo || "/dashboard";
+      } else {
+        alert(`Error: ${data.message}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Server error. Please try again later."); 
+    }
+
     setIsLoading(false);
-    console.log("Login:", formData);
   };
+
 
   const handleSocialLogin = (provider: "google" | "facebook") => {
     console.log(`Login with ${provider}`);

@@ -38,24 +38,40 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-        setIsLoading(true);
-    const url = "http://localhost:3500/api/authentification";
-    const method= 'POST';
-    const responce= await fetch(url, 
-      {method, 
-      body: JSON.stringify(formData),
-      headers: {'Content-Type': 'application/json'}
-    });
-    const responceData= await responce.json();
-    // await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log(responceData);
-    setIsLoading(false);
-    console.log("Register:", formData);
+
+    setIsLoading(true);
+
+    try {
+      const url = "http://localhost:3500/api/authentification";
+      const method = "POST";
+
+      const response = await fetch(url, {
+        method,
+        body: JSON.stringify(formData),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await response.json();
+      setIsLoading(false);
+
+      if (data.success) {
+        alert(data.message); 
+        onSwitchToLogin();
+      } else {
+        alert(data.message || "Registration failed. Please try again.");
+      }
+
+    } catch (error) {
+      setIsLoading(false);
+      alert("Server error. Please try again later.");
+      console.error("Registration error:", error);
+    }
   };
+
 
   const handleSocialSignup = (provider: "google" | "facebook") => {
     console.log(`Sign up with ${provider}`);

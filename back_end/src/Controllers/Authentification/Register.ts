@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { PrismaClient } from "../../../generated/prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import {  sendVerificationEmail } from "../../util/EempleEmail";
+import { sendVerificationEmail } from "../../util/EempleEmail";
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "ariqerhtuzerj";
@@ -11,62 +11,62 @@ export const Register = async (req: Request, res: Response) => {
   try {
     const { username, email, password, confirmPassword } = req.body;
 
-    // Validation des champs
+    // Validate required fields
     if (!username || !email || !password || !confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Tous les champs obligatoires doivent être remplis",
+        message: "All required fields must be filled",
       });
     }
 
-    // Validation email
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         success: false,
-        message: "Format d'email invalide",
+        message: "Invalid email format",
       });
     }
 
-    // Validation mot de passe
+    // Validate password
     if (password.length < 8) {
       return res.status(400).json({
         success: false,
-        message: "Le mot de passe doit contenir au moins 8 caractères",
+        message: "Password must be at least 8 characters",
       });
     }
 
     if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Les mots de passe ne correspondent pas",
+        message: "Passwords do not match",
       });
     }
 
-    // Vérifier si user existe déjà
+    // Check if user already exists
     const existUser = await prisma.user.findFirst({
       where: {
-        OR: [{ email: email }, { username: username }], // ✅ Correction OR
+        OR: [{ email: email }, { username: username }],
       },
     });
 
     if (existUser) {
       return res.status(400).json({
         success: false,
-        message: "Email ou nom d'utilisateur déjà utilisé",
+        message: "Email or username already in use",
       });
     }
 
-    // Hasher le mot de passe
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const Hashpassword = await bcrypt.hash(password, salt);
 
-    // Créer user avec les bons champs Prisma
+    // Create new user
     const newUser = await prisma.user.create({
       data: {
         username: username,
         email: email,
-        password_hash: Hashpassword, // ✅ Correction ici
+        password_hash: Hashpassword,
         display_name: "",
         bio: null,
         avatar_url: null,
@@ -79,26 +79,26 @@ export const Register = async (req: Request, res: Response) => {
       },
     });
 
-    // Générer token JWT pour vérification email
+    // Generate JWT token for email verification
     const token = jwt.sign(
       { userId: newUser.id, email: newUser.email },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // Envoyer email de vérification
+    // Send verification email
     try {
       await sendVerificationEmail(email, username, token);
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "Échec de l'envoi de l'email de vérification",
+        message: "Failed to send verification email",
       });
     }
 
     return res.status(201).json({
       success: true,
-      message: "Compte créé avec succès, veuillez vérifier votre email",
+      message: "Registration successful! Please check your email to activate your account.",
       user: {
         id: newUser.id,
         username: newUser.username,
@@ -106,10 +106,10 @@ export const Register = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error("Erreur lors de l'inscription :", error);
+    console.error("Error during registration:", error);
     return res.status(500).json({
       success: false,
-      message: "Erreur serveur",
+      message: "Server error",
     });
   }
 };

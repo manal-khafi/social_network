@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { AuthInput } from "./AuthInput";
 import { AuthButton } from "./AuthButton";
@@ -14,8 +13,7 @@ type PasswordStrength = "weak" | "medium" | "strong";
 export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
   onSwitchToLogin,
 }) => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
+  const queryParams = new URLSearchParams(window.location.search);
   const token = queryParams.get("token");
 
   const [isLoading, setIsLoading] = useState(false);
@@ -26,16 +24,26 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
 
   // Verify token on mount
   useEffect(() => {
-    if (!token) return;
+    if (!token){
+      console.error("No token found in URL");
+      alert("Token missing or invalid");
+      onSwitchToLogin();
+      return;
+    }
 
     const verifyToken = async () => {
       try {
-        const res = await fetch(`http://localhost:3500/api/auth/verify-reset-token?token=${token}`);
+        console.log(token);
+        
+        const res = await fetch(`http://localhost:3500/api/authentification/verify-reset-token/${token}`);
 
         if (!res.ok) {
+          console.log("Token verification failed");
           console.error("Server responded with:", res.status, res.statusText);
-          alert("Token invalide ou expiré ou serveur indisponible");
-          onSwitchToLogin();
+          // alert("Token invalide ou expiré ou serveur indisponible");
+          console.log("Token invalide ou expiré ou serveur indisponible");
+          setTimeout(() => onSwitchToLogin(), 20000);
+          
           return;
         }
 
@@ -88,7 +96,7 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
 
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:3500/api/auth/reset-password", {
+      const res = await fetch("http://localhost:3500/api/authentification/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword: formData.password }),

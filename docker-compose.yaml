@@ -36,6 +36,8 @@ services:
       SMTP_PORT: 587
       SMTP_USER: imanemharach@gmail.com
       SMTP_PASS: "qrhiyehjndrvqzld"
+      RESET_PASSWORD_EXPIRES_IN: 15m
+      RESET_PASSWORD_SECRET: your_super_secret_key
       JWT_SECRET: ariqerhtuzerj
       NODE_ENV: development
     networks:

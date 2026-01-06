@@ -1,5 +1,5 @@
 import { initializeEmailService } from "../config/EmailConfig";
-import { Transporter } from "../config/EmailConfig"; // import simple
+import { getTransporter } from "../config/EmailConfig";
 
 interface EmailOptions {
   to: string;
@@ -10,25 +10,21 @@ interface EmailOptions {
 
 export const sendEmail = async (options: EmailOptions) => {
   try {
-    if (!Transporter?.sendMail) {
-      await initializeEmailService();
-    }
+    const transporter = await getTransporter();
 
-    const info = await Transporter.sendMail({
-      from: `"${process.env.EMAIL_FROM_NAME || "ANMOUGAR"}" <${process.env.SMTP_USER}>`,
+    return await transporter.sendMail({
+      from: `"ANMOUGAR" <${process.env.SMTP_USER}>`,
       to: options.to,
       subject: options.subject,
       html: options.html,
       text: options.text || options.html.replace(/<[^>]*>/g, ""),
     });
-
-    console.log("📨 Email envoyé :", info.messageId);
-    return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("❌ Échec envoi email :", error);
+    console.error("❌ Email error:", error);
     throw error;
   }
 };
+
 
 
 
@@ -56,6 +52,33 @@ export const sendVerificationEmail = async (email: string, username: string, tok
   return sendEmail({
     to: email,
     subject: "Vérifiez votre adresse email",
+    html,
+  });
+};
+
+export const sendResetPasswordEmail = async (email: string, token: string) => {
+  const resetLink = `http://localhost:5173/reset-password?token=${token}`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #4F46E5;">Réinitialisation de votre mot de passe</h2>
+      <p>Bonjour,</p>
+      <p>Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :</p>
+      <p style="text-align:center;margin:24px 0;">
+        <a href="${resetLink}" style="background:#4F46E5;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:bold;">
+          Réinitialiser mon mot de passe
+        </a>
+      </p>
+      <p style="background:#f3f3f3;padding:10px;border-radius:6px;word-break:break-all;">${resetLink}</p>
+      <p><strong>Ce lien expire dans 1 heure.</strong></p>
+      <p>Si vous n’avez pas demandé cette réinitialisation, ignorez cet email.</p>
+      <p>L'équipe ${process.env.APP_NAME || ""}</p>
+    </div>
+  `;
+
+  return sendEmail({
+    to: email,
+    subject: "Réinitialisez votre mot de passe",
     html,
   });
 };

@@ -1,62 +1,37 @@
-// src/components/VerifyEmail.tsx
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-
-type VerifyResponse = {
-  success: boolean;
-  message: string;
-};
+import { useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [message, setMessage] = useState<string>("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const token = searchParams.get("token"); // Get token from URL
     if (!token) {
-      setStatus("error");
-      setMessage("Token manquant !");
+      alert("Token is missing!");
+      navigate("/"); // redirect to login
       return;
     }
 
     const verifyEmail = async () => {
       try {
-        console.log("Envoi de la requête de vérification avec le token :", token);
-        const res = await fetch(`http://localhost:3500/api/authentification/verify-email?token=${token}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+        const res = await fetch(`http://localhost:3500/api/authentification/verify-email?token=${token}`);
+        const data = await res.json();
 
-
-        const data: VerifyResponse = await res.json();
+        alert(data.message);
         if (data.success) {
-          setStatus("success");
-          setMessage(data.message || "Votre email a été vérifié avec succès !");
-        } else {
-          setStatus("error");
-          setMessage(data.message || "Le lien est invalide ou expiré.");
+          navigate("/"); // redirect to login page
         }
-
-        
       } catch (error) {
-        setStatus("error");
-        setMessage("Erreur serveur. Veuillez réessayer plus tard.");
+        alert("Server error. Please try again later.");
+        navigate("/"); // redirect on error
       }
     };
 
     verifyEmail();
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="p-8 bg-white shadow-md rounded-lg max-w-md text-center">
-        {status === "loading" && <p>⏳ Vérification en cours...</p>}
-        {status === "success" && <p className="text-green-600 font-bold">{message}</p>}
-        {status === "error" && <p className="text-red-600 font-bold">{message}</p>}
-      </div>
-    </div>
-  );
+  return null;
 };
 
 export default VerifyEmail;

@@ -1,21 +1,60 @@
 import { PrismaClient } from "@prisma/client";
-import crypto from "crypto";
+import jwt, { Secret, SignOptions } from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import { sendResetPasswordEmail } from "../util/EempleEmail";
 
 const prisma = new PrismaClient();
 
+const RESET_SECRET_RAW = process.env.RESET_PASSWORD_SECRET;
+if (!RESET_SECRET_RAW) throw new Error("RESET_PASSWORD_SECRET is not defined");
+
+const RESET_SECRET: Secret = RESET_SECRET_RAW;
+
+
+
+import { parseTimeString } from "../util/parseTime";
+const signOptions: SignOptions = {
+  expiresIn: parseTimeString(process.env.RESET_PASSWORD_EXPIRES_IN || "15m"),
+  algorithm: "HS256",
+};
+
 export const forgotPassword = async (email: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return; // ne pas révéler si l'utilisateur existe
+  if (!user) throw new Error("No user found with this email");
 
-  // Génération d'un token cryptographiquement sécurisé
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1h
+  const resetToken = jwt.sign(
+    { userId: user.id, email: user.email },
+    RESET_SECRET,
+    signOptions
+  );
+
+  await sendResetPasswordEmail(email, resetToken);
+  console.log("Reset password token sent");
+};
+
+export const verifyResetToken = async (token: string) => {
+  try {
+    return jwt.verify(token, RESET_SECRET) as { userId: string; email: string };
+  } catch {
+    return null;
+  }
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+  let payload: { userId: string };
+
+  try {
+    payload = jwt.verify(token, RESET_SECRET) as { userId: string };
+  } catch {
+    throw new Error("Token invalide ou expiré");
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
 
   await prisma.user.update({
-    where: { id: user.id },
-    data: { reset_token: resetToken, reset_token_expiry: resetTokenExpiry },
+    where: { id: payload.userId },
+    data: { password_hash: hashedPassword },
   });
 
-  // TODO: envoyer resetToken via email
-  console.log(`Reset token (envoyer par email): ${resetToken}`);
+  console.log("Password reset successful");
 };

@@ -3,51 +3,40 @@ import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || "ariqerhtuzerj";
 
 const verifyEmail = async (req: Request, res: Response) => {
   try {
     const { token } = req.query;
-    console.log("Token reçu :", token);
-
     if (!token || typeof token !== "string") {
-      return res.status(400).json({ success: false, message: "Token manquant ou invalide !" });
+      return res.status(400).json({ success: false, message: "Token is missing!" });
     }
 
-    // Décoder et vérifier le JWT
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
-      userId: string;
-      email: string;
-      exp: number;
-    };
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as { userId: string; email: string; exp: number };
+    } catch (err) {
+      return res.status(400).json({ success: false, message: "Invalid or expired token!" });
+    }
 
-    console.log("JWT décodé :", decoded);
-
-    // Chercher l'utilisateur par ID
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-    });
-
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
     if (!user) {
-      return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
+      return res.status(404).json({ success: false, message: "User not found!" });
     }
 
-    // Vérifier expiration du token
-    const isExpired = decoded.exp * 1000 < Date.now();
-    if (isExpired) {
-      return res.status(400).json({ success: false, message: "Le lien a expiré." });
+    if (user.is_verified) {
+      return res.json({ success: true, message: "Your email is already verified! You can log in." });
     }
 
-    // Mettre à jour l'utilisateur
     await prisma.user.update({
       where: { id: user.id },
       data: { is_verified: true },
     });
 
-    return res.json({ success: true, message: "Email vérifié avec succès !" });
-
+    return res.json({ success: true, message: "Your email has been verified! You can now log in." });
   } catch (error: any) {
-    console.error("Erreur verification :", error);
-    return res.status(500).json({ success: false, message: "Erreur serveur.", detail: error.message });
+    console.error("Verification error:", error);
+    return res.status(500).json({ success: false, message: "Server error", detail: error.message });
   }
 };
 

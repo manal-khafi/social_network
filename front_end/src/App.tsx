@@ -6,7 +6,8 @@ import Home from './Componenets/Home/Home';
 import Dashboard from './Componenets/Home/Dashboard';
 import { Provider } from "react-redux";
 import { store } from "./store";
-import { ForgotPassword } from "./Componenets/Authentification/ForgotPassword";
+import { ForgotPasswordScreen } from "./Componenets/Authentification/auth/ForgotPasswordScreen";
+import { ResetPasswordScreen } from "./Componenets/Authentification/auth/resetPassword";
 
 function App() {
   const handleBack = () => {
@@ -21,8 +22,11 @@ function App() {
 
         <Route
           path="/forgot-password"
-          element={<ForgotPassword onBack={handleBack} />}
+          element={<ForgotPasswordScreen onBack={handleBack} />}
         />
+
+        <Route path="/reset-password" 
+        element={<ResetPasswordScreen onSwitchToLogin={() => window.location.href = '/'} />} />
 
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/redirect" element={<RedirectByRole />} />
