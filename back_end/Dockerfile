@@ -20,3 +20,6 @@ COPY . .
 EXPOSE 3500
 
 CMD ["npm", "run", "dev"]
+
+# Ajouter le fichier de clé de service Firebase
+COPY src/config/serviceAccountKey.json ./src/config/serviceAccountKey.json

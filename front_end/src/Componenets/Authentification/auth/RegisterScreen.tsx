@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { AuthInput } from "./AuthInput";
 import { AuthButton } from "./AuthButton";
 import { SocialButton } from "./SocialButton";
+import { handleSocialAuth } from "./socialAuth";
 import { Logo } from "./Logo";
 
 interface RegisterScreenProps {
@@ -70,11 +71,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
       alert("Server error. Please try again later.");
       console.error("Registration error:", error);
     }
-  };
-
-
-  const handleSocialSignup = (provider: "google" | "facebook") => {
-    console.log(`Sign up with ${provider}`);
   };
 
   return (
@@ -158,8 +154,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
       </div>
 
       <div className="space-y-3">
-        <SocialButton provider="google" onClick={() => handleSocialSignup("google")} />
-        <SocialButton provider="facebook" onClick={() => handleSocialSignup("facebook")} />
+        <SocialButton provider="google" onClick={() => handleSocialAuth("google")} />
+        <SocialButton provider="facebook" onClick={() => handleSocialAuth("facebook")} />
       </div>
 
       <div className="mt-6 text-center">

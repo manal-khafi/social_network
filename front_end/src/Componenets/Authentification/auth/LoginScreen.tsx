@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { AuthInput } from "./AuthInput";
 import { AuthButton } from "./AuthButton";
 import { SocialButton } from "./SocialButton";
+import { handleSocialAuth } from "./socialAuth";
 import { Logo } from "./Logo";
 
 interface LoginScreenProps {
@@ -29,7 +30,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       const response = await fetch(url, {
         method: 'POST',
         body: JSON.stringify({
-          email: formData.emailOrUsername, // backend expects 'email'
+          email: formData.emailOrUsername, 
           password: formData.password,
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -53,10 +54,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     setIsLoading(false);
   };
 
-
-  const handleSocialLogin = (provider: "google" | "facebook") => {
-    console.log(`Login with ${provider}`);
-  };
 
   return (
     <motion.div
@@ -123,8 +120,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       </div>
 
       <div className="space-y-3">
-        <SocialButton provider="google" onClick={() => handleSocialLogin("google")} />
-        <SocialButton provider="facebook" onClick={() => handleSocialLogin("facebook")} />
+        <SocialButton provider="google" onClick={() => handleSocialAuth("google")} />
+        <SocialButton provider="facebook" onClick={() => handleSocialAuth("facebook")} />
       </div>
 
       <div className="mt-6 text-center">
