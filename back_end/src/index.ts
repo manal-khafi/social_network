@@ -1,6 +1,9 @@
 import express from "express";
 import cors from "cors";
 import AuthentificationRoutes from "./Routes/Authentification";
+import commentRouter from "./Routes/Comment";
+import FollowRoutes from "./Routes/Following";
+import SignaleRouter from "./Routes/Signale";
 import dotenv from "dotenv";
 
 
@@ -31,6 +34,9 @@ initializeEmailService();
 app.use(express.json());
 
 app.use("/api/authentification", AuthentificationRoutes);
+app.use("/api/comments", commentRouter);
+app.use("/api/Follow", FollowRoutes);
+app.use("/api/reports", SignaleRouter);
 
 app.get("/", (req, res) => {
   res.json({
