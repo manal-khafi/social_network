@@ -62,6 +62,12 @@ enum JoinRequestStatus {
   rejected
 }
 
+enum ReportStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model User {
   id            String   @id @default(uuid())
   username      String   @unique
@@ -101,6 +107,8 @@ model User {
   groupMembers             GroupMember[]
   joinRequests             JoinRequest[]
   notifications            Notification[]
+  reportsMade     Report[] @relation("UserReportsMade")
+  reportsReceived Report[] @relation("UserReportsReceived")
 }
 
 model Follow {
@@ -143,6 +151,7 @@ model Post {
   user    User   @relation(fields: [user_id], references: [id])
 
   // Relations
+  reports Report[]
   comments Comment[]
   likes    Like[]
   shares   Share[]
@@ -168,6 +177,7 @@ model Comment {
   // Relations
   replies Comment[] @relation("CommentReplies")
   likes   Like[]
+  reports Report[]
 }
 
 model Like {
@@ -450,4 +460,24 @@ model Notification {
 
   user             User             @relation(fields: [user_id], references: [id])
   typeNotification TypeNotification @relation(fields: [type_notification_id], references: [id])
+}
+
+
+
+model Report {
+  id          String   @id @default(uuid())
+  reason      String
+  description String?
+  status      ReportStatus @default(PENDING)
+  created_at  DateTime @default(now())
+
+  reporter_id        String
+  reported_user_id   String
+  post_id            String?
+  comment_id         String?
+
+  reporter      User  @relation("UserReportsMade", fields: [reporter_id], references: [id], onDelete: Cascade)
+  reportedUser  User  @relation("UserReportsReceived", fields: [reported_user_id], references: [id], onDelete: Cascade)
+  post          Post? @relation(fields: [post_id], references: [id], onDelete: SetNull)
+  comment       Comment? @relation(fields: [comment_id], references: [id], onDelete: SetNull)
 }

@@ -1,6 +1,6 @@
 import jwt, { SignOptions, Secret } from "jsonwebtoken";
 
-// Load environment variables
+
 const {
   AUTH_SECRET,
   AUTH_SECRET_EXPIRES_IN,
