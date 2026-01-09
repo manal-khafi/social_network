@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import AuthentificationRoutes from "./Routes/Authentification";
+import communityRoutes from "./Routes/communityRoutes";
 import dotenv from "dotenv";
 
 
@@ -31,6 +32,7 @@ initializeEmailService();
 app.use(express.json());
 
 app.use("/api/authentification", AuthentificationRoutes);
+app.use("/api/communities", communityRoutes);
 
 app.get("/", (req, res) => {
   res.json({
