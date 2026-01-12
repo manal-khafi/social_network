@@ -19,6 +19,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
     email: "",
     password: "",
     confirmPassword: "",
+    date_of_birth: "",
+    account_name: "",
+    adresse:"",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -139,6 +142,26 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
             if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: "" });
           }}
           error={errors.confirmPassword}
+          required
+        />
+        <AuthInput
+          label="Adresse"
+          type="text"
+          placeholder="Enter your adresse"
+          value={formData.adresse}
+          onChange={(e) =>
+            setFormData({ ...formData, adresse: e.target.value })
+          }
+          required
+        />
+        <AuthInput
+          label="date_of_birth"
+          type="date"
+          placeholder="Enter your abirthey date"
+          value={formData.date_of_birth}
+          onChange={(e) =>
+            setFormData({ ...formData, date_of_birth: e.target.value })
+          }
           required
         />
 

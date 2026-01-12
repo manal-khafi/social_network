@@ -83,6 +83,11 @@ model User {
   last_login    DateTime @default(now())
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
+  
+  gender          String?
+  date_of_birth   DateTime?
+  account_name    String?
+  adresse        String?
 
   role_id String?
   role    Role? @relation(fields: [role_id], references: [id])

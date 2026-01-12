@@ -15,6 +15,7 @@ export const Login = async (req: Request, res: Response) => {
         message: "Email ou mot de passe manquant",
       });
     }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
@@ -22,16 +23,19 @@ export const Login = async (req: Request, res: Response) => {
         message: "Format d'email invalide",
       });
     }
-    const user = await prisma.user.findFirst({
+    const user = await prisma.user.findUnique({
       where: { email },
       include: {
         role: {
           include: {
-            rolePermissions: { include: { permission: true } },
+            rolePermissions: {
+              include: { permission: true },
+            },
           },
         },
       },
     });
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -45,14 +49,28 @@ export const Login = async (req: Request, res: Response) => {
         message: "Veuillez vérifier votre email avant de vous connecter.",
       });
     }
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+
+    if (!user.password_hash) {
+      return res.status(400).json({
+        success: false,
+        message: "Identifiants incorrects",
+      });
+    }
+
+    // 3️⃣ Vérification mot de passe
+    const isValidPassword = await bcrypt.compare(
+      password,
+      user.password_hash
+    );
+
     if (!isValidPassword) {
       return res.status(400).json({
         success: false,
         message: "Identifiants incorrects",
       });
     }
-    const permissions = user.role?.rolePermissions.map(rp => rp.permission.code) || [];
+    const permissions =
+      user.role?.rolePermissions.map((rp) => rp.permission.code) || [];
     const token = jwt.sign(
       {
         id: user.id,
@@ -67,26 +85,33 @@ export const Login = async (req: Request, res: Response) => {
       where: { id: user.id },
       data: { last_login: new Date() },
     });
-    let redirectTo = "/home";
+    const isProfileIncomplete =
+      !user.username ||
+      !user.avatar_url ||
+      !user.gender ||
+      !user.bio;
+    let redirectTo = "/index";
     const roleName = user.role?.name?.toLowerCase() || "";
 
-    if (roleName.includes("superadmin") || roleName.includes("super admin")) {
+    if (isProfileIncomplete) {
+      redirectTo = "/personalization";
+    } else if (roleName === "super_admin" || roleName === "superadmin") {
       redirectTo = "/dashboard";
     }
     return res.status(200).json({
       success: true,
       message: "Connexion réussie",
+      token,
+      redirectTo,
       user: {
         id: user.id,
         username: user.username,
         email: user.email,
         role: user.role?.name,
         permissions,
+        isProfileComplete: !isProfileIncomplete,
       },
-      token,
-      redirectTo,
     });
-
   } catch (error) {
     console.error("Erreur authentification :", error);
     return res.status(500).json({

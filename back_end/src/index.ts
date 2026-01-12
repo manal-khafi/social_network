@@ -4,6 +4,7 @@ import AuthentificationRoutes from "./Routes/Authentification";
 import commentRouter from "./Routes/Comment";
 import FollowRoutes from "./Routes/Following";
 import SignaleRouter from "./Routes/Signale";
+import ComptRouter from "./Routes/Comproutes";
 import dotenv from "dotenv";
 
 
@@ -37,6 +38,7 @@ app.use("/api/authentification", AuthentificationRoutes);
 app.use("/api/comments", commentRouter);
 app.use("/api/Follow", FollowRoutes);
 app.use("/api/reports", SignaleRouter);
+app.use("/api/Compte", ComptRouter);
 
 app.get("/", (req, res) => {
   res.json({

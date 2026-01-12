@@ -5,6 +5,7 @@ import { LoginScreen } from "../Componenets/Authentification/auth/LoginScreen.ts
 import { RegisterScreen } from "../Componenets/Authentification/auth/RegisterScreen.tsx";
 import { ForgotPasswordScreen } from "../Componenets/Authentification/auth/ForgotPasswordScreen.tsx";
 import { ResetPasswordScreen } from "../Componenets/Authentification/auth/resetPassword.tsx";
+import { LeftSide } from "../Componenets/Authentification/auth/LeftSide.tsx";
 
 type Screen = "login" | "register" | "forgotPassword";
 
@@ -12,6 +13,9 @@ export default function AuthView() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("login");
 
   return (
+    <>
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+    <LeftSide />
     <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-[#feeaa1]/20 rounded-full blur-3xl"></div>
@@ -50,5 +54,7 @@ export default function AuthView() {
         </AnimatePresence>
       </div>
     </div>
+  </div>
+  </>
   );
 }
