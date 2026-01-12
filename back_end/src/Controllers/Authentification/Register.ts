@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "../../../generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { sendVerificationEmail } from "../../util/EempleEmail";
@@ -98,7 +98,8 @@ export const Register = async (req: Request, res: Response) => {
 
     return res.status(201).json({
       success: true,
-      message: "Registration successful! Please check your email to activate your account.",
+      message:
+        "Registration successful! Please check your email to activate your account.",
       user: {
         id: newUser.id,
         username: newUser.username,
