@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 
-import { LoginScreen } from "../Componenets/Authentification/auth/LoginScreen.tsx";
-import { RegisterScreen } from "../Componenets/Authentification/auth/RegisterScreen.tsx";
-import { ForgotPasswordScreen } from "../Componenets/Authentification/auth/ForgotPasswordScreen.tsx";
-import { ResetPasswordScreen } from "../Componenets/Authentification/auth/resetPassword.tsx";
+import { LoginScreen } from "../components/Authentification/auth/LoginScreen.tsx";
+import { RegisterScreen } from "../components/Authentification/auth/RegisterScreen.tsx";
+import { ForgotPasswordScreen } from "../components/Authentification/auth/ForgotPasswordScreen.tsx";
+import { ResetPasswordScreen } from "../components/Authentification/auth/resetPassword.tsx";
 
 type Screen = "login" | "register" | "forgotPassword";
 
@@ -24,7 +24,9 @@ export default function AuthView() {
             <LoginScreen
               key="login"
               onSwitchToRegister={() => setCurrentScreen("register")}
-              onSwitchToForgotPassword={() => setCurrentScreen("forgotPassword")}
+              onSwitchToForgotPassword={() =>
+                setCurrentScreen("forgotPassword")
+              }
             />
           )}
 

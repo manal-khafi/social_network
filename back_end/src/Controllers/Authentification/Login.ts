@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../../generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -45,6 +45,13 @@ export const Login = async (req: Request, res: Response) => {
         message: "Veuillez vérifier votre email avant de vous connecter.",
       });
     }
+
+    if (!user.password_hash) {
+      return res.status(400).json({
+        success: false,
+        message: "Identifiants incorrects",
+      });
+    }
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       return res.status(400).json({
@@ -52,7 +59,8 @@ export const Login = async (req: Request, res: Response) => {
         message: "Identifiants incorrects",
       });
     }
-    const permissions = user.role?.rolePermissions.map(rp => rp.permission.code) || [];
+    const permissions =
+      user.role?.rolePermissions.map((rp) => rp.permission.code) || [];
     const token = jwt.sign(
       {
         id: user.id,
@@ -86,7 +94,6 @@ export const Login = async (req: Request, res: Response) => {
       token,
       redirectTo,
     });
-
   } catch (error) {
     console.error("Erreur authentification :", error);
     return res.status(500).json({
