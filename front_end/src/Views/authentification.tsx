@@ -28,7 +28,9 @@ export default function AuthView() {
             <LoginScreen
               key="login"
               onSwitchToRegister={() => setCurrentScreen("register")}
-              onSwitchToForgotPassword={() => setCurrentScreen("forgotPassword")}
+              onSwitchToForgotPassword={() =>
+                setCurrentScreen("forgotPassword")
+              }
             />
           )}
 

@@ -1,4 +1,7 @@
 import jwt, { SignOptions, Secret } from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 
 const {

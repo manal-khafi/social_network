@@ -127,7 +127,8 @@ export const Register = async (req: Request, res: Response) => {
     // 12. Réponse succès
     return res.status(201).json({
       success: true,
-      message: "Registration successful! Please check your email to activate your account.",
+      message:
+        "Registration successful! Please check your email to activate your account.",
       user: {
         id: newUser.id,
         username: newUser.username,
