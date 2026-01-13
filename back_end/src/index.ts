@@ -6,12 +6,14 @@ import FollowRoutes from "./Routes/Following";
 import SignaleRouter from "./Routes/Signale";
 import ComptRouter from "./Routes/Comproutes";
 import dotenv from "dotenv";
+import multer from "multer";
 
 
 dotenv.config();
 
 const port = 3500;
 const app = express();
+app.use(express.json());
 
 app.use(cors({
   origin: ["http://localhost:5173"],
@@ -27,12 +29,18 @@ app.use(cors({
 }));
 
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
+
 
 import { initializeEmailService } from "./config/EmailConfig";
 
 dotenv.config();
 initializeEmailService();
-app.use(express.json());
+
 
 app.use("/api/authentification", AuthentificationRoutes);
 app.use("/api/comments", commentRouter);

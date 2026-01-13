@@ -118,6 +118,8 @@ const PersonalizationWizard: React.FC = () => {
         break;
     }
   };
+
+  // Fonction pour passer directement à l'accueil
   const handleSkipToHome = () => {
     console.log('Sauter vers la page d\'accueil');
     
@@ -139,17 +141,19 @@ const PersonalizationWizard: React.FC = () => {
     localStorage.setItem('userSetupData', JSON.stringify(defaultData));
     navigate('/home');
   };
+
 const submitAllDataToBackend = async () => {
   setIsSubmitting(true);
 
   try {
     console.log('=== DÉBUT ENVOI ===');
+    console.log('Données complètes:', allData);
     
     if (!allData.profile.username) {
       throw new Error('Le nom d\'utilisateur est requis');
     }
 
-    // 1. Construire les données JSON
+    // 1. Construire les données JSON PROPRES
     const jsonData = {
       accountSetup: {
         choice: allData.accountChoice,
@@ -165,198 +169,124 @@ const submitAllDataToBackend = async () => {
       completedSteps: completedSteps
     };
     
-    console.log('JSON Data:', jsonData);
-    
-    // 2. Créer FormData CORRECTEMENT
+    console.log('JSON Data à envoyer:', JSON.stringify(jsonData, null, 2));
     const formData = new FormData();
+    console.log(jsonData);
+    formData.append('userData', JSON.stringify(jsonData));
+    console.log(formData);
+    console.log('userData ajouté au FormData');
     
-    // 3. Ajouter userData (IMPORTANT: utiliser Blob pour JSON)
-    const userDataBlob = new Blob([JSON.stringify(jsonData)], {
-      type: 'application/json'
-    });
-    formData.append('userData', userDataBlob, 'userData.json');
-    
-    console.log('✅ userData ajouté comme Blob');
-    
-    // 4. Ajouter l'image SI elle existe
+    // 4. Ajouter l'image si elle existe
     if (allData.profile.imageFile) {
-      const file = allData.profile.imageFile;
-      console.log('📸 Fichier image:', {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        sizeMB: (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+      console.log('Fichier image détecté:', {
+        name: allData.profile.imageFile.name,
+        type: allData.profile.imageFile.type,
+        size: `${(allData.profile.imageFile.size / 1024).toFixed(2)} KB`
       });
-      formData.append('profileImage', file, file.name);
-      console.log('✅ Fichier ajouté au FormData');
+      formData.append('profileImage', allData.profile.imageFile);
+      console.log('Fichier ajouté au FormData');
     } else if (allData.profile.profileImage && allData.profile.profileImage !== 'default') {
       if (allData.profile.profileImage.startsWith('data:image')) {
-        // Convertir base64 en Blob
-        const base64Response = await fetch(allData.profile.profileImage);
-        const blob = await base64Response.blob();
-        formData.append('profileImage', blob, 'profile.png');
-        console.log('✅ Image base64 convertie en Blob et ajoutée');
+        const base64Data = allData.profile.profileImage.split(',')[1];
+        console.log('Image base64 détectée, longueur:', base64Data.length);
+        formData.append('profileImageBase64', base64Data);
+        console.log('Base64 ajouté au FormData');
       }
     }
 
-    // 5. DEBUG: Afficher FormData (méthode correcte)
-    console.log('=== DEBUG FORM DATA ===');
-    console.log('FormData créé, nombre d\'entrées:', Array.from(formData.entries()).length);
-    
-    // Parcourir FormData pour vérifier
-    for (const [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: File - ${value.name} (${value.size} bytes, ${value.type})`);
-      } else if (value instanceof Blob) {
-        console.log(`${key}: Blob - ${value.type} (${value.size} bytes)`);
-      } else {
-        console.log(`${key}: ${typeof value} - ${value}`);
+    // 5. Vérifier le contenu de FormData (méthode alternative)
+    console.log('=== VÉRIFICATION FORM DATA ===');
+    console.log('formData a userData?', formData.has('userData'));
+    console.log('formData a profileImage?', formData.has('profileImage'));
+    console.log('formData a profileImageBase64?', formData.has('profileImageBase64'));
+    const entries = [];
+    for (const pair of formData.entries()) {
+      if (pair[0] === 'userData') {
+        entries.push(`${pair[0]}: JSON (${pair[1].length} caractères)`);
+      } else if (pair[0] === 'profileImage') {
+        entries.push(`${pair[0]}: Fichier - ${pair[1].name}`);
+      } else if (pair[0] === 'profileImageBase64') {
+        entries.push(`${pair[0]}: Base64 (${pair[1].length} caractères)`);
       }
     }
-    
-    // 6. TEST: Vérifier d'abord que le backend est accessible
-    console.log('=== TEST DE CONNEXION BACKEND ===');
+    console.log('Entrées FormData:', entries);
+    console.log('=== ENVOI AU BACKEND ===');
+    console.log(formData);
+    console.log('URL:', 'http://localhost:3500/api/Compte/update/profile');
     try {
-      const testResponse = await fetch('http://localhost:3500/health', {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
+      const response = await fetch('http://localhost:3500/api/Compte/update/profile', {
+        method: 'POST',
+        body: formData,
       });
-      console.log('Test backend - Status:', testResponse.status);
-      if (testResponse.ok) {
-        const testData = await testResponse.json();
-        console.log('✅ Backend accessible:', testData);
-      } else {
-        throw new Error(`Backend ne répond pas correctement: ${testResponse.status}`);
-      }
-    } catch (testError: any) {
-      console.error('❌ Backend inaccessible:', testError.message);
-      // Continuer quand même - peut-être que l'endpoint existe
-    }
-    
-    // 7. Envoyer la requête avec XMLHttpRequest (plus fiable pour FormData)
-    console.log('=== ENVOI AVEC XMLHttpRequest ===');
-    
-    return new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
+
+      console.log('=== RÉPONSE ===');
+      console.log('Status:', response.status, response.statusText);
+      console.log('OK?', response.ok);
       
-      xhr.open('POST', 'http://localhost:3500/api/Compte/update/profile');
-      
-      xhr.onload = function() {
-        console.log('=== RÉPONSE XHR ===');
-        console.log('Status:', xhr.status, xhr.statusText);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Erreur du serveur:', errorText);
         
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const result = JSON.parse(xhr.responseText);
-            console.log('✅ Réponse JSON:', result);
-            
-            // Sauvegarder localement
-            localStorage.setItem('userProfile', JSON.stringify({
-              username: allData.profile.username,
-              profileImage: allData.profile.profileImage,
-              gender: allData.gender,
-              privacy: allData.privacy,
-              isSetupComplete: true
-            }));
-            
-            if (result.token) {
-              localStorage.setItem('authToken', result.token);
-            }
-            
-            localStorage.removeItem('setupWizardData');
-            
-            navigate('/home', { 
-              state: { 
-                welcomeMessage: `Bienvenue ${allData.profile.username} !`,
-                setupComplete: true
-              } 
-            });
-            
-            resolve();
-          } catch (parseError) {
-            console.error('❌ Erreur parsing réponse:', parseError);
-            console.error('Response text:', xhr.responseText);
-            reject(new Error('Réponse invalide du serveur'));
-          }
-        } else {
-          console.error('❌ Erreur XHR:', xhr.status, xhr.statusText);
-          console.error('Response:', xhr.responseText);
-          reject(new Error(`Erreur ${xhr.status}: ${xhr.statusText}`));
+        // Essayer de parser comme JSON si possible
+        try {
+          const errorJson = JSON.parse(errorText);
+          console.error('Erreur JSON:', errorJson);
+          throw new Error(`Erreur ${response.status}: ${errorJson.message || response.statusText}`);
+        } catch {
+          throw new Error(`Erreur ${response.status}: ${response.statusText} - ${errorText}`);
         }
-      };
+      }
+
+      const result = await response.json();
+      console.log('Réponse JSON:', result);
       
-      xhr.onerror = function() {
-        console.error('❌ ERREUR RÉSEAU XHR');
-        reject(new Error('Erreur réseau - Vérifiez CORS et connexion serveur'));
-      };
+      console.log('=== SAUVEGARDE LOCALE ===');
+      localStorage.setItem('userProfile', JSON.stringify({
+        username: allData.profile.username,
+        profileImage: allData.profile.profileImage,
+        gender: allData.gender,
+        privacy: allData.privacy,
+        isSetupComplete: true
+      }));
       
-      xhr.ontimeout = function() {
-        console.error('❌ TIMEOUT XHR');
-        reject(new Error('Timeout - Le serveur ne répond pas'));
-      };
+      if (result.token) {
+        localStorage.setItem('authToken', result.token);
+      }
       
-      xhr.timeout = 30000;
+      // Nettoyer
+      localStorage.removeItem('setupWizardData');
       
-      // Événement progression upload
-      xhr.upload.onprogress = function(event) {
-        if (event.lengthComputable) {
-          const percent = (event.loaded / event.total) * 100;
-          console.log(`📤 Upload: ${percent.toFixed(1)}%`);
-        }
-      };
+      // Naviguer
+      navigate('/home', { 
+        state: { 
+          welcomeMessage: `Bienvenue ${allData.profile.username} !`,
+          setupComplete: true
+        } 
+      });
+
+    } catch (fetchError: any) {
+      console.error('=== ERREUR FETCH ===');
+      console.error('Type:', fetchError.name);
+      console.error('Message:', fetchError.message);
+      console.error('Stack:', fetchError.stack);
       
-      console.log('🚀 Envoi de la requête XHR...');
-      xhr.send(formData);
-    });
-    
+      // Vérifier si c'est une erreur réseau/CORS
+      if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+        throw new Error('Impossible de se connecter au serveur. Vérifiez que le backend est en marche sur http://localhost:3500');
+      }
+      throw fetchError;
+    }
+
   } catch (error: any) {
-    console.error('❌ ERREUR FINALE ===');
-    console.error('Message:', error.message);
-    console.error('Stack:', error.stack);
-    
-    // Solution de secours : mode local
-    if (error.message.includes('Failed to fetch') || 
-        error.message.includes('NetworkError') ||
-        error.message.includes('Erreur réseau')) {
-      
-      const useLocalMode = confirm(
-        'Le serveur backend n\'est pas accessible.\n\n' +
-        'Voulez-vous continuer en mode local (données sauvegardées dans le navigateur)?'
-      );
-      
-      if (useLocalMode) {
-        // Mode local
-        localStorage.setItem('userProfile', JSON.stringify({
-          username: allData.profile.username,
-          profileImage: allData.profile.profileImage,
-          gender: allData.gender,
-          privacy: allData.privacy,
-          isSetupComplete: true
-        }));
-        
-        localStorage.setItem('authToken', 'local-token-' + Date.now());
-        localStorage.removeItem('setupWizardData');
-        
-        navigate('/home', { 
-          state: { 
-            welcomeMessage: `Bienvenue ${allData.profile.username} ! (Mode local)`,
-            setupComplete: true,
-            localMode: true
-          } 
-        });
-        return;
-      }
-    }
-    
-    alert(`Erreur: ${error.message}\n\nVeuillez vérifier que le serveur backend est en marche.`);
+    console.error('=== ERREUR FINALE ===');
+    console.error(error);
+    alert(`Erreur: ${error.message || 'Une erreur est survenue lors de la création du compte.'}`);
   } finally {
     setIsSubmitting(false);
     console.log('=== FIN ENVOI ===');
   }
 };
-
-
-
+  // Sauvegarder les données dans localStorage (sans le fichier image)
   useEffect(() => {
     const saveData = {
       currentStep,
@@ -365,7 +295,7 @@ const submitAllDataToBackend = async () => {
         profile: {
           username: allData.profile.username,
           profileImage: allData.profile.profileImage,
-          imageFile: null
+          imageFile: null // Ne pas sauvegarder le File
         }
       },
       completedSteps
