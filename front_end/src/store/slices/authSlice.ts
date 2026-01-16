@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { forgotPassword as forgotPasswordAPI } from "../../utils/authService";
+import { forgotPassword as forgotPasswordAPI } from "../../util/authService";
 
 interface AuthState {
   loading: boolean;

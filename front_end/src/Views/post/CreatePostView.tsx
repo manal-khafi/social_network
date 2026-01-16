@@ -62,7 +62,7 @@ export default function CreatePostView() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
-          <button onClick={() => navigate('/')} className="p-2 hover:bg-muted rounded-full">
+          <button onClick={() => navigate('/home')} className="p-2 hover:bg-muted rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h2 className="font-semibold">Create Post</h2>

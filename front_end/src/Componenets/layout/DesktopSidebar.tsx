@@ -1,25 +1,37 @@
-import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, PlusCircle, Mail, User, X, Settings, LogOut } from 'lucide-react';
-import { useAppSelector, useAppDispatch } from '../../hooks';
-import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
-import { logout } from '../../features/auth/authSlice';
+import { Link, useLocation } from "react-router-dom";
+import {
+  Home,
+  Users,
+  PlusCircle,
+  Mail,
+  User,
+  X,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import { useAppSelector, useAppDispatch } from "../../hooks";
+import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
+import { logout } from "../../features/auth/authSlice";
 
 interface DesktopSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function DesktopSidebar({ isOpen, onClose }: DesktopSidebarProps) {
+export default function DesktopSidebar({
+  isOpen,
+  onClose,
+}: DesktopSidebarProps) {
   const location = useLocation();
   const { currentUser } = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
 
   const navItems = [
-    { path: '/', icon: Home, label: 'Home' },
-    { path: '/community', icon: Users, label: 'Community' },
-    { path: '/create-post', icon: PlusCircle, label: 'Create' },
-    { path: '/inbox', icon: Mail, label: 'Inbox' },
-    { path: '/profile/me', icon: User, label: 'Profile' },
+    { path: "/home", icon: Home, label: "Home" },
+    { path: "/home/community", icon: Users, label: "Community" },
+    { path: "/home/create-post", icon: PlusCircle, label: "Create" },
+    { path: "/home/inbox", icon: Mail, label: "Inbox" },
+    { path: "/home/profile/me", icon: User, label: "Profile" },
   ];
 
   const handleLogout = () => {
@@ -42,14 +54,16 @@ export default function DesktopSidebar({ isOpen, onClose }: DesktopSidebarProps)
       {/* Sidebar */}
       <aside
         className={`hidden lg:flex fixed top-0 left-0 h-full w-80 bg-card border-r border-border z-50 flex-col transition-transform duration-300 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Header */}
         <div className="p-4 border-b border-border flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2" onClick={onClose}>
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-sm text-primary-foreground font-bold">A</span>
+              <span className="text-sm text-primary-foreground font-bold">
+                A
+              </span>
             </div>
             <h1 className="text-lg font-bold text-foreground">ANMOUGAR</h1>
           </Link>
@@ -70,11 +84,15 @@ export default function DesktopSidebar({ isOpen, onClose }: DesktopSidebarProps)
           <div className="flex items-center gap-3">
             <Avatar className="w-12 h-12">
               <AvatarImage src={currentUser.avatar} />
-              <AvatarFallback>{currentUser.username[0].toUpperCase()}</AvatarFallback>
+              <AvatarFallback>
+                {currentUser.username[0].toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="font-semibold truncate">{currentUser.fullName}</p>
-              <p className="text-sm text-muted-foreground truncate">@{currentUser.username}</p>
+              <p className="text-sm text-muted-foreground truncate">
+                @{currentUser.username}
+              </p>
             </div>
           </div>
         </Link>
@@ -86,7 +104,7 @@ export default function DesktopSidebar({ isOpen, onClose }: DesktopSidebarProps)
               const Icon = item.icon;
               const isActive =
                 location.pathname === item.path ||
-                (item.path !== '/' && location.pathname.startsWith(item.path));
+                (item.path !== "/" && location.pathname.startsWith(item.path));
 
               return (
                 <Link
@@ -95,11 +113,13 @@ export default function DesktopSidebar({ isOpen, onClose }: DesktopSidebarProps)
                   onClick={onClose}
                   className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all ${
                     isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted text-foreground'
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted text-foreground"
                   }`}
                 >
-                  <Icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} />
+                  <Icon
+                    className={`w-6 h-6 ${isActive ? "fill-current" : ""}`}
+                  />
                   <span className="font-medium">{item.label}</span>
                 </Link>
               );
@@ -109,18 +129,24 @@ export default function DesktopSidebar({ isOpen, onClose }: DesktopSidebarProps)
           {/* Settings and Logout Section */}
           <div className="mt-6 pt-6 border-t border-border space-y-2">
             <Link
-              to="/settings"
+              to="/home/settings"
               onClick={onClose}
               className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all ${
-                location.pathname.startsWith('/settings')
-                  ? 'bg-primary text-primary-foreground'
-                  : 'hover:bg-muted text-foreground'
+                location.pathname.startsWith("/home/settings")
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-muted text-foreground"
               }`}
             >
-              <Settings className={`w-6 h-6 ${location.pathname.startsWith('/settings') ? 'fill-current' : ''}`} />
+              <Settings
+                className={`w-6 h-6 ${
+                  location.pathname.startsWith("/home/settings")
+                    ? "fill-current"
+                    : ""
+                }`}
+              />
               <span className="font-medium">Settings</span>
             </Link>
-            
+
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-all hover:bg-muted text-foreground"

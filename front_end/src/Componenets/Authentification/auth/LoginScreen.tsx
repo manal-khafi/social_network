@@ -5,6 +5,8 @@ import { AuthButton } from "./AuthButton";
 import { SocialButton } from "./SocialButton";
 import { handleSocialAuth } from "./socialAuth";
 import { Logo } from "./Logo";
+import { useAppDispatch } from "../../../hooks";
+import { setAuth } from "../../../features/auth/authSlice";
 
 interface LoginScreenProps {
   onSwitchToRegister: () => void;
@@ -15,6 +17,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onSwitchToRegister,
   onSwitchToForgotPassword,
 }) => {
+  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     emailOrUsername: "",
@@ -26,14 +29,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     setIsLoading(true);
 
     try {
-      const url = 'http://localhost:3500/api/authentification/login';
+      const url = "http://localhost:3500/api/authentification/login";
       const response = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({
-          email: formData.emailOrUsername, 
+          email: formData.emailOrUsername,
           password: formData.password,
         }),
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
 
       const data = await response.json();
@@ -41,19 +44,26 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
       if (data.success) {
         alert(data.message);
-        localStorage.setItem("token", data.token);
-        window.location.href = data.redirectTo || "/dashboard";
+
+        // Dispatch Redux action to update auth state
+        dispatch(
+          setAuth({
+            user: data.user,
+            token: data.token,
+          })
+        );
+
+        window.location.href = data.redirectTo || "/home";
       } else {
         alert(`Error: ${data.message}`);
       }
     } catch (error) {
       console.error(error);
-      alert("Server error. Please try again later."); 
+      alert("Server error. Please try again later.");
     }
 
     setIsLoading(false);
   };
-
 
   return (
     <motion.div
@@ -120,8 +130,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       </div>
 
       <div className="space-y-3">
-        <SocialButton provider="google" onClick={() => handleSocialAuth("google")} />
-        <SocialButton provider="facebook" onClick={() => handleSocialAuth("facebook")} />
+        <SocialButton
+          provider="google"
+          onClick={() => handleSocialAuth("google")}
+        />
+        <SocialButton
+          provider="facebook"
+          onClick={() => handleSocialAuth("facebook")}
+        />
       </div>
 
       <div className="mt-6 text-center">

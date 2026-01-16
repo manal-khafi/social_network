@@ -6,10 +6,11 @@ import commentRouter from "./Routes/Comment";
 import FollowRoutes from "./Routes/Following";
 import SignaleRouter from "./Routes/Signale";
 import ComptRouter from "./Routes/Comproutes";
+import postRoutes from "./Routes/postRoute";
+import repostRoutes from "./Routes/repostRoute";
+import likeRoutes from "./Routes/likeRoute";
 import dotenv from "dotenv";
 import multer from "multer";
-
-
 
 import { initializeEmailService } from "./config/EmailConfig";
 
@@ -21,30 +22,27 @@ const port = process.env.PORT || 3500;
 const app = express();
 app.use(express.json());
 
-app.use(cors({
-  origin: ["http://localhost:5173"],
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Accept"
-  ],
-  credentials: true,
-  optionsSuccessStatus: 200
-}));
-
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+    ],
+    credentials: true,
+    optionsSuccessStatus: 200,
+  })
+);
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
-
-
 dotenv.config();
-
-
 
 app.use(
   cors({
@@ -69,6 +67,9 @@ app.use("/api/comments", commentRouter);
 app.use("/api/Follow", FollowRoutes);
 app.use("/api/reports", SignaleRouter);
 app.use("/api/Compte", ComptRouter);
+app.use("/api/posts", postRoutes);
+app.use("/api/reposts", repostRoutes);
+app.use("/api/posts", likeRoutes);
 
 app.get("/", (req, res) => {
   res.json({

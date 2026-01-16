@@ -223,6 +223,8 @@ model Repost {
 
   user         User @relation(fields: [user_id], references: [id])
   originalPost Post @relation(fields: [original_post_id], references: [id])
+
+  @@unique([user_id, original_post_id])
 }
 
 model Save {

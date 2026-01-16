@@ -8,7 +8,7 @@ const settingsSections = [
     title: 'Account Settings',
     description: 'Manage your profile and account security',
     icon: User,
-    path: '/settings/account',
+    path: '/home/settings/account',
     color: 'text-[#18534f]'
   },
   {
@@ -16,23 +16,15 @@ const settingsSections = [
     title: 'Notifications',
     description: 'Configure how you receive updates',
     icon: Bell,
-    path: '/settings/notifications',
+    path: '/home/settings/notifications',
     color: 'text-[#226d68]'
-  },
-  {
-    id: 'content',
-    title: 'Content Preferences',
-    description: 'Customize your feed and content',
-    icon: Shield,
-    path: '/settings/content',
-    color: 'text-[#18534f]'
   },
   {
     id: 'appearance',
     title: 'Appearance',
     description: 'Theme, blocked accounts, and liked posts',
     icon: Palette,
-    path: '/settings/appearance',
+    path: '/home/settings/appearance',
     color: 'text-[#226d68]'
   },
   {
@@ -40,7 +32,7 @@ const settingsSections = [
     title: 'About & Support',
     description: 'App info, help, and support',
     icon: Info,
-    path: '/settings/about',
+    path: '/home/settings/about',
     color: 'text-[#18534f]'
   }
 ];

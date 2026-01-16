@@ -43,7 +43,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             <Search className="w-5 h-5 text-foreground" />
           </button>
           
-          <Link to="/notifications" className="relative p-2 hover:bg-muted rounded-full transition-colors">
+          <Link to="notifications" className="relative p-2 hover:bg-muted rounded-full transition-colors">
             <Bell className="w-5 h-5 text-foreground" />
             {unreadCount > 0 && (
               <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">

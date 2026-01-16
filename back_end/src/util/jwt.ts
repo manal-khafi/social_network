@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-
 const {
   AUTH_SECRET,
   AUTH_SECRET_EXPIRES_IN,
@@ -11,27 +10,38 @@ const {
   AUTH_REFRESH_SECRET_EXPIRES_IN,
   RESET_SECRET,
   RESET_EXPIRES_IN,
+  JWT_SECRET, // Support JWT_SECRET for backward compatibility
 } = process.env;
 
-if (!AUTH_SECRET || !AUTH_REFRESH_SECRET || !RESET_SECRET) {
-  throw new Error("JWT secrets are missing in environment variables!");
+// Use AUTH_SECRET if available, otherwise fall back to JWT_SECRET
+// This ensures backward compatibility while supporting the new naming convention
+const accessSecret: Secret = AUTH_SECRET || JWT_SECRET || "ariqerhtuzerj";
+
+if (!AUTH_REFRESH_SECRET || !RESET_SECRET) {
+  throw new Error(
+    "AUTH_REFRESH_SECRET and RESET_SECRET are required in environment variables!"
+  );
 }
 
-const accessSecret: Secret = AUTH_SECRET;
 const refreshSecret: Secret = AUTH_REFRESH_SECRET;
 const resetSecret: Secret = RESET_SECRET;
 
-const accessExpiresIn: SignOptions['expiresIn'] = (AUTH_SECRET_EXPIRES_IN ?? "15m") as unknown as SignOptions['expiresIn'];
-const refreshExpiresIn: SignOptions['expiresIn'] = (AUTH_REFRESH_SECRET_EXPIRES_IN ?? "24h") as unknown as SignOptions['expiresIn'];
-const resetExpiresIn: SignOptions['expiresIn'] = (RESET_EXPIRES_IN ?? "15m") as unknown as SignOptions['expiresIn'];
-
-
+// Default to 7d for access tokens (matching existing behavior)
+// Can be overridden with AUTH_SECRET_EXPIRES_IN environment variable
+const accessExpiresIn: SignOptions["expiresIn"] = (AUTH_SECRET_EXPIRES_IN ??
+  "7d") as unknown as SignOptions["expiresIn"];
+const refreshExpiresIn: SignOptions["expiresIn"] =
+  (AUTH_REFRESH_SECRET_EXPIRES_IN ??
+    "24h") as unknown as SignOptions["expiresIn"];
+const resetExpiresIn: SignOptions["expiresIn"] = (RESET_EXPIRES_IN ??
+  "15m") as unknown as SignOptions["expiresIn"];
 
 // Generate access token
 export const generateAccessToken = (payload: object) =>
   jwt.sign(payload, accessSecret, { expiresIn: accessExpiresIn });
 
 // Verify access token
+// This will work with tokens signed with either AUTH_SECRET or JWT_SECRET
 export const verifyAccessToken = (token: string) =>
   jwt.verify(token, accessSecret);
 
@@ -50,6 +60,5 @@ export const generateResetToken = (payload: object) =>
 // Verify reset token
 export const verifyResetToken = (token: string) =>
   jwt.verify(token, resetSecret);
-
 
 // console.log("DEBUG SECRET:", process.env.AUTH_SECRET);

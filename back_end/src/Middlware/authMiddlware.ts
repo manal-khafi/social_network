@@ -2,7 +2,7 @@ import { Response, NextFunction } from "express";
 import {
   verifyAccessToken,
   verifyRefreshToken,
-  generateAccessToken
+  generateAccessToken,
 } from "../util/jwt";
 import { PrismaClient } from "@prisma/client";
 import { AuthRequest } from "../types/AuthRequest";
@@ -33,63 +33,84 @@ export const authMiddleware = async (
 
       req.user = decoded;
       return next();
+    } catch (err: unknown) {
+      const error = err as { name?: string; message?: string };
 
-    } catch (err: any) {
-      if (err.name !== "TokenExpiredError") {
-        return res.status(401).json({ message: "Token invalide" });
-      }
+      // If token is expired, try to refresh it
+      if (error.name === "TokenExpiredError") {
+        const refreshToken =
+          req.cookies?.refreshToken || req.headers["x-refresh-token"];
 
-      const refreshToken =
-        req.cookies?.refreshToken ||
-        req.headers["x-refresh-token"];
-
-      if (!refreshToken) {
-        return res.status(401).json({ message: "Refresh token manquant" });
-      }
-
-      const decodedRefresh = verifyRefreshToken(refreshToken as string) as {
-        id: string;
-      };
-
-      const user = await prisma.user.findUnique({
-        where: { id: decodedRefresh.id },
-        include: {
-          role: {
-            include: {
-              rolePermissions: {
-                include: {
-                  permission: true
-                }
-              }
-            }
-          }
+        if (!refreshToken) {
+          return res
+            .status(401)
+            .json({ message: "Token expiré et refresh token manquant" });
         }
-      });
 
-      if (!user) {
-        return res.status(401).json({ message: "Utilisateur introuvable" });
+        try {
+          const decodedRefresh = verifyRefreshToken(refreshToken as string) as {
+            id: string;
+          };
+
+          const user = await prisma.user.findUnique({
+            where: { id: decodedRefresh.id },
+            include: {
+              role: {
+                include: {
+                  rolePermissions: {
+                    include: {
+                      permission: true,
+                    },
+                  },
+                },
+              },
+            },
+          });
+
+          if (!user) {
+            return res.status(401).json({ message: "Utilisateur introuvable" });
+          }
+
+          const permissions =
+            user.role?.rolePermissions.map(
+              (p: { permission: { name: string } }) => p.permission.name
+            ) || [];
+
+          const newAccessToken = generateAccessToken({
+            id: user.id,
+            email: user.email,
+            role: user.role?.name,
+            permissions,
+          });
+
+          res.setHeader("x-access-token", newAccessToken);
+
+          req.user = {
+            id: user.id,
+            email: user.email,
+            role: user.role?.name,
+            permissions,
+          };
+
+          return next();
+        } catch (refreshError) {
+          console.error("Refresh token verification failed:", refreshError);
+          return res.status(401).json({ message: "Refresh token invalide" });
+        }
+      } else {
+        // Token is invalid (wrong secret, malformed, etc.)
+        console.error(
+          "Token verification failed:",
+          error.message || error.name
+        );
+        return res.status(401).json({
+          message: "Token invalide",
+          error:
+            error.name === "JsonWebTokenError"
+              ? "Invalid token format"
+              : error.message,
+        });
       }
-
-      const permissions =
-        user.role?.rolePermissions.map(p => p.permission.name) || [];
-
-      const newAccessToken = generateAccessToken({
-        id: user.id,
-        email: user.email,
-        role: user.role?.name,
-        permissions
-      });
-
-      res.setHeader("x-access-token", newAccessToken);
-
-      req.user = {
-        id: user.id,
-        email: user.email,
-        role: user.role?.name,
-        permissions
-      };
-
-      next();
     }
   } catch (error) {
     return res.status(401).json({ message: "Unauthorized" });

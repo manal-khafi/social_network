@@ -1,10 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import { generateAccessToken } from "../../util/jwt";
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || "votre_secret_jwt_ici";
 
 export const Login = async (req: Request, res: Response) => {
   try {
@@ -58,10 +57,7 @@ export const Login = async (req: Request, res: Response) => {
     }
 
     // 3️⃣ Vérification mot de passe
-    const isValidPassword = await bcrypt.compare(
-      password,
-      user.password_hash
-    );
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
     if (!isValidPassword) {
       return res.status(400).json({
@@ -70,26 +66,21 @@ export const Login = async (req: Request, res: Response) => {
       });
     }
     const permissions =
-      user.role?.rolePermissions.map((rp) => rp.permission.code) || [];
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role?.name,
-        permissions,
-      },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+      user.role?.rolePermissions.map(
+        (rp: { permission: { code: string } }) => rp.permission.code
+      ) || [];
+    const token = generateAccessToken({
+      id: user.id,
+      email: user.email,
+      role: user.role?.name,
+      permissions,
+    });
     await prisma.user.update({
       where: { id: user.id },
       data: { last_login: new Date() },
     });
     const isProfileIncomplete =
-      !user.username ||
-      !user.avatar_url ||
-      !user.gender ||
-      !user.bio;
+      !user.username || !user.avatar_url || !user.gender || !user.bio;
     let redirectTo = "/index";
     const roleName = user.role?.name?.toLowerCase() || "";
 

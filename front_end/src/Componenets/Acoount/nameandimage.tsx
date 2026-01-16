@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Upload, User, Camera, ArrowRight, ArrowLeft } from 'lucide-react';
+import React, { useState } from "react";
+import { Upload, User, Camera, ArrowRight, ArrowLeft } from "lucide-react";
 
 interface SetupProfileProps {
-  onUpdate: (data: { username: string; profileImage: string | null; imageFile: File | null }) => void;
+  onUpdate: (data: {
+    username: string;
+    profileImage: string | null;
+    imageFile: File | null;
+  }) => void;
   onSkip: () => void;
   onBack: () => void;
   initialData?: {
@@ -11,34 +15,32 @@ interface SetupProfileProps {
   };
 }
 
-const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, initialData }) => {
+const SetupProfile: React.FC<SetupProfileProps> = ({
+  onUpdate,
+  onSkip,
+  onBack,
+  initialData,
+}) => {
   const [loading, setLoading] = useState(false);
-  const [username, setUsername] = useState(initialData?.username || '');
-  const [profileImage, setProfileImage] = useState<string | null>(initialData?.profileImage || null);
+  const [username, setUsername] = useState(initialData?.username || "");
+  const [profileImage, setProfileImage] = useState<string | null>(
+    initialData?.profileImage || null
+  );
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  // Mettre à jour les données dans le parent lorsqu'elles changent
-  useEffect(() => {
-    if (username.trim() || profileImage) {
-      const data = {
-        username: username.trim(),
-        profileImage,
-        imageFile
-      };
-      onUpdate(data);
-    }
-  }, [username, profileImage, imageFile, onUpdate]);
+  // Removed auto-update useEffect to prevent infinite loop
+  // Data will be sent to parent only when user submits
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('L\'image est trop grande (max 5MB)');
+        setError("L'image est trop grande (max 5MB)");
         return;
       }
-      if (!file.type.startsWith('image/')) {
-        setError('Veuillez sélectionner une image');
+      if (!file.type.startsWith("image/")) {
+        setError("Veuillez sélectionner une image");
         return;
       }
 
@@ -49,7 +51,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
         setProfileImage(result);
       };
       reader.readAsDataURL(file);
-      setError('');
+      setError("");
     }
   };
 
@@ -60,25 +62,31 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username.trim()) {
-      setError('Choisis un nom d\'utilisateur');
+      setError("Choisis un nom d'utilisateur");
       return;
     }
 
     if (username.length < 3) {
-      setError('Le nom doit faire au moins 3 caractères');
+      setError("Le nom doit faire au moins 3 caractères");
       return;
     }
 
     setLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      // Les données seront envoyées via le callback onUpdate
+      // Send data to parent when user submits
+      onUpdate({
+        username: username.trim(),
+        profileImage,
+        imageFile,
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
       onSkip(); // Passer à l'étape suivante
-    } catch (error) {
-      setError('Erreur, réessaye !');
+    } catch {
+      setError("Erreur, réessaye !");
     } finally {
       setLoading(false);
     }
@@ -92,14 +100,16 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
           <div className="bg-white rounded-xl p-6 border border-[#718197]/10 shadow-sm">
             <div className="flex flex-col items-center">
               <div className="relative mb-4">
-                <div className={`w-32 h-32 rounded-full border-3 ${
-                  profileImage ? 'border-[#D6955B]' : 'border-[#718197]/20'
-                } flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#ECF8F6] to-white`}>
+                <div
+                  className={`w-32 h-32 rounded-full border-3 ${
+                    profileImage ? "border-[#D6955B]" : "border-[#718197]/20"
+                  } flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#ECF8F6] to-white`}
+                >
                   {profileImage ? (
                     <>
-                      <img 
-                        src={profileImage} 
-                        alt="Profile preview" 
+                      <img
+                        src={profileImage}
+                        alt="Profile preview"
                         className="w-full h-full object-cover"
                       />
                       <button
@@ -114,7 +124,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
                     <User className="w-16 h-16 text-[#718197]/40" />
                   )}
                 </div>
-                
+
                 {!profileImage && (
                   <div className="absolute -bottom-2 -right-2 bg-[#18534F] text-white rounded-full p-3 shadow-lg">
                     <Camera className="w-5 h-5" />
@@ -123,10 +133,12 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
               </div>
 
               <label className="cursor-pointer">
-                <div className="px-5 py-3 bg-gradient-to-r from-[#18534F] to-[#718197] text-white rounded-lg 
-                  hover:shadow-lg transition flex items-center gap-2">
+                <div
+                  className="px-5 py-3 bg-gradient-to-r from-[#18534F] to-[#718197] text-white rounded-lg 
+                  hover:shadow-lg transition flex items-center gap-2"
+                >
                   <Upload className="w-4 h-4" />
-                  {profileImage ? 'Changer la photo' : 'Uploader une photo'}
+                  {profileImage ? "Changer la photo" : "Uploader une photo"}
                 </div>
                 <input
                   type="file"
@@ -151,7 +163,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value);
-                  setError('');
+                  setError("");
                 }}
                 placeholder="ex: alex_2024"
                 className="w-full px-4 py-3 border border-[#718197]/20 rounded-lg 
@@ -159,24 +171,28 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
                   placeholder:text-[#718197]/40"
                 maxLength={20}
               />
-              
+
               <div className="flex items-center justify-between text-sm">
-                <span className={`${username.length > 15 ? 'text-[#D6955B]' : 'text-[#718197]'}`}>
+                <span
+                  className={`${
+                    username.length > 15 ? "text-[#D6955B]" : "text-[#718197]"
+                  }`}
+                >
                   {username.length}/20 caractères
                 </span>
                 <span className="text-[#18534F] font-medium">
-                  @{username || 'tonnom'}
+                  @{username || "tonnom"}
                 </span>
               </div>
             </div>
           </div>
-          
+
           {error && (
             <div className="p-4 bg-red-50 border border-red-100 rounded-lg text-red-600 text-center">
               {error}
             </div>
           )}
-          
+
           {/* Boutons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <button
@@ -201,7 +217,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
             <button
               type="submit"
               disabled={loading || !username.trim()}
-              className="flex-1 py-3 bg-gradient-to-r from-[#18534F] to-[#718197] text-white 
+              className="flex-1 py-3 bg-linear-to-r from-[#18534F] to-[#718197] text-white 
                 rounded-lg hover:shadow-lg transition disabled:opacity-50 
                 flex items-center justify-center gap-2"
             >
