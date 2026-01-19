@@ -1,0 +1,780 @@
+import { ArrowLeft, UserPlus, UserMinus, Users, TrendingUp, Hash, Settings, Upload, Image as ImageIcon, Palette, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getCommunityById, getCommunityMembers, updateCommunity } from "../api/axios";
+import { storage } from "../config/firebaseConfig";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { v4 as uuidv4 } from "uuid";
+import { Button } from "../Componenets/Community/communityButton";
+import { Badge } from "../Componenets/Community/communityBadge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../Componenets/Community/communityTabs";
+import { Card, CardContent } from "../Componenets/Community/communityCard";
+import { Avatar, AvatarImage, AvatarFallback } from "../Componenets/Community/communityAvatar";
+import { ScrollArea } from "../Componenets/Community/communityScrollArea";
+import { Input } from "../Componenets/Community/communityInput";
+import { Label } from "../Componenets/Community/communityLabel";
+import { Textarea } from "../Componenets/Community/communityTextArea";
+import { Switch } from "../Componenets/Community/communitySwitch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Componenets/Community/communitySelect";
+
+interface CommunityPageProps {
+  communityId: string | number;
+  onBack: () => void;
+}
+
+interface Member {
+  id: string;
+  userId?: string;
+  name?: string;
+  username?: string;
+  followers?: number;
+  avatar?: string;
+  isVerified?: boolean;
+  user?: {
+    firstName?: string;
+    lastName?: string;
+    email: string;
+  };
+  joinedAt?: string;
+  role?: string;
+}
+
+interface Community {
+  id: string;
+  name: string;
+  bio?: string;
+  description?: string;
+  avatar_url?: string;
+  banner_url?: string;
+  _count?: {
+    members: number;
+  };
+  type?: string;
+  createdAt?: string;
+  is_private?: boolean;
+  allow_posts?: boolean;
+  require_approval?: boolean;
+}
+
+export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
+  const navigate = useNavigate();
+  const [isJoined, setIsJoined] = useState(false);
+  const [community, setCommunity] = useState<Community | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // États pour les paramètres
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [coverImagePreview, setCoverImagePreview] = useState<string>("");
+  const [logoImagePreview, setLogoImagePreview] = useState<string>("");
+  const [isPublic, setIsPublic] = useState(true);
+  const [allowPosts, setAllowPosts] = useState(true);
+  const [requireApproval, setRequireApproval] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [logoImageFile, setLogoImageFile] = useState<File | null>(null);
+  
+  // Fetch community data from backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [communityRes, membersRes] = await Promise.all([
+          getCommunityById(communityId),
+          getCommunityMembers(communityId),
+        ]);
+        
+        const communityData = communityRes.data?.data || communityRes.data;
+        const membersData = membersRes.data?.data || membersRes.data?.members || membersRes.data || [];
+        
+        setCommunity(communityData);
+        setMembers(Array.isArray(membersData) ? membersData : []);
+        
+        if (communityData) {
+          setEditName(communityData.name || "");
+          setEditDescription(communityData.bio || communityData.description || "");
+          setEditCategory(communityData.type || "");
+          setIsPublic(!communityData.is_private);
+          setAllowPosts(communityData.allow_posts ?? true);
+          setRequireApproval(communityData.require_approval ?? false);
+        }
+      } catch (error) {
+        console.error("Failed to fetch community data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [communityId]);
+  
+  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleLogoImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const uploadImageToFirebase = async (file: File, path: string): Promise<string> => {
+    try {
+      const fileRef = storageRef(storage, `communities/${path}/${Date.now()}-${uuidv4()}`);
+      await uploadBytes(fileRef, file);
+      const downloadUrl = await getDownloadURL(fileRef);
+      return downloadUrl;
+    } catch (error) {
+      console.error("Error uploading image to Firebase:", error);
+      throw error;
+    }
+  };
+  
+  const handleSaveSettings = async () => {
+    if (!community) return;
+    
+    try {
+      setIsSaving(true);
+      
+      let bannerUrl = community.banner_url;
+      let avatarUrl = community.avatar_url;
+      
+      // Upload cover image if selected
+      if (coverImageFile) {
+        bannerUrl = await uploadImageToFirebase(coverImageFile, community.id);
+      }
+      
+      // Upload logo image if selected
+      if (logoImageFile) {
+        avatarUrl = await uploadImageToFirebase(logoImageFile, community.id);
+      }
+      
+      // Update community with new data and image URLs
+      await updateCommunity(community.id, {
+        name: editName,
+        bio: editDescription,
+        is_private: !isPublic,
+        allow_posts: allowPosts,
+        require_approval: requireApproval,
+        banner_url: bannerUrl,
+        avatar_url: avatarUrl,
+      });
+      
+      // Update local state
+      setCommunity({
+        ...community,
+        name: editName,
+        bio: editDescription,
+        description: editDescription,
+        banner_url: bannerUrl,
+        avatar_url: avatarUrl,
+        is_private: !isPublic,
+        allow_posts: allowPosts,
+        require_approval: requireApproval,
+      });
+      
+      // Clear file inputs
+      const coverInput = document.getElementById("cover-upload") as HTMLInputElement;
+      const logoInput = document.getElementById("logo-upload") as HTMLInputElement;
+      if (coverInput) coverInput.value = "";
+      if (logoInput) logoInput.value = "";
+      setCoverImageFile(null);
+      setLogoImageFile(null);
+      setCoverImagePreview("");
+      setLogoImagePreview("");
+      
+      alert("Communauté mise à jour avec succès!");
+    } catch (error) {
+      console.error("Failed to update community:", error);
+      alert("Erreur lors de la mise à jour de la communauté");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
+        <p className="text-gray-600">Chargement de la communauté...</p>
+      </div>
+    );
+  }
+
+  if (!community) {
+    return (
+      <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Communauté non trouvée</p>
+          <Button onClick={onBack} className="bg-[#d6955b] hover:bg-[#c5844a] text-white">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#ecf8f6]">
+      {/* Header with Banner */}
+      <div 
+        className="relative h-48 sm:h-64 bg-gradient-to-r from-[#18534f] via-[#226d68] to-[#d6955b] bg-cover bg-center"
+        style={{
+          backgroundImage: community.banner_url ? `url(${community.banner_url})` : undefined
+        }}
+      >
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+          <Button variant="ghost" onClick={() => navigate('/community')} className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white h-9 w-9 p-0 sm:h-10 sm:w-10">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Community Info */}
+      <div className="px-3 sm:px-4 lg:px-8 py-8 pl-[70px] pr-[70px]">
+        <div className="mb-4 sm:mb-8">
+          <Card className="border-2 shadow-xl">
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex flex-col gap-4">
+                <div className="flex-1">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl border-4 border-white shadow-lg flex-shrink-0">
+                      <AvatarImage src={community.avatar_url} alt={community.name} />
+                      <AvatarFallback className="bg-gradient-to-br from-[#18534f] to-[#226d68] text-white text-2xl sm:text-3xl font-bold">
+                        {community.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 sm:mb-2 flex-wrap">
+                        <h1 className="text-xl sm:text-3xl font-bold text-gray-900 truncate">{community.name}</h1>
+                        <Badge variant="secondary" className="bg-[#feeaa1] text-[#18534f] border-[#feeaa1] text-xs">
+                          <Hash className="h-3 w-3 mr-1" />
+                          {community.type || "Sin Catégorie"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-4 line-clamp-2">{community.bio || community.description}</p>
+                      <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-500">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          <span>
+                            <span className="font-semibold text-gray-900">{(community._count?.members || members.length).toLocaleString()}</span>{" "}
+                            membres
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#d6955b]" />
+                          <span className="font-semibold text-gray-900">Tendance</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Join/Leave Button */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setIsJoined(!isJoined)}
+                    className={
+                      isJoined
+                        ? "h-7 sm:h-8 px-2.5 sm:px-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white text-xs"
+                        : "h-7 sm:h-8 px-2.5 sm:px-3 bg-[#d6955b] hover:bg-[#c5844a] text-white text-xs"
+                    }
+                  >
+                    {isJoined ? (
+                      <>
+                        <UserMinus className="mr-1 h-3 w-3" />
+                        Quitter
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="mr-1 h-3 w-3" />
+                        Rejoindre
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="members" className="pb-12">
+          <TabsList className="w-full h-11 sm:h-12 bg-white border-2 shadow-sm grid grid-cols-3">
+            <TabsTrigger value="members" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              Membres
+            </TabsTrigger>
+            <TabsTrigger value="about" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
+              À propos
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
+              <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              Paramètres
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Members Tab */}
+          <TabsContent value="members" className="mt-6">
+            <Card className="border-2">
+              <CardContent className="p-6">
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold mb-2">
+                    Membres ({members.length})
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Découvrez les membres de cette communauté
+                  </p>
+                </div>
+
+                <ScrollArea className="h-[500px] pr-4">
+                  {members.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-gray-600">Aucun membre pour le moment</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {members.map((member) => {
+                        const userName = member.user ? `${member.user.firstName || ''} ${member.user.lastName || ''}`.trim() || member.user.email : member.name || "Utilisateur";
+                        const initials = member.user && member.user.firstName && member.user.lastName
+                          ? `${member.user.firstName[0]}${member.user.lastName[0]}`
+                          : userName.substring(0, 2).toUpperCase();
+                        
+                        return (
+                          <Card key={member.id} className="group hover:shadow-md transition-all duration-300 hover:border-[#226d68]">
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                  <Avatar className="h-14 w-14 border-2 border-gray-200 group-hover:border-[#226d68] transition-colors">
+                                    <AvatarImage src={member.avatar} />
+                                    <AvatarFallback className="bg-gradient-to-br from-[#18534f] to-[#226d68] text-white font-semibold">
+                                      {initials}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <h4 className="font-semibold text-gray-900 group-hover:text-[#18534f] transition-colors">
+                                        {userName}
+                                      </h4>
+                                      {member.role === 'ADMIN' && (
+                                        <Badge variant="secondary" className="h-5 px-1.5 bg-[#feeaa1] text-[#18534f] text-xs">
+                                          Admin
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-gray-600">{member.user?.email || member.username}</p>
+                                    {member.joinedAt && (
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Membre depuis {new Date(member.joinedAt).toLocaleDateString('fr-FR')}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <Button variant="outline" className="border-2 border-[#226d68] text-[#18534f] hover:bg-[#ecf8f6] hover:border-[#18534f]">
+                                  Suivre
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* About Tab */}
+          <TabsContent value="about" className="mt-6">
+            <Card className="border-2">
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-xl font-semibold mb-3">À propos de {community.name}</h3>
+                    <p className="text-gray-600 leading-relaxed">{community.bio || community.description}</p>
+                  </div>
+
+                  <div className="border-t pt-6">
+                    <h4 className="font-semibold mb-3">Statistiques</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card className="bg-gradient-to-br from-[#ecf8f6] to-white border-[#226d68]">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Users className="h-8 w-8 text-[#18534f]" />
+                            <div>
+                              <p className="text-2xl font-bold text-[#18534f]">
+                                {(community._count?.members || members.length).toLocaleString()}
+                              </p>
+                              <p className="text-sm text-[#226d68]">Membres</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="bg-gradient-to-br from-[#feeaa1] to-white border-[#d6955b]">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Hash className="h-8 w-8 text-[#18534f]" />
+                            <div>
+                              <p className="text-2xl font-bold text-[#18534f]">{community.type || "Sin Catégorie"}</p>
+                              <p className="text-sm text-[#226d68]">Catégorie</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="bg-gradient-to-br from-[#ecf8f6] to-white border-[#d6955b]">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <TrendingUp className="h-8 w-8 text-[#d6955b]" />
+                            <div>
+                              <p className="text-2xl font-bold text-[#18534f]">
+                                {community.createdAt ? new Date(community.createdAt).toLocaleDateString('fr-FR') : "N/A"}
+                              </p>
+                              <p className="text-sm text-[#226d68]">Créée le</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-6">
+                    <h4 className="font-semibold mb-3">Règles de la communauté</h4>
+                    <ul className="space-y-2 text-gray-600">
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#18534f] font-bold">1.</span>
+                        <span>Soyez respectueux envers tous les membres</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#18534f] font-bold">2.</span>
+                        <span>Partagez du contenu pertinent et de qualité</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#18534f] font-bold">3.</span>
+                        <span>Pas de spam ou de contenu promotionnel non autorisé</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#18534f] font-bold">4.</span>
+                        <span>Aidez à maintenir une atmosphère positive</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="mt-6">
+            <div className="space-y-4">
+              {/* Informations de base */}
+              <Card className="border-2">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-[#ecf8f6]">
+                      <Hash className="h-5 w-5 text-[#18534f]" />
+                    </div>
+                    <h3 className="font-semibold text-lg">Informations de base</h3>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="edit-name" className="text-sm text-gray-700">Nom de la communauté</Label>
+                      <Input
+                        id="edit-name"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Nom de votre communauté"
+                        className="h-10 border-2 focus:border-[#226d68]"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <Label htmlFor="edit-description" className="text-sm text-gray-700">Description</Label>
+                      <Textarea
+                        id="edit-description"
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        placeholder="Décrivez votre communauté..."
+                        rows={3}
+                        className="border-2 focus:border-[#226d68] resize-none"
+                      />
+                      <p className="text-xs text-gray-500">{editDescription.length} caractères</p>
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <Label htmlFor="edit-category" className="text-sm text-gray-700">Catégorie</Label>
+                      <Select value={editCategory} onValueChange={setEditCategory}>
+                        <SelectTrigger className="h-10 border-2 focus:border-[#226d68]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Tech">Tech</SelectItem>
+                          <SelectItem value="Art">Art</SelectItem>
+                          <SelectItem value="Culture">Culture</SelectItem>
+                          <SelectItem value="Business">Business</SelectItem>
+                          <SelectItem value="Environment">Environnement</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Apparence */}
+              <Card className="border-2">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-[#feeaa1]">
+                      <Palette className="h-5 w-5 text-[#18534f]" />
+                    </div>
+                    <h3 className="font-semibold text-lg">Apparence</h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Image de couverture */}
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-700">Image de couverture</Label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="w-full h-24 rounded-lg border-2 border-dashed border-[#226d68] bg-gray-50 overflow-hidden">
+                            {coverImagePreview ? (
+                              <img src={coverImagePreview} alt="Aperçu couverture" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="flex items-center justify-center h-full">
+                                <ImageIcon className="h-8 w-8 text-[#226d68]" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <Label
+                            htmlFor="cover-upload"
+                            className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-white border-2 border-[#226d68] rounded-lg hover:bg-[#ecf8f6] transition-colors text-[#18534f] text-sm"
+                          >
+                            <Upload className="h-4 w-4" />
+                            <span>Modifier</span>
+                          </Label>
+                          <input
+                            id="cover-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleCoverImageChange}
+                            className="hidden"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">PNG, JPG (max. 5MB)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Logo */}
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-700">Logo de la communauté</Label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="w-20 h-20 rounded-xl border-2 border-dashed border-[#226d68] bg-gray-50 overflow-hidden flex items-center justify-center">
+                            {logoImagePreview ? (
+                              <img src={logoImagePreview} alt="Aperçu logo" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-[#18534f] to-[#226d68] flex items-center justify-center text-white text-2xl font-bold">
+                                {editName.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <Label
+                            htmlFor="logo-upload"
+                            className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-white border-2 border-[#226d68] rounded-lg hover:bg-[#ecf8f6] transition-colors text-[#18534f] text-sm"
+                          >
+                            <Upload className="h-4 w-4" />
+                            <span>Modifier</span>
+                          </Label>
+                          <input
+                            id="logo-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoImageChange}
+                            className="hidden"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">PNG, JPG (max. 2MB)</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Confidentialité & Paramètres */}
+              <Card className="border-2">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-[#ecf8f6]">
+                      <Shield className="h-5 w-5 text-[#18534f]" />
+                    </div>
+                    <h3 className="font-semibold text-lg">Confidentialité & Paramètres</h3>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
+                      <div className="flex-1">
+                        <Label htmlFor="public-toggle" className="text-sm font-medium text-gray-900 cursor-pointer">
+                          Communauté publique
+                        </Label>
+                        <p className="text-xs text-gray-500 mt-0.5">Visible par tous les utilisateurs</p>
+                      </div>
+                      <Switch
+                        id="public-toggle"
+                        checked={isPublic}
+                        onCheckedChange={setIsPublic}
+                        className="data-[state=checked]:bg-[#18534f]"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
+                      <div className="flex-1">
+                        <Label htmlFor="posts-toggle" className="text-sm font-medium text-gray-900 cursor-pointer">
+                          Autoriser les publications
+                        </Label>
+                        <p className="text-xs text-gray-500 mt-0.5">Les membres peuvent publier du contenu</p>
+                      </div>
+                      <Switch
+                        id="posts-toggle"
+                        checked={allowPosts}
+                        onCheckedChange={setAllowPosts}
+                        className="data-[state=checked]:bg-[#18534f]"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
+                      <div className="flex-1">
+                        <Label htmlFor="approval-toggle" className="text-sm font-medium text-gray-900 cursor-pointer">
+                          Approbation requise
+                        </Label>
+                        <p className="text-xs text-gray-500 mt-0.5">Valider les publications avant affichage</p>
+                      </div>
+                      <Switch
+                        id="approval-toggle"
+                        checked={requireApproval}
+                        onCheckedChange={setRequireApproval}
+                        className="data-[state=checked]:bg-[#18534f]"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Aperçu */}
+              {(editName !== community.name || editDescription !== (community.bio || community.description)) && (
+                <Card className="border-2 border-[#d6955b] bg-gradient-to-br from-[#feeaa1]/20 to-white">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-[#feeaa1]">
+                        <TrendingUp className="h-5 w-5 text-[#18534f]" />
+                      </div>
+                      <h3 className="font-semibold text-lg">Aperçu des modifications</h3>
+                    </div>
+                    
+                    <Card className="border-2 border-[#226d68]">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#18534f] to-[#226d68] flex items-center justify-center text-white text-xl font-bold shadow">
+                            {editName.charAt(0)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900">{editName}</h4>
+                              <Badge variant="secondary" className="bg-[#feeaa1] text-[#18534f] text-xs">
+                                <Hash className="h-3 w-3 mr-1" />
+                                {editCategory || "Sin Catégorie"}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600">{editDescription}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Boutons d'action */}
+              <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-[#226d68] p-4 z-50">
+                <div className="max-w-7xl mx-auto flex gap-3 px-[70px]">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-11 border-2 border-[#226d68] text-[#18534f] hover:bg-[#ecf8f6]"
+                    onClick={() => {
+                      if (community) {
+                        setEditName(community.name || "");
+                        setEditDescription(community.bio || community.description || "");
+                        setEditCategory(community.type || "");
+                      }
+                      setCoverImagePreview("");
+                      setLogoImagePreview("");
+                    }}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={handleSaveSettings}
+                    disabled={isSaving}
+                    className="flex-1 h-11 bg-[#d6955b] hover:bg-[#c5844a] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSaving ? "En cours..." : "Sauvegarder"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
+
+// Wrapper component to read route params and provide a fallback back-navigation
+export function CommunityPageWrapper({ onBack }: { onBack?: () => void }) {
+  const { communityId } = useParams<{ communityId: string }>();
+  const navigate = useNavigate();
+
+  if (!communityId) {
+    return (
+      <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Communauté non trouvée</p>
+          <Button onClick={() => navigate('/community')} className="bg-[#d6955b] hover:bg-[#c5844a] text-white">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour aux communautés
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const handleBack = () => {
+    if (onBack) return onBack();
+    navigate(-1);
+  };
+
+  return <CommunityPage communityId={communityId} onBack={handleBack} />;
+}

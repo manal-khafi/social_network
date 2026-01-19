@@ -8,6 +8,9 @@ import { Provider } from "react-redux";
 import { store } from "./store";
 import { ForgotPasswordScreen } from "./Componenets/Authentification/auth/ForgotPasswordScreen";
 import { ResetPasswordScreen } from "./Componenets/Authentification/auth/resetPassword";
+import { CommunityList } from './Views/communityList';
+import { CommunityPageWrapper } from './Views/communityPage';
+import { CreateCommunity } from './Views/createCommunity';
 
 function App() {
   const handleBack = () => {
@@ -33,6 +36,9 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/index" element={<Home />} />
 
+        <Route path='/community' element={<CommunityList onSelectCommunity={(id) => console.log(id)} onCreateClick={() => console.log("Create community")} />} />
+        <Route path='/community/:communityId' element={<CommunityPageWrapper onBack={handleBack} />} />
+        <Route path='/community/create' element={<CreateCommunity onBack={handleBack} onSubmit={(data) => console.log(data)} />} />
       </Routes>
     </Provider>
   );

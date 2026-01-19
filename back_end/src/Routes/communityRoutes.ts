@@ -9,7 +9,8 @@ const routes = express.Router();
 routes.post("/", communityControllers.createCommunity);
 routes.get("/", communityControllers.getAllCommunities);
 routes.get("/:id", communityControllers.getCommunityById);
-routes.patch("/:id", communityControllers.modifyCommunity);
+routes.put("/:id", communityControllers.modifyCommunity); // Add PUT support
+routes.patch("/:id", communityControllers.modifyCommunity); // Keep PATCH for backward compatibility
 routes.delete("/:id", communityControllers.deleteCommunity);
 
 // this route for handeling the request and send it
