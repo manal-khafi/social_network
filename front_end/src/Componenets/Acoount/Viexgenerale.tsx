@@ -214,20 +214,22 @@ const submitAllDataToBackend = async () => {
     console.log(formData);
     console.log('URL:', 'http://localhost:3500/api/Compte/update/profile');
     try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Token d\'authentification manquant');
+      }
+
       const response = await fetch('http://localhost:3500/api/Compte/update/profile', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         body: formData,
       });
-
-      console.log('=== RÉPONSE ===');
-      console.log('Status:', response.status, response.statusText);
-      console.log('OK?', response.ok);
       
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Erreur du serveur:', errorText);
-        
-        // Essayer de parser comme JSON si possible
         try {
           const errorJson = JSON.parse(errorText);
           console.error('Erreur JSON:', errorJson);
@@ -239,8 +241,6 @@ const submitAllDataToBackend = async () => {
 
       const result = await response.json();
       console.log('Réponse JSON:', result);
-      
-      console.log('=== SAUVEGARDE LOCALE ===');
       localStorage.setItem('userProfile', JSON.stringify({
         username: allData.profile.username,
         profileImage: allData.profile.profileImage,
@@ -252,8 +252,6 @@ const submitAllDataToBackend = async () => {
       if (result.token) {
         localStorage.setItem('authToken', result.token);
       }
-      
-      // Nettoyer
       localStorage.removeItem('setupWizardData');
       
       // Naviguer

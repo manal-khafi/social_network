@@ -1,25 +1,18 @@
 import express from "express";
-// @ts-ignore
 import cors from "cors";
+import path from "path";
 import AuthentificationRoutes from "./Routes/Authentification";
 import commentRouter from "./Routes/Comment";
 import FollowRoutes from "./Routes/Following";
 import SignaleRouter from "./Routes/Signale";
 import ComptRouter from "./Routes/Comproutes";
 import dotenv from "dotenv";
-import multer from "multer";
-
-
-
 import { initializeEmailService } from "./config/EmailConfig";
 
 dotenv.config();
-initializeEmailService();
 
-dotenv.config();
 const port = process.env.PORT || 3500;
 const app = express();
-app.use(express.json());
 
 app.use(cors({
   origin: ["http://localhost:5173"],
@@ -34,34 +27,9 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-});
-
-
-
-dotenv.config();
-
-
-
-app.use(
-  cors({
-    origin: ["http://localhost:5173"],
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-    ],
-    credentials: true,
-    optionsSuccessStatus: 200,
-  })
-);
-
 app.use(express.json());
+
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 initializeEmailService();
 app.use("/api/authentification", AuthentificationRoutes);

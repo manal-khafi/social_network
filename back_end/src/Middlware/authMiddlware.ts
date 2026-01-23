@@ -21,6 +21,8 @@ export const authMiddleware = async (
       return res.status(401).json({ message: "Token manquant" });
     }
 
+
+    
     const token = authHeader.split(" ")[1];
 
     try {

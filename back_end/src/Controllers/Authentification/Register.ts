@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { sendVerificationEmail } from "../../util/EempleEmail";
+import { generateAccessToken } from "../../util/jwt";
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || "ariqerhtuzerj";
 
 export const Register = async (req: Request, res: Response) => {
   try {
@@ -115,10 +114,8 @@ export const Register = async (req: Request, res: Response) => {
     });
 
     // 10. Générer token JWT
-    const token = jwt.sign(
+    const token = generateAccessToken(
       { userId: newUser.id, email: newUser.email },
-      JWT_SECRET,
-      { expiresIn: "7d" }
     );
 
     // 11. Envoi email verification
@@ -140,7 +137,6 @@ export const Register = async (req: Request, res: Response) => {
         bio: newUser.bio,
         avatar_url: newUser.avatar_url,
       },
-      token
     });
 
   } catch (error) {
