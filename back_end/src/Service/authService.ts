@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../config/prismaClient";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { sendResetPasswordEmail } from "../util/EempleEmail";
-
-const prisma = new PrismaClient();
 
 const RESET_SECRET_RAW = process.env.RESET_PASSWORD_SECRET;
 if (!RESET_SECRET_RAW) throw new Error("RESET_PASSWORD_SECRET is not defined");

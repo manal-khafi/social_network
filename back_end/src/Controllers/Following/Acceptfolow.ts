@@ -1,10 +1,7 @@
-import { Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import { AuthRequest } from "../../types/AuthRequest";
+import { Request, Response } from "express";
+import prisma from "../../config/prismaClient";
 
-const prisma = new PrismaClient();
-
-const Acceptdemande = async (req: AuthRequest, res: Response) => {
+const Acceptdemande = async (req: Request, res: Response) => {
   try {
     const demandeId = req.params.demandeId; // string UUID
     const userId = req.user?.id; // string UUID depuis token

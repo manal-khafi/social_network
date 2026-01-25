@@ -5,7 +5,7 @@ import Acceptdemande from "../Controllers/Following/Acceptfolow";
 import { refuseFollowRequest } from "../Controllers/Following/Refusedemande";
 import Following from "../Controllers/Following/Folloing";
 import Follower from "../Controllers/Following/Follower";
-import { authMiddleware } from "../Middlware/authMiddlware";
+import { authMiddleware } from "../Middleware/authMiddlware";
 
 const FollowRoutes= Router();
 

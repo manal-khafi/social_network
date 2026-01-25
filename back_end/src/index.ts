@@ -1,21 +1,26 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import path from "path";
-import AuthentificationRoutes from "./Routes/Authentification";
+import AuthenticationRoutes from "./Routes/Authentication";
 import commentRouter from "./Routes/Comment";
 import FollowRoutes from "./Routes/Following";
 import SignaleRouter from "./Routes/Signale";
 import ComptRouter from "./Routes/Comproutes";
-import dotenv from "dotenv";
+import ProfileRouter from "./Routes/Profile";
 import { initializeEmailService } from "./config/EmailConfig";
-
-dotenv.config();
 
 const port = process.env.PORT || 3500;
 const app = express();
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:5173"];
+
 app.use(cors({
-  origin: ["http://localhost:5173"],
+  origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",
@@ -32,11 +37,12 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 initializeEmailService();
-app.use("/api/authentification", AuthentificationRoutes);
+app.use("/api/authentication", AuthenticationRoutes);
 app.use("/api/comments", commentRouter);
-app.use("/api/Follow", FollowRoutes);
+app.use("/api/follow", FollowRoutes);
 app.use("/api/reports", SignaleRouter);
 app.use("/api/Compte", ComptRouter);
+app.use("/api/profile", ProfileRouter);
 
 app.get("/", (req, res) => {
   res.json({

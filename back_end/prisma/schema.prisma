@@ -83,6 +83,8 @@ model User {
   last_login    DateTime @default(now())
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
+  token_version Int      @default(0)
+  onboarding_done Boolean @default(false)
   
   gender          String?
   date_of_birth   DateTime?

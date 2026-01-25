@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { followUser, unfollowUser } from '../../features/user/userSlice';
-import { Card } from '../../Componenets/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
-import { Button } from '../../Componenets/ui/button';
+import { Card } from '../../Components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
+import { Button } from '../../Components/ui/button';
 import { toast } from 'sonner';
 
 interface FollowersViewProps {

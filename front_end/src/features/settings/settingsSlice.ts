@@ -1,9 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import { loadLanguage } from '../../utils/persistLanguage';
 
 interface SettingsState {
-  theme: 'light' | 'dark';
-  language: 'en' | 'fr' | 'es' | 'ar';
+  theme: 'light' | 'dark' | 'system';
+  language: 'en' | 'fr' | 'es' | 'ar' | 'de';
   notifications: {
     likes: boolean;
     comments: boolean;
@@ -24,8 +25,8 @@ interface SettingsState {
 }
 
 const initialState: SettingsState = {
-  theme: 'light',
-  language: 'en',
+  theme: 'system',
+  language: (loadLanguage() as SettingsState['language']) || 'en',
   notifications: {
     likes: true,
     comments: true,
@@ -44,10 +45,10 @@ const settingsSlice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
-    toggleTheme: (state) => {
-      state.theme = state.theme === 'light' ? 'dark' : 'light';
+    setTheme: (state, action: PayloadAction<'light' | 'dark' | 'system'>) => {
+      state.theme = action.payload;
     },
-    setLanguage: (state, action: PayloadAction<'en' | 'fr' | 'es' | 'ar'>) => {
+    setLanguage: (state, action: PayloadAction<'en' | 'fr' | 'es' | 'ar' | 'de'>) => {
       state.language = action.payload;
     },
     toggleNotification: (state, action: PayloadAction<keyof typeof initialState.notifications>) => {
@@ -75,7 +76,7 @@ const settingsSlice = createSlice({
 });
 
 export const {
-  toggleTheme,
+  setTheme,
   setLanguage,
   toggleNotification,
   toggleAllNotifications,

@@ -1,16 +1,15 @@
 import { Request, Response } from 'express';
-import { prisma } from '../config/prismaClient';
+import prisma from '../config/prismaClient';
 
 export const toggleLike = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.id;
         const { postId } = req.params;
-        const existingLike = await prisma.like.findUnique({
+        const existingLike = await prisma.like.findFirst({
             where: {
-                userId_postId: {
-                    userId: userId!,
-                    postId: postId,
-                },
+                user_id: userId!,
+                post_id: postId,
+                comment_id: null, // Explicitly look for a like on a post, not a comment
             },
         });
         //unlike 
@@ -27,8 +26,8 @@ export const toggleLike = async (req: Request, res: Response) => {
         //like
         await prisma.like.create({
             data: {
-                userId: userId!,
-                postId: postId,
+                user_id: userId!,
+                post_id: postId,
             },
         });
         return res.json({ liked: true,

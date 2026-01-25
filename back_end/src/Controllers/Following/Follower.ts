@@ -1,10 +1,7 @@
-import { Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import { AuthRequest } from "../../types/AuthRequest";
+import { Request, Response } from "express";
+import prisma from "../../config/prismaClient";
 
-const prisma = new PrismaClient();
-
-const Follower = async (req: AuthRequest, res: Response) => {
+const Follower = async (req: Request, res: Response) => {
   const userId = req.params.userId; 
   try {
     const followers = await prisma.follow.findMany({

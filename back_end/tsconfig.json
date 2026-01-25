@@ -4,7 +4,7 @@
     "paths": {
       "@/*": ["*"]
     },
-    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "target": "ES2020",
     "module": "CommonJS",
     "outDir": "./dist",
@@ -18,6 +18,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "exclude": ["node_modules"]
 }

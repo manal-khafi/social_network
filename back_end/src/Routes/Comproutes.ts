@@ -1,7 +1,7 @@
 import { Router } from "express";
-import Create from "../Controllers/Compte/Create";
+import Create from "../Controllers/Account/Create";
 import multer from "multer";
-import { authMiddleware } from "../Middlware/authMiddlware";
+import { authMiddleware } from "../Middleware/authMiddlware";
 
 const ComptRouter = Router();
 const upload = multer({ storage: multer.memoryStorage() });

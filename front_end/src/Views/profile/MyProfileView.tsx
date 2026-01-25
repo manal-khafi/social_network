@@ -1,55 +1,79 @@
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { logout } from '../../features/auth/authSlice';
-import { Edit, Settings, Menu, LogOut} from 'lucide-react';
-import { Button } from '../../Componenets/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../Componenets/ui/tabs';
+import { logoutUser } from '../../features/auth/authSlice';
+import { fetchCurrentUserProfile } from '../../features/user/userSlice';
+import { Edit, Settings, Menu, LogOut, Loader2 } from 'lucide-react';
+import { Button } from '../../Components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../Components/ui/tabs';
+import { PATHS } from '../../routes/paths';
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../../Componenets/ui/dropdown-menu';
-import PostCard from '../../Componenets/post/PostCard';
+} from '../../Components/ui/dropdown-menu';
+import PostCard from '../../Components/post/PostCard';
 
 export default function MyProfileView() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { currentUser } = useAppSelector((state) => state.user);
+
+  const { user: authUser, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { currentUser, status: profileStatus, error: profileError } = useAppSelector((state) => state.user);
   const { feed, savedPosts, archivedPosts } = useAppSelector((state) => state.posts);
   
-  if (!currentUser) return null;
-
-  const userPosts = feed.filter(p => p.userId === currentUser.id);
+  useEffect(() => {
+    // Fetch profile only if we are authenticated and the profile hasn't been fetched yet
+    if (isAuthenticated && !currentUser && profileStatus === 'idle') {
+      dispatch(fetchCurrentUserProfile());
+    }
+  }, [isAuthenticated, currentUser, profileStatus, dispatch]);
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+    dispatch(logoutUser());
+    navigate(PATHS.AUTH);
   };
+
+  const user = currentUser ?? authUser;
+
+  if (profileStatus === 'loading' && !user) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-muted-foreground">Could not load user profile.</p>
+        <Button onClick={() => dispatch(fetchCurrentUserProfile())} className="mt-4">
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  // The backend doesn't provide user posts yet, so this will be empty
+  const userPosts = feed.filter(p => p.userId === user.id);
 
   return (
     <div>
-      {currentUser.coverImage && (
-        <div className="h-48 bg-muted">
-          <img
-            src={currentUser.coverImage}
-            alt="Cover"
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
+      <div className="h-48 bg-muted" />
 
       <div className="p-4">
         <div className="flex items-end justify-between -mt-16 mb-4">
           <Avatar className="w-24 h-24 border-4 border-background">
-            <AvatarImage src={currentUser.avatar} />
-            <AvatarFallback className="text-2xl">{currentUser.username[0].toUpperCase()}</AvatarFallback>
+            <AvatarImage src={user.avatar_url ?? user.avatar ?? undefined} />
+            <AvatarFallback className="text-2xl">{(user?.username?.[0] ?? "?").toUpperCase()}</AvatarFallback>
           </Avatar>
           
           <div className="flex gap-2">
-            <Link to="/profile/edit">
+            <Link to={PATHS.PROFILE_EDIT}>
               <Button variant="outline" size="sm">
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Profile
@@ -63,14 +87,14 @@ export default function MyProfileView() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link to="/settings" className="flex items-center cursor-pointer">
+                  <Link to={PATHS.SETTINGS} className="flex items-center cursor-pointer">
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <button
-                    className="flex items-center cursor-pointer"
+                    className="flex items-center cursor-pointer w-full"
                     onClick={handleLogout}
                   >
                     <LogOut className="w-4 h-4 mr-2" />
@@ -82,20 +106,12 @@ export default function MyProfileView() {
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold">{currentUser.fullName}</h1>
-        <p className="text-muted-foreground">@{currentUser.username}</p>
-        <p className="mt-3">{currentUser.bio}</p>
+        <h1 className="text-2xl font-bold">{user.display_name ?? user.username}</h1>
+        <p className="text-muted-foreground">@{user.username}</p>
+        {user.bio && <p className="mt-3">{user.bio}</p>}
 
-        <div className="flex gap-6 mt-4">
-          <Link to="/profile/me/followers" className="hover:underline">
-            <span className="font-semibold">{currentUser.followersCount.toLocaleString()}</span>{' '}
-            <span className="text-muted-foreground">Followers</span>
-          </Link>
-          <Link to="/profile/me/following" className="hover:underline">
-            <span className="font-semibold">{currentUser.followingCount.toLocaleString()}</span>{' '}
-            <span className="text-muted-foreground">Following</span>
-          </Link>
-        </div>
+        {/* Follower/Following counts are not available from the profile endpoint yet */}
+        {/* <div className="flex gap-6 mt-4"> ... </div> */}
       </div>
 
 
@@ -108,19 +124,11 @@ export default function MyProfileView() {
         </TabsList>
         
         <TabsContent value="posts" className="p-4 space-y-4">
-          {userPosts.filter(p => !p.originalPost).length > 0 ? (
-            userPosts.filter(p => !p.originalPost).map(post => <PostCard key={post.id} post={post} />)
-          ) : (
-            <p className="text-center text-muted-foreground py-8">No posts yet</p>
-          )}
+            <p className="text-center text-muted-foreground py-8">Posts are not yet linked to user profiles.</p>
         </TabsContent>
         
         <TabsContent value="reposts" className="p-4 space-y-4">
-          {userPosts.filter(p => p.originalPost).length > 0 ? (
-            userPosts.filter(p => p.originalPost).map(post => <PostCard key={post.id} post={post} />)
-          ) : (
-            <p className="text-center text-muted-foreground py-8">No reposts yet</p>
-          )}
+            <p className="text-center text-muted-foreground py-8">Reposts are not yet implemented.</p>
         </TabsContent>
         
         <TabsContent value="saved" className="p-4 space-y-4">

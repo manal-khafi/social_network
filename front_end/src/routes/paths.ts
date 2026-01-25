@@ -1,0 +1,17 @@
+export const PATHS = {
+  AUTH: "/",
+  HOME: "/home",
+  FEED: "/home/feed",
+  COMMUNITY: "/home/community",
+  CREATE_POST: "/home/create-post",
+  INBOX: "/home/inbox",
+  INBOX_ARCHIVED: "/home/inbox/archived",
+  NOTIFICATIONS: "/home/notifications",
+  PROFILE_ME: "/home/profile/me",
+  PROFILE_EDIT: "/home/profile/edit",
+  SETTINGS: "/home/settings",
+  SETTINGS_ACCOUNT: "/home/settings/account",
+  SETTINGS_NOTIFICATIONS: "/home/settings/notifications",
+  SETTINGS_PRIVACY: "/home/settings/privacy",
+  SETTINGS_APPEARANCE: "/home/settings/appearance",
+};

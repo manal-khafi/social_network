@@ -3,7 +3,7 @@ import { AuthRequest } from "@/types/AuthRequest";
 import * as BlockService from "@/Service/BlockService";
 
 /**
- * Utilitaire : vérifier l'authentification
+ * Utilitaire : vérifier l'Authentication
  */
 const requireAuth = (userId?: string) => {
   if (!userId) {

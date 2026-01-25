@@ -1,10 +1,7 @@
-import { Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import { AuthRequest } from "../../types/AuthRequest";
+import { Request, Response } from "express";
+import prisma from "../../config/prismaClient";
 
-const prisma = new PrismaClient();
-
-export const deleteComment = async (req: AuthRequest, res: Response) => {
+export const deleteComment = async (req: Request, res: Response) => {
   const commentId = req.params.commentId;
   const userId = req.user?.id;
 

@@ -1,11 +1,8 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import { AuthRequest } from "../../types/AuthRequest";
-
-const prisma = new PrismaClient();
+import prisma from "../../config/prismaClient";
 
 export class ReportController {
-  static async createReport(req: AuthRequest, res: Response) {
+  static async createReport(req: Request, res: Response) {
   try {
     if (!req.user?.id) {
       return res.status(401).json({ message: "Non authentifié" });
@@ -29,7 +26,7 @@ export class ReportController {
     return res.status(500).json({ message: "Erreur lors de la création du report" });
   }
 }
-  static async getAllReports(req: AuthRequest, res: Response) {
+  static async getAllReports(req: Request, res: Response) {
     try {
       const { status } = req.query;
       const reports = await prisma.report.findMany({
@@ -48,7 +45,7 @@ export class ReportController {
       res.status(500).json({ message: "Erreur lors de la récupération des reports" });
     }
   }
-  static async getReportById(req: AuthRequest, res: Response) {
+  static async getReportById(req: Request, res: Response) {
     try {
       const { id } = req.params;
       const report = await prisma.report.findUnique({
@@ -67,7 +64,7 @@ export class ReportController {
       res.status(500).json({ message: "Erreur lors de la récupération du report" });
     }
   }
-  static async updateReportStatus(req: AuthRequest, res: Response) {
+  static async updateReportStatus(req: Request, res: Response) {
     try {
       const { id } = req.params;
       const { status } = req.body;
@@ -83,7 +80,7 @@ export class ReportController {
       res.status(500).json({ message: "Erreur lors de la mise à jour du report" });
     }
   }
-  static async deleteReport(req: AuthRequest, res: Response) {
+  static async deleteReport(req: Request, res: Response) {
     try {
       const { id } = req.params;
 
@@ -95,7 +92,7 @@ export class ReportController {
       res.status(500).json({ message: "Erreur lors de la suppression du report" });
     }
   }
-  static async getReportsByUser(req: AuthRequest, res: Response) {
+  static async getReportsByUser(req: Request, res: Response) {
     try {
       const { userId } = req.params;
 

@@ -1,0 +1,71 @@
+
+/* ==========================================================================
+   ACCESSIBILITY STYLES
+   ========================================================================== */
+
+/* --- High Contrast --- */
+.a11y-contrast {
+  --border: color-mix(in srgb, var(--foreground) 50%, transparent);
+  --muted-foreground: color-mix(in srgb, var(--foreground) 85%, transparent);
+  --ring: color-mix(in srgb, var(--foreground) 100%, transparent);
+}
+
+.a11y-contrast.dark {
+  --border: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+/* --- Reduced Motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.a11y-reduced-motion *,
+.a11y-reduced-motion *::before,
+.a11y-reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* --- Screen Reader --- */
+.a11y-skip-link {
+  position: absolute;
+  left: -9999px;
+  padding: 1rem 1.5rem;
+  background-color: var(--background);
+  color: var(--foreground);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius);
+  font-weight: 500;
+}
+
+.a11y-skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 9999;
+}
+
+.a11y-screen-reader :focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+
+/* --- Larger Touch Targets --- */
+.a11y-touch button,
+.a11y-touch [role="button"],
+.a11y-touch a,
+.a11y-touch input,
+.a11y-touch select,
+.a11y-touch textarea {
+  min-height: 44px;
+}
+
+.a11y-touch button {
+  min-width: 44px;
+}

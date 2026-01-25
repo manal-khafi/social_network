@@ -5,10 +5,16 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    host: true,           // 👈 rend le serveur accessible hors container
-    port: 5173,           // 👈 doit matcher le port docker-compose
+    host: "0.0.0.0",
+    port: 5173,
+    strictPort: true,
+    hmr: {
+      protocol: "ws",
+      host: "127.0.0.1",   // browser connects to your host machine
+      clientPort: 5173,
+    },
     watch: {
-      usePolling: true,   // 👈 permet la détection des changements avec volumes
-    }
-  }
+      usePolling: true,
+    },
+  },
 });

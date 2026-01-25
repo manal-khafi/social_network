@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { viewStory, toggleStoryLike } from '../../features/stories/storiesSlice';
 import { X, Heart, Send, Pause, Play } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
-import { Input } from '../../Componenets/ui/input';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
+import { Input } from '../../Components/ui/input';
 import { motion } from 'motion/react';
 
 export default function StoryViewerView() {

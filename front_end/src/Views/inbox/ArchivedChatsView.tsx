@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../hooks';
-import { Card } from '../../Componenets/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
+import { Card } from '../../Components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { Archive } from 'lucide-react';
 
 export default function ArchivedChatsView() {

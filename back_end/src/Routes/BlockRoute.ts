@@ -7,12 +7,12 @@ import {
   getBlockedCount,
   getBlockedUsers,
 } from "../Controllers/Block/BlockController";
-import { authMiddleware } from "../Middlware/authMiddlware";
-import { checkBlockMiddleware } from "../Middlware/Block/CheckBlockMiddleware";
+import { authMiddleware } from "../Middleware/authMiddlware";
+import { checkBlockMiddleware } from "../Middleware/Block/CheckBlockMiddleware";
 
 const router = Router();
 
-// Toutes les routes nécessitent une authentification
+// Toutes les routes nécessitent une Authentication
 router.use(authMiddleware);
 
 // POST /api/blocks - Bloquer un utilisateur

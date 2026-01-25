@@ -1,30 +1,31 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { addPost } from '../../features/posts/postsSlice';
-import { Button } from '../../Componenets/ui/button';
-import { Textarea } from '../../Componenets/ui/textarea';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
+import { Button } from '../../Components/ui/button';
+import { Textarea } from '../../Components/ui/textarea';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { X, Image as ImageIcon, Smile, MapPin, ArrowLeft } from 'lucide-react';
-import { Card } from '../../Componenets/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '../../Componenets/ui/popover';
+import { Card } from '../../Components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '../../Components/ui/popover';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
+import { PATHS } from '../../routes/paths';
 
 export default function CreatePostView() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { currentUser } = useAppSelector((state) => state.user);
+  const { user: authUser } = useAppSelector((state) => state.auth);
   const [content, setContent] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePost = () => {
-    if (content.trim() && currentUser) {
+    if (content.trim() && authUser) {
       dispatch(addPost({
-        userId: currentUser.id,
-        username: currentUser.username,
-        avatar: currentUser.avatar,
+        userId: authUser.id,
+        username: authUser.username,
+        avatar: authUser.avatar,
         content,
         images: images.length > 0 ? images : undefined,
         commentsAllowed: true,
@@ -34,7 +35,7 @@ export default function CreatePostView() {
         isReposted: false,
       }));
       toast.success('Post created successfully');
-      navigate('/');
+      navigate(PATHS.HOME);
     }
   };
 
@@ -55,14 +56,24 @@ export default function CreatePostView() {
     setContent(prev => prev + emojiData.emoji);
   };
 
-  if (!currentUser) return null;
+  if (!authUser) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h1 className="text-2xl font-bold mb-4">Authentication Error</h1>
+        <p className="mb-4">You must be logged in to create a post.</p>
+        <Link to={PATHS.AUTH} className="text-blue-500 hover:underline">
+          Go to Login
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
-          <button onClick={() => navigate('/')} className="p-2 hover:bg-muted rounded-full">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h2 className="font-semibold">Create Post</h2>
@@ -81,12 +92,12 @@ export default function CreatePostView() {
             {/* User Info */}
             <div className="flex items-start gap-3 mb-4">
               <Avatar>
-                <AvatarImage src={currentUser.avatar} />
-                <AvatarFallback>{currentUser.username[0].toUpperCase()}</AvatarFallback>
+                <AvatarImage src={authUser.avatar ?? undefined} />
+                <AvatarFallback>{(authUser.username?.[0] ?? "?").toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <p className="font-semibold">{currentUser.fullName}</p>
-                <p className="text-sm text-muted-foreground">@{currentUser.username}</p>
+                <p className="font-semibold">{authUser.username ?? "User"}</p>
+                <p className="text-sm text-muted-foreground">@{authUser.username ?? "unknown"}</p>
               </div>
             </div>
 
@@ -175,13 +186,13 @@ export default function CreatePostView() {
               <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Preview</h3>
               <div className="flex gap-3">
                 <Avatar>
-                  <AvatarImage src={currentUser.avatar} />
-                  <AvatarFallback>{currentUser.username[0].toUpperCase()}</AvatarFallback>
+                  <AvatarImage src={authUser.avatar ?? undefined} />
+                  <AvatarFallback>{(authUser.username?.[0] ?? "?").toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">{currentUser.fullName}</span>
-                    <span className="text-sm text-muted-foreground">@{currentUser.username}</span>
+                    <span className="font-semibold">{authUser.username}</span>
+                    <span className="text-sm text-muted-foreground">@{authUser.username}</span>
                     <span className="text-sm text-muted-foreground">· now</span>
                   </div>
                   <p className="mt-1 whitespace-pre-wrap">{content}</p>

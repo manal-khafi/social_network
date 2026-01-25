@@ -1,10 +1,10 @@
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { markAsRead, markAllAsRead } from '../../features/notifications/notificationsSlice';
 import { acceptFollowRequest, denyFollowRequest } from '../../features/user/userSlice';
-import { Card } from '../../Componenets/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
-import { Button } from '../../Componenets/ui/button';
-import { Separator } from '../../Componenets/ui/separator';
+import { Card } from '../../Components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
+import { Button } from '../../Components/ui/button';
+import { Separator } from '../../Components/ui/separator';
 import { Heart, MessageCircle, UserPlus, Repeat, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 

@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { unblockUser } from '../../features/user/userSlice';
 import { ArrowLeft, Lock, Eye, MessageCircle, UserX, Download, Clock, Trash2 } from 'lucide-react';
-import { Card } from '../../Componenets/ui/card';
-import { Button } from '../../Componenets/ui/button';
-import { Switch } from '../../Componenets/ui/switch';
-import { Separator } from '../../Componenets/ui/separator';
-import { RadioGroup, RadioGroupItem } from '../../Componenets/ui/radio-group';
-import { Label } from '../../Componenets/ui/label';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../Componenets/ui/dialog';
+import { Card } from '../../Components/ui/card';
+import { Button } from '../../Components/ui/button';
+import { Switch } from '../../Components/ui/switch';
+import { Separator } from '../../Components/ui/separator';
+import { RadioGroup, RadioGroupItem } from '../../Components/ui/radio-group';
+import { Label } from '../../Components/ui/label';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../Components/ui/dialog';
 import { toast } from 'sonner';
 
 export default function PrivacyView() {

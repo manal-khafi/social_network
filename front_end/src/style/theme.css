@@ -1,14 +1,16 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-size: 16px;
+  /* Global font size */
+  --app-font-size: 16px;
+
   /* ANMOUGAR Color Palette */
   --anm-primary: #18534f; /* Deep green */
   --anm-secondary: #226d68; /* Teal */
   --anm-background: #ecf8f6; /* Soft white */
   --anm-accent: #feeaa1; /* Sand */
   --anm-cta: #d6955b; /* Warm ochre */
-  
+
   --background: var(--anm-background);
   --foreground: #1a1a1a;
   --card: #ffffff;
@@ -29,15 +31,19 @@
   --input: transparent;
   --input-background: #ffffff;
   --switch-background: #d1d5db;
+
   --font-weight-medium: 500;
   --font-weight-normal: 400;
+
   --ring: var(--anm-primary);
   --radius: 0.75rem;
+
   --chart-1: var(--anm-primary);
   --chart-2: var(--anm-secondary);
   --chart-3: var(--anm-cta);
   --chart-4: var(--anm-accent);
   --chart-5: #94a3b8;
+
   --sidebar: #ffffff;
   --sidebar-foreground: #1a1a1a;
   --sidebar-primary: var(--anm-primary);
@@ -46,6 +52,37 @@
   --sidebar-accent-foreground: #1a1a1a;
   --sidebar-border: rgba(34, 109, 104, 0.1);
   --sidebar-ring: var(--anm-primary);
+  
+  /* Layout Density */
+  --density-space-xs: 0.25rem;
+  --density-space-sm: 0.5rem;
+  --density-space-md: 1rem;
+  --density-space-lg: 1.5rem;
+  --density-space-xl: 2.5rem;
+}
+
+.density-compact {
+  --density-space-xs: 0.125rem;
+  --density-space-sm: 0.25rem;
+  --density-space-md: 0.75rem;
+  --density-space-lg: 1rem;
+  --density-space-xl: 2rem;
+}
+
+.density-comfortable {
+  --density-space-xs: 0.25rem;
+  --density-space-sm: 0.5rem;
+  --density-space-md: 1rem;
+  --density-space-lg: 1.5rem;
+  --density-space-xl: 2.5rem;
+}
+
+.density-spacious {
+  --density-space-xs: 0.5rem;
+  --density-space-sm: 0.75rem;
+  --density-space-md: 1.5rem;
+  --density-space-lg: 2rem;
+  --density-space-xl: 3rem;
 }
 
 .dark {
@@ -70,13 +107,13 @@
   --input-background: rgba(82, 173, 166, 0.05);
   --switch-background: #3f4b52;
   --ring: #226d68;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
+
   --chart-1: #226d68;
   --chart-2: #52ada6;
   --chart-3: #d6955b;
   --chart-4: #feeaa1;
   --chart-5: #64748b;
+
   --sidebar: #1a1f26;
   --sidebar-foreground: #e8f4f2;
   --sidebar-primary: #226d68;
@@ -133,18 +170,17 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    font-size: var(--app-font-size);
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-size: var(--app-font-size);
   }
 
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
-
-  html {
-    font-size: var(--font-size);
-  }
+  /* Default typography styles for HTML elements.
+     Tailwind utilities (text-sm, text-lg...) will override these. */
 
   h1 {
     font-size: var(--text-2xl);

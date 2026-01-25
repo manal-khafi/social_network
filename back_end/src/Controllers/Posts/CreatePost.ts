@@ -1,10 +1,8 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { PrismaClient, PostVisibility } from "@prisma/client";
-import { AuthRequest } from "../../types/AuthRequest";
+import prisma from "../../config/prismaClient";
 
-const prisma = new PrismaClient();
-
-export const createPost = async (req: AuthRequest, res: Response) => {
+export const createPost = async (req: Request, res: Response) => {
   try {
     if (!req.user?.id) {
       return res.status(401).json({ message: "Non authentifié" });
@@ -19,7 +17,7 @@ export const createPost = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: "media_urls must be an array of strings" });
     }
 
-    if (media_urls && !media_urls.every(m => typeof m === "string")) {
+    if (media_urls && !media_urls.every((m: string) => typeof m === "string")) {
       return res.status(400).json({ message: "Each media URL must be a string" });
     }
 

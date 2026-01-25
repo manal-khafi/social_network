@@ -1,5 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import api from '../../api/axios';
 
 export interface Comment {
   id: string;
@@ -45,109 +46,24 @@ interface PostsState {
   archivedPosts: Post[];
   userPosts: { [userId: string]: Post[] };
   postComments: { [postId: string]: Comment[] };
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
 }
 
-const mockPosts: Post[] = [
-  {
-    id: '1',
-    userId: '2',
-    username: 'jane_smith',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-    content: 'Just captured this amazing sunset! 🌅 The colors were absolutely breathtaking.',
-    images: ['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'],
-    likes: 234,
-    comments: 45,
-    shares: 12,
-    saves: 67,
-    isLiked: false,
-    isSaved: false,
-    isReposted: false,
-    isArchived: false,
-    timestamp: '2h ago',
-    commentsAllowed: true,
-    likesVisible: true,
-  },
-  {
-    id: '2',
-    userId: '3',
-    username: 'mike_wilson',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-    content: 'Morning workout done! 💪 Remember, consistency is key. #fitness #motivation',
-    likes: 456,
-    comments: 23,
-    shares: 8,
-    saves: 34,
-    isLiked: false,
-    isSaved: false,
-    isReposted: false,
-    isArchived: false,
-    timestamp: '4h ago',
-    commentsAllowed: true,
-    likesVisible: true,
-  },
-];
-
 const initialState: PostsState = {
-  feed: mockPosts,
+  feed: [],
   savedPosts: [],
   archivedPosts: [],
   userPosts: {},
-  postComments: {
-    '1': [
-      {
-        id: 'c1',
-        postId: '1',
-        userId: '3',
-        username: 'mike_wilson',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-        content: 'Absolutely stunning! 😍',
-        likes: 5,
-        isLiked: false,
-        timestamp: '1h ago',
-        replies: [
-          {
-            id: 'r1',
-            postId: '1',
-            userId: '2',
-            username: 'jane_smith',
-            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-            content: 'Thank you! 🙏',
-            likes: 2,
-            isLiked: false,
-            timestamp: '45m ago',
-            replies: [],
-          },
-        ],
-      },
-      {
-        id: 'c2',
-        postId: '1',
-        userId: '1',
-        username: 'john_doe',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
-        content: 'Great shot! What camera did you use?',
-        likes: 1,
-        isLiked: true,
-        timestamp: '30m ago',
-        replies: [],
-      },
-    ],
-    '2': [
-      {
-        id: 'c3',
-        postId: '2',
-        userId: '2',
-        username: 'jane_smith',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-        content: 'So inspiring! 💪',
-        likes: 8,
-        isLiked: false,
-        timestamp: '3h ago',
-        replies: [],
-      },
-    ],
-  },
+  postComments: {},
+  status: 'idle',
+  error: null,
 };
+
+export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
+  const response = await api.get('/posts');
+  return response.data;
+});
 
 const postsSlice = createSlice({
   name: 'posts',
@@ -194,9 +110,9 @@ const postsSlice = createSlice({
         const repost: Post = {
           ...originalPost,
           id: Date.now().toString(),
-          userId: '1',
-          username: 'john_doe',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+          userId: '1', // TODO: Get from auth state
+          username: 'current_user', // TODO: Get from auth state
+          avatar: '',
           timestamp: 'Just now',
           originalPost: {
             id: originalPost.id,
@@ -217,9 +133,9 @@ const postsSlice = createSlice({
         const newComment: Comment = {
           id: Date.now().toString(),
           postId,
-          userId: '1',
-          username: 'john_doe',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+          userId: '1', // TODO: Get from auth state
+          username: 'current_user',
+          avatar: '',
           content,
           likes: 0,
           isLiked: false,
@@ -255,8 +171,8 @@ const postsSlice = createSlice({
             id: Date.now().toString(),
             postId,
             userId: '1',
-            username: 'john_doe',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+            username: 'current_user',
+            avatar: '',
             content,
             likes: 0,
             isLiked: false,
@@ -291,7 +207,7 @@ const postsSlice = createSlice({
     },
     archivePost: (state, action: PayloadAction<string>) => {
       const post = state.feed.find(p => p.id === action.payload);
-      if (post && post.userId === '1') {
+      if (post) {
         post.isArchived = true;
         state.archivedPosts.push(post);
         state.feed = state.feed.filter(p => p.id !== action.payload);
@@ -307,16 +223,30 @@ const postsSlice = createSlice({
     },
     toggleCommentsAllowed: (state, action: PayloadAction<string>) => {
       const post = state.feed.find(p => p.id === action.payload);
-      if (post && post.userId === '1') {
+      if (post) {
         post.commentsAllowed = !post.commentsAllowed;
       }
     },
     toggleLikesVisible: (state, action: PayloadAction<string>) => {
       const post = state.feed.find(p => p.id === action.payload);
-      if (post && post.userId === '1') {
+      if (post) {
         post.likesVisible = !post.likesVisible;
       }
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchPosts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchPosts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.feed = action.payload;
+      })
+      .addCase(fetchPosts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message || 'Failed to fetch posts';
+      });
   },
 });
 

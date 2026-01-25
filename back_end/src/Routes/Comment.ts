@@ -2,7 +2,7 @@ import  Comment  from "../Controllers/Comment/CreateComment";
 import { deleteComment } from "../Controllers/Comment/deleteComment";
 import modifierComment from "../Controllers/Comment/ModifierComment";
 import getCommet from "../Controllers/Comment/getComment";
-import { authMiddleware } from "../Middlware/authMiddlware";
+import { authMiddleware } from "../Middleware/authMiddlware";
 import { Router } from "express";
 
 const commentRouter= Router();

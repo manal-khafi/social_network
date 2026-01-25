@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
-import { Response } from "express";
-import { AuthRequest } from "../../types/AuthRequest";
-const prisma = new PrismaClient();
+import prisma from "../../config/prismaClient";
+import { Request, Response } from "express";
 
-const modifierComment = async (req:AuthRequest, res: Response)=>{
+const modifierComment = async (req: Request, res: Response)=>{
     try{
         const {commentId} = req.params;
         const {content}= req.body;

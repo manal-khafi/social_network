@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 
-import { LoginScreen } from "../Componenets/Authentification/auth/LoginScreen.tsx";
-import { RegisterScreen } from "../Componenets/Authentification/auth/RegisterScreen.tsx";
-import { ForgotPasswordScreen } from "../Componenets/Authentification/auth/ForgotPasswordScreen.tsx";
-import { ResetPasswordScreen } from "../Componenets/Authentification/auth/resetPassword.tsx";
-import { LeftSide } from "../Componenets/Authentification/auth/LeftSide.tsx";
+import { LoginScreen } from "../Components/Authentication/auth/LoginScreen.tsx";
+import { RegisterScreen } from "../Components/Authentication/auth/RegisterScreen.tsx";
+import { ForgotPasswordScreen } from "../Components/Authentication/auth/ForgotPasswordScreen.tsx";
+import { ResetPasswordScreen } from "../Components/Authentication/auth/resetPassword.tsx";
+import { LeftSide } from "../Components/Authentication/auth/LeftSide.tsx";
 
 type Screen = "login" | "register" | "forgotPassword";
 

@@ -1,0 +1,28 @@
+
+/* ==========================================================================
+   DENSITY-AWARE STYLES
+   ========================================================================== */
+
+.p-density { padding: var(--density-space-md); }
+.px-density { padding-left: var(--density-space-md); padding-right: var(--density-space-md); }
+.py-density { padding-top: var(--density-space-md); padding-bottom: var(--density-space-md); }
+
+.space-y-density > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--density-space-md);
+}
+
+.gap-density { gap: var(--density-space-md); }
+
+/* Apply to common components */
+.card,
+[data-card] {
+  padding: var(--density-space-md);
+}
+
+section {
+  margin-bottom: var(--density-space-lg);
+}
+
+.form-group { 
+  margin-bottom: var(--density-space-md);
+}

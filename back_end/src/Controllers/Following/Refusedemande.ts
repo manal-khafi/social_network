@@ -1,10 +1,7 @@
-import { Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import { AuthRequest } from "../../types/AuthRequest";
+import { Request, Response } from "express";
+import prisma from "../../config/prismaClient";
 
-const prisma = new PrismaClient();
-
-export const refuseFollowRequest = async (req: AuthRequest, res: Response) => {
+export const refuseFollowRequest = async (req: Request, res: Response) => {
   try {
     const { requestId } = req.params; // UUID string
 

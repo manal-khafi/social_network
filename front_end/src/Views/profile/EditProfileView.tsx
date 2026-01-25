@@ -1,71 +1,81 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { updateProfile } from '../../features/user/userSlice';
-import { togglePrivacy } from '../../features/user/userSlice';
-import { Card } from '../../Componenets/ui/card';
-import { Input } from '../../Componenets/ui/input';
-import { Textarea } from '../../Componenets/ui/textarea';
-import { Button } from '../../Componenets/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
-import { Switch } from '../../Componenets/ui/switch';
-import { Separator } from '../../Componenets/ui/separator';
+import { updateProfile, togglePrivacy } from '../../features/user/userSlice';
+import { Card } from '../../Components/ui/card';
+import { Input } from '../../Components/ui/input';
+import { Textarea } from '../../Components/ui/textarea';
+import { Button } from '../../Components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
+import { Switch } from '../../Components/ui/switch';
+import { Separator } from '../../Components/ui/separator';
 import { Camera, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { PATHS } from '../../routes/paths';
 
 export default function EditProfileView() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { currentUser } = useAppSelector((state) => state.user);
+
   const profilePicRef = useRef<HTMLInputElement>(null);
   const coverPicRef = useRef<HTMLInputElement>(null);
-  
+
   const [formData, setFormData] = useState({
-    username: currentUser?.username || '',
-    fullName: currentUser?.fullName || '',
-    bio: currentUser?.bio || '',
+    username: '',
+    fullName: '',
+    bio: '',
     location: '',
     dateOfBirth: '',
   });
 
-  const [isPrivate, setIsPrivate] = useState(!currentUser?.isPublic);
+  const [isPrivate, setIsPrivate] = useState<boolean>(false);
 
   useEffect(() => {
-    if (currentUser) {
-      setFormData({
-        username: currentUser.username,
-        fullName: currentUser.fullName,
-        bio: currentUser.bio,
-        location: '',
-        dateOfBirth: '',
-      });
-      setIsPrivate(!currentUser.isPublic);
-    }
+    if (!currentUser) return;
+
+    setFormData({
+      username: currentUser.username ?? '',
+      fullName: currentUser.display_name ?? '',
+      bio: currentUser.bio ?? '',
+      location: '',
+      dateOfBirth: '',
+    });
+
+    // If isPublic is missing, default to public (=> isPrivate false)
+    setIsPrivate(!(currentUser.isPublic ?? true));
   }, [currentUser]);
 
   const handleSave = () => {
-    dispatch(updateProfile({
-      username: formData.username,
-      fullName: formData.fullName,
-      bio: formData.bio,
-    }));
-    
-    if (isPrivate !== !currentUser?.isPublic) {
+    if (!currentUser) return;
+
+    // Keep payload aligned with your UserProfile shape
+    dispatch(
+      updateProfile({
+        username: formData.username,
+        display_name: formData.fullName,
+        bio: formData.bio,
+      } as any)
+    );
+
+    // Only toggle if changed
+    const currentIsPrivate = !(currentUser.isPublic ?? true);
+    if (isPrivate !== currentIsPrivate) {
       dispatch(togglePrivacy());
     }
-    
+
     toast.success('Profile updated successfully');
-    navigate('/profile/me');
+    navigate(PATHS.PROFILE_ME);
   };
 
   const handleCancel = () => {
-    navigate('/profile/me');
+    navigate(PATHS.PROFILE_ME);
   };
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real app, this would upload the file
+      // TODO: upload to backend
       toast.success('Profile picture updated');
     }
   };
@@ -73,7 +83,7 @@ export default function EditProfileView() {
   const handleCoverPicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real app, this would upload the file
+      // TODO: upload to backend
       toast.success('Cover photo updated');
     }
   };
@@ -89,11 +99,7 @@ export default function EditProfileView() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h2 className="font-semibold">Edit Profile</h2>
-          <Button
-            onClick={handleSave}
-            size="sm"
-            className="bg-[#d6955b] hover:bg-[#c58549]"
-          >
+          <Button onClick={handleSave} size="sm" className="bg-[#d6955b] hover:bg-[#c58549]">
             Save
           </Button>
         </div>
@@ -102,9 +108,9 @@ export default function EditProfileView() {
           {/* Cover Photo */}
           <Card className="overflow-hidden">
             <div className="relative h-48 bg-muted">
-              {currentUser.coverImage && (
+              {(currentUser as any).coverImage && (
                 <img
-                  src={currentUser.coverImage}
+                  src={(currentUser as any).coverImage}
                   alt="Cover"
                   className="w-full h-full object-cover"
                 />
@@ -116,7 +122,7 @@ export default function EditProfileView() {
                 onChange={handleCoverPicChange}
                 className="hidden"
               />
-              <button 
+              <button
                 onClick={() => coverPicRef.current?.click()}
                 className="absolute bottom-4 right-4 p-3 bg-background/90 rounded-full hover:bg-background shadow-lg"
               >
@@ -131,9 +137,9 @@ export default function EditProfileView() {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <Avatar className="w-24 h-24">
-                  <AvatarImage src={currentUser.avatar} />
+                  <AvatarImage src={currentUser.avatar_url ?? undefined} />
                   <AvatarFallback className="text-2xl">
-                    {currentUser.username[0].toUpperCase()}
+                    {(currentUser.username?.[0] ?? '?').toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <input
@@ -143,20 +149,17 @@ export default function EditProfileView() {
                   onChange={handleProfilePicChange}
                   className="hidden"
                 />
-                <button 
+                <button
                   onClick={() => profilePicRef.current?.click()}
                   className="absolute bottom-0 right-0 p-2 bg-primary rounded-full text-primary-foreground hover:bg-primary/90 shadow-lg"
                 >
                   <Camera className="w-4 h-4" />
                 </button>
               </div>
+
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">
-                  Upload a new profile picture
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  JPG, PNG or GIF. Max 5MB
-                </p>
+                <p className="text-sm text-muted-foreground">Upload a new profile picture</p>
+                <p className="text-xs text-muted-foreground mt-1">JPG, PNG or GIF. Max 5MB</p>
               </div>
             </div>
           </Card>
@@ -164,7 +167,7 @@ export default function EditProfileView() {
           {/* Basic Information */}
           <Card className="p-6 space-y-4">
             <h3 className="font-semibold">Basic Information</h3>
-            
+
             <div className="space-y-2">
               <label className="text-sm">Username</label>
               <Input
@@ -172,9 +175,7 @@ export default function EditProfileView() {
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 placeholder="username"
               />
-              <p className="text-xs text-muted-foreground">
-                Your unique username on ANMOUGAR
-              </p>
+              <p className="text-xs text-muted-foreground">Your unique username on ANMOUGAR</p>
             </div>
 
             <div className="space-y-2">
@@ -196,7 +197,7 @@ export default function EditProfileView() {
                 rows={4}
               />
               <p className="text-xs text-muted-foreground text-right">
-                {formData.bio.length}/150
+                {(formData.bio ?? '').length}/150
               </p>
             </div>
           </Card>
@@ -204,7 +205,7 @@ export default function EditProfileView() {
           {/* Additional Information */}
           <Card className="p-6 space-y-4">
             <h3 className="font-semibold">Additional Information</h3>
-            
+
             <div className="space-y-2">
               <label className="text-sm">Location</label>
               <Input
@@ -221,16 +222,14 @@ export default function EditProfileView() {
                 onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                 type="date"
               />
-              <p className="text-xs text-muted-foreground">
-                This won't be shown publicly
-              </p>
+              <p className="text-xs text-muted-foreground">This won't be shown publicly</p>
             </div>
           </Card>
 
           {/* Privacy Settings */}
           <Card className="p-6 space-y-4">
             <h3 className="font-semibold">Privacy</h3>
-            
+
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="font-medium">Private Account</p>
@@ -238,10 +237,7 @@ export default function EditProfileView() {
                   Only approved followers can see your posts and stories
                 </p>
               </div>
-              <Switch
-                checked={isPrivate}
-                onCheckedChange={setIsPrivate}
-              />
+              <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
             </div>
 
             <Separator />
@@ -249,9 +245,7 @@ export default function EditProfileView() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="font-medium">Allow Comments</p>
-                <p className="text-sm text-muted-foreground">
-                  People can comment on your posts
-                </p>
+                <p className="text-sm text-muted-foreground">People can comment on your posts</p>
               </div>
               <Switch defaultChecked />
             </div>
@@ -273,9 +267,7 @@ export default function EditProfileView() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="font-medium">Show Activity Status</p>
-                <p className="text-sm text-muted-foreground">
-                  Let people see when you're online
-                </p>
+                <p className="text-sm text-muted-foreground">Let people see when you're online</p>
               </div>
               <Switch defaultChecked />
             </div>
@@ -283,17 +275,10 @@ export default function EditProfileView() {
 
           {/* Action Buttons */}
           <div className="flex gap-3 pb-6">
-            <Button
-              onClick={handleCancel}
-              variant="outline"
-              className="flex-1"
-            >
+            <Button onClick={handleCancel} variant="outline" className="flex-1">
               Cancel
             </Button>
-            <Button
-              onClick={handleSave}
-              className="flex-1 bg-[#d6955b] hover:bg-[#c58549]"
-            >
+            <Button onClick={handleSave} className="flex-1 bg-[#d6955b] hover:bg-[#c58549]">
               Save Changes
             </Button>
           </div>

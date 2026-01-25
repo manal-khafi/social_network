@@ -2,11 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { toggleAllNotifications, toggleNotification, updateNotificationChannel } from '../../features/settings/settingsSlice';
 import { ArrowLeft, Bell, Smartphone, Mail, MessageSquare } from 'lucide-react';
-import { Card } from '../../Componenets/ui/card';
-import { Switch } from '../../Componenets/ui/switch';
-import { Separator } from '../../Componenets/ui/separator';
-import { RadioGroup, RadioGroupItem } from '../../Componenets/ui/radio-group';
-import { Label } from '../../Componenets/ui/label';
+import { Card } from '../../Components/ui/card';
+import { Switch } from '../../Components/ui/switch';
+import { Separator } from '../../Components/ui/separator';
+import { RadioGroup, RadioGroupItem } from '../../Components/ui/radio-group';
+import { Label } from '../../Components/ui/label';
 
 export default function NotificationsView() {
   const navigate = useNavigate();

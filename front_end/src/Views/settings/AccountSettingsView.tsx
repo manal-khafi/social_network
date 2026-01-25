@@ -4,14 +4,14 @@ import { useAppSelector, useAppDispatch } from '../../hooks';
 import { updateProfile, togglePrivacy } from '../../features/user/userSlice';
 import { logout } from '../../features/auth/authSlice';
 import { ArrowLeft, Camera, Mail, Phone, Lock, Shield, LogOut, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
-import { Card } from '../../Componenets/ui/card';
-import { Input } from '../../Componenets/ui/input';
-import { Textarea } from '../../Componenets/ui/textarea';
-import { Button } from '../../Componenets/ui/button';
-import { Switch } from '../../Componenets/ui/switch';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
-import { Separator } from '../../Componenets/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../Componenets/ui/dialog';
+import { Card } from '../../Components/ui/card';
+import { Input } from '../../Components/ui/input';
+import { Textarea } from '../../Components/ui/textarea';
+import { Button } from '../../Components/ui/button';
+import { Switch } from '../../Components/ui/switch';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
+import { Separator } from '../../Components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../Components/ui/dialog';
 import { toast } from 'sonner';
 
 export default function AccountSettingsView() {

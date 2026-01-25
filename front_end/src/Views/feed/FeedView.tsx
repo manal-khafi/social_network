@@ -1,6 +1,6 @@
 import { useAppSelector } from '../../hooks';
-import StoryBar from '../../Componenets/story/StoryBar';
-import PostCard from '../../Componenets/post/PostCard';
+import StoryBar from '../../Components/story/StoryBar';
+import PostCard from '../../Components/post/PostCard';
 
 export default function FeedView() {
   const { feed } = useAppSelector((state) => state.posts);

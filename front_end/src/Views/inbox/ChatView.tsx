@@ -9,12 +9,12 @@ import {
   Phone, Video, MoreVertical, CheckCheck, Check, MapPin, 
   Calendar, BarChart3, Play, Archive, Ban, Trash2, UserCircle
 } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
-import { Input } from '../../Componenets/ui/input';
-import { Button } from '../../Componenets/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../Componenets/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '../../Componenets/ui/popover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../../Componenets/ui/dropdown-menu';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
+import { Input } from '../../Components/ui/input';
+import { Button } from '../../Components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../Components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '../../Components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../../Components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import EmojiPicker from 'emoji-picker-react';
 

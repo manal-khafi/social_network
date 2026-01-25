@@ -20,10 +20,8 @@ export const blockUser = async (blockerId: string, blockedId: string) => {
   validateBlockAction(blockerId, blockedId);
   const alredayBlocked = await prisma.block.findFirst({
     where: {
-      blocker_id_blocked_id: {
-        blocker_id: blockerId,
-        blocked_id: blockedId,
-      },
+      blocker_id: blockerId,
+      blocked_id: blockedId,
     },
   });
 
@@ -66,7 +64,7 @@ export const unblockUser = async (blockerId: string, blockedId: string) => {
   validateBlockAction(blockerId, blockedId);
   const block = await prisma.block.findUnique({
     where: {
-      blocker_id_blocked_id: {
+      blocker_id_blocked_id: { // Correct syntax for findUnique on composite unique key
         blocker_id: blockerId,
         blocked_id: blockedId,
       },
@@ -100,7 +98,7 @@ export const isBlocked = async (
     },
   });
 
-  return block > 0;
+  return block !== null;
 };
 
 /**

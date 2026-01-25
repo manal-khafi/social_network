@@ -1,7 +1,7 @@
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { joinCommunity, leaveCommunity } from '../../features/communities/communitiesSlice';
-import { Button } from '../../Componenets/ui/button';
-import { Card } from '../../Componenets/ui/card';
+import { Button } from '../../Components/ui/button';
+import { Card } from '../../Components/ui/card';
 import { Users } from 'lucide-react';
 
 export default function CommunityView() {

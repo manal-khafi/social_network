@@ -1,7 +1,7 @@
 // src/routes/reportRoutes.ts
 import { Router } from "express";
 import { ReportController } from "../Controllers/Signale/Create";
-import { authMiddleware } from "../Middlware/authMiddlware";
+import { authMiddleware } from "../Middleware/authMiddlware";
 
 const SignaleRouter = Router();
 

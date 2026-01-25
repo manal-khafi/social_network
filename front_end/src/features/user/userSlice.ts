@@ -1,17 +1,21 @@
-import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import api from "../../api/axios";
+import type { RootState } from "../../store";
 
-export interface User {
+export interface UserProfile {
   id: string;
   username: string;
-  fullName: string;
-  bio: string;
-  avatar?: string;
+  display_name: string;
+  bio: string | null;
+  avatar_url: string | null;
+
+  // optional frontend-only fields
   coverImage?: string;
-  isPublic: boolean;
-  followersCount: number;
-  followingCount: number;
-  postsCount: number;
+  isPublic?: boolean;
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
   isFollowing?: boolean;
   isFollowedBy?: boolean;
   followRequestPending?: boolean;
@@ -19,182 +23,356 @@ export interface User {
 }
 
 interface UserState {
-  currentUser: User | null;
-  viewedUser: User | null;
-  followers: User[];
-  following: User[];
-  blockedUsers: User[];
-  suggestedUsers: User[];
-  followRequests: User[];
+  currentUser: UserProfile | null;
+  viewedUser: UserProfile | null;
+  status: "idle" | "loading" | "succeeded" | "failed";
+  error: string | null;
+
+  followers: UserProfile[];
+  following: UserProfile[];
+  blockedUsers: UserProfile[];
+  suggestedUsers: UserProfile[];
+  followRequests: UserProfile[];
+  blockedCount: number;
 }
 
 const initialState: UserState = {
-  currentUser: {
-    id: '1',
-    username: 'john_doe',
-    fullName: 'John Doe',
-    bio: 'Digital creator | Photography enthusiast 📸',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
-    coverImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200',
-    isPublic: true,
-    followersCount: 1234,
-    followingCount: 567,
-    postsCount: 89,
-  },
+  currentUser: null,
   viewedUser: null,
+  status: "idle",
+  error: null,
+
   followers: [],
   following: [],
   blockedUsers: [],
-  followRequests: [
-    {
-      id: '4',
-      username: 'sarah_jones',
-      fullName: 'Sarah Jones',
-      bio: 'Artist & Designer',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-      isPublic: false,
-      followersCount: 890,
-      followingCount: 345,
-      postsCount: 67,
-    },
-    {
-      id: '5',
-      username: 'alex_brown',
-      fullName: 'Alex Brown',
-      bio: 'Music producer',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
-      isPublic: false,
-      followersCount: 2340,
-      followingCount: 456,
-      postsCount: 123,
-    },
-  ],
-  suggestedUsers: [
-    {
-      id: '2',
-      username: 'jane_smith',
-      fullName: 'Jane Smith',
-      bio: 'Travel blogger',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-      isPublic: true,
-      followersCount: 5678,
-      followingCount: 234,
-      postsCount: 156,
-    },
-    {
-      id: '3',
-      username: 'mike_wilson',
-      fullName: 'Mike Wilson',
-      bio: 'Fitness coach',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-      isPublic: true,
-      followersCount: 3421,
-      followingCount: 890,
-      postsCount: 234,
-    },
-  ],
+  suggestedUsers: [],
+  followRequests: [],
+  blockedCount: 0,
 };
 
+// -------------------------
+// PROFILE
+// -------------------------
+export const fetchCurrentUserProfile = createAsyncThunk<
+  UserProfile,
+  void,
+  { state: RootState; rejectValue: string }
+>("user/fetchCurrentUserProfile", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/profile/me`);
+    return response.data.user as UserProfile;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to fetch profile");
+  }
+});
+
+// -------------------------
+// FOLLOW SYSTEM (your routes)
+// -------------------------
+export const followUser = createAsyncThunk<
+  { userId: string },
+  string,
+  { rejectValue: string }
+>("user/followUser", async (userIdToFollow, { rejectWithValue }) => {
+  try {
+    await api.post(`/follow/follow/${userIdToFollow}`);
+    return { userId: userIdToFollow };
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to follow user");
+  }
+});
+
+export const unfollowUser = createAsyncThunk<
+  { userId: string },
+  string,
+  { rejectValue: string }
+>("user/unfollowUser", async (userIdToUnfollow, { rejectWithValue }) => {
+  try {
+    await api.delete(`/follow/unfollow/${userIdToUnfollow}`);
+    return { userId: userIdToUnfollow };
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to unfollow user");
+  }
+});
+
+/**
+ * Your UI imports toggleFollow.
+ * We'll implement it using the current viewedUser.isFollowing state.
+ */
+export const toggleFollow = createAsyncThunk<
+  { userId: string; isFollowing: boolean },
+  string,
+  { state: RootState; rejectValue: string }
+>("user/toggleFollow", async (userId, { getState, dispatch, rejectWithValue }) => {
+  try {
+    const currentlyFollowing = !!getState().user.viewedUser?.isFollowing;
+
+    if (currentlyFollowing) {
+      await dispatch(unfollowUser(userId)).unwrap();
+      return { userId, isFollowing: false };
+    } else {
+      await dispatch(followUser(userId)).unwrap();
+      return { userId, isFollowing: true };
+    }
+  } catch (error: any) {
+    return rejectWithValue(error?.message || "Failed to toggle follow");
+  }
+});
+
+export const acceptFollowRequest = createAsyncThunk<
+  { demandeId: string },
+  string,
+  { rejectValue: string }
+>("user/acceptFollowRequest", async (demandeId, { rejectWithValue }) => {
+  try {
+    await api.post(`/follow/accept-follow/${demandeId}`);
+    return { demandeId };
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to accept follow request");
+  }
+});
+
+export const denyFollowRequest = createAsyncThunk<
+  { requestId: string },
+  string,
+  { rejectValue: string }
+>("user/denyFollowRequest", async (requestId, { rejectWithValue }) => {
+  try {
+    await api.post(`/follow/refuse-follow/${requestId}`);
+    return { requestId };
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to deny follow request");
+  }
+});
+
+export const fetchFollowers = createAsyncThunk<
+  UserProfile[],
+  string,
+  { rejectValue: string }
+>("user/fetchFollowers", async (userId, { rejectWithValue }) => {
+  try {
+    const res = await api.get(`/follow/followers/${userId}`);
+    return res.data as UserProfile[];
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to fetch followers");
+  }
+});
+
+export const fetchFollowing = createAsyncThunk<
+  UserProfile[],
+  string,
+  { rejectValue: string }
+>("user/fetchFollowing", async (userId, { rejectWithValue }) => {
+  try {
+    const res = await api.get(`/follow/following/${userId}`);
+    return res.data as UserProfile[];
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to fetch following");
+  }
+});
+
+// -------------------------
+// BLOCK SYSTEM (your real controller routes)
+// -------------------------
+export const blockUser = createAsyncThunk<
+  { blockedUserId: string },
+  string,
+  { rejectValue: string }
+>("user/blockUser", async (blockedUserId, { rejectWithValue }) => {
+  try {
+    await api.post(`/blocks`, { blockedUserId });
+    return { blockedUserId };
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to block user");
+  }
+});
+
+export const unblockUser = createAsyncThunk<
+  { blockedUserId: string },
+  string,
+  { rejectValue: string }
+>("user/unblockUser", async (blockedUserId, { rejectWithValue }) => {
+  try {
+    // axios delete with body => use { data: ... }
+    await api.delete(`/blocks`, { data: { blockedUserId } });
+    return { blockedUserId };
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to unblock user");
+  }
+});
+
+export const checkBlock = createAsyncThunk<
+  { targetUserId: string; isBlocked: boolean },
+  string,
+  { rejectValue: string }
+>("user/checkBlock", async (targetUserId, { rejectWithValue }) => {
+  try {
+    const res = await api.get(`/blocks/check/${targetUserId}`);
+    return { targetUserId, isBlocked: !!res.data?.isBlocked };
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to check block");
+  }
+});
+
+export const fetchBlockedCount = createAsyncThunk<
+  number,
+  void,
+  { rejectValue: string }
+>("user/fetchBlockedCount", async (_, { rejectWithValue }) => {
+  try {
+    const res = await api.get(`/blocks/count`);
+    const count = Number(res.data?.data?.count ?? 0);
+    return Number.isFinite(count) ? count : 0;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to fetch blocked count");
+  }
+});
+
+export const fetchBlockedUsers = createAsyncThunk<
+  UserProfile[],
+  { page?: number; limit?: number } | void,
+  { rejectValue: string }
+>("user/fetchBlockedUsers", async (params, { rejectWithValue }) => {
+  try {
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 20;
+
+    const res = await api.get(`/blocks`, { params: { page, limit } });
+    // controller returns: { success, data: blockedUsers, pagination }
+    return (res.data?.data ?? []) as UserProfile[];
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to fetch blocked users");
+  }
+});
+
+// -------------------------
+// PRIVACY (route not provided yet)
+// -------------------------
+export const togglePrivacy = createAsyncThunk<
+  { isPublic: boolean },
+  void,
+  { rejectValue: string }
+>("user/togglePrivacy", async (_, { rejectWithValue }) => {
+  try {
+    /**
+     * TODO: Replace with your real endpoint.
+     * If you paste the privacy router/controller, I’ll set it exactly.
+     */
+    const res = await api.post(`/profile/toggle-privacy`);
+    return { isPublic: !!res.data?.isPublic };
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to toggle privacy");
+  }
+});
+
+// -------------------------
+// SLICE
+// -------------------------
 const userSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState,
   reducers: {
-    setViewedUser: (state, action: PayloadAction<User>) => {
+    setViewedUser: (state, action: PayloadAction<UserProfile | null>) => {
       state.viewedUser = action.payload;
     },
-    updateProfile: (state, action: PayloadAction<Partial<User>>) => {
-      if (state.currentUser) {
-        state.currentUser = { ...state.currentUser, ...action.payload };
-      }
+    updateProfile: (state, action: PayloadAction<Partial<UserProfile>>) => {
+      if (state.currentUser) state.currentUser = { ...state.currentUser, ...action.payload };
     },
-    toggleFollow: (state, action: PayloadAction<string>) => {
-      if (state.viewedUser && state.viewedUser.id === action.payload) {
-        // If account is private and not following, send request
-        if (!state.viewedUser.isPublic && !state.viewedUser.isFollowing) {
-          state.viewedUser.followRequestPending = true;
-        } else {
-          // For public accounts or unfollowing
-          state.viewedUser.isFollowing = !state.viewedUser.isFollowing;
-          state.viewedUser.followersCount += state.viewedUser.isFollowing ? 1 : -1;
-          
-          if (state.viewedUser.followRequestPending) {
-            state.viewedUser.followRequestPending = false;
-          }
+    clearUserError: (state) => {
+      state.error = null;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // profile
+      .addCase(fetchCurrentUserProfile.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(fetchCurrentUserProfile.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.currentUser = action.payload;
+      })
+      .addCase(fetchCurrentUserProfile.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = (action.payload as string) || "Failed to fetch profile";
+      })
+
+      // follow
+      .addCase(followUser.fulfilled, (state, action) => {
+        if (state.viewedUser?.id === action.payload.userId) state.viewedUser.isFollowing = true;
+      })
+      .addCase(unfollowUser.fulfilled, (state, action) => {
+        if (state.viewedUser?.id === action.payload.userId) state.viewedUser.isFollowing = false;
+      })
+      .addCase(toggleFollow.fulfilled, (state, action) => {
+        const { userId, isFollowing } = action.payload;
+        if (state.viewedUser?.id === userId) state.viewedUser.isFollowing = isFollowing;
+      })
+
+      // followers/following list
+      .addCase(fetchFollowers.fulfilled, (state, action) => {
+        state.followers = action.payload;
+      })
+      .addCase(fetchFollowing.fulfilled, (state, action) => {
+        state.following = action.payload;
+      })
+
+      // follow requests (best effort removal)
+      .addCase(acceptFollowRequest.fulfilled, (state, action) => {
+        state.followRequests = state.followRequests.filter(
+          (u) => u.id !== action.payload.demandeId
+        );
+      })
+      .addCase(denyFollowRequest.fulfilled, (state, action) => {
+        state.followRequests = state.followRequests.filter(
+          (u) => u.id !== action.payload.requestId
+        );
+      })
+
+      // block
+      .addCase(blockUser.fulfilled, (state, action) => {
+        const targetId = action.payload.blockedUserId;
+        if (state.viewedUser?.id === targetId) state.viewedUser.isBlocked = true;
+      })
+      .addCase(unblockUser.fulfilled, (state, action) => {
+        const targetId = action.payload.blockedUserId;
+        if (state.viewedUser?.id === targetId) state.viewedUser.isBlocked = false;
+      })
+      .addCase(checkBlock.fulfilled, (state, action) => {
+        if (state.viewedUser?.id === action.payload.targetUserId) {
+          state.viewedUser.isBlocked = action.payload.isBlocked;
         }
-      }
-    },
-    acceptFollowRequest: (state, action: PayloadAction<string>) => {
-      const userId = action.payload;
-      const requestIndex = state.followRequests.findIndex(u => u.id === userId);
-      if (requestIndex !== -1) {
-        const user = state.followRequests[requestIndex];
-        state.following.push(user);
-        state.followRequests.splice(requestIndex, 1);
-        if (state.currentUser) {
-          state.currentUser.followersCount += 1;
+      })
+      .addCase(fetchBlockedCount.fulfilled, (state, action) => {
+        state.blockedCount = action.payload;
+      })
+      .addCase(fetchBlockedUsers.fulfilled, (state, action) => {
+        state.blockedUsers = action.payload;
+      })
+
+      // privacy
+      .addCase(togglePrivacy.fulfilled, (state, action) => {
+        if (state.currentUser) state.currentUser.isPublic = action.payload.isPublic;
+      })
+
+      // generic error capture
+      .addMatcher(
+        (action) => action.type.startsWith("user/") && action.type.endsWith("/rejected"),
+        (state, action: any) => {
+          state.error = action.payload || action.error?.message || "Request failed";
         }
-      }
-    },
-    denyFollowRequest: (state, action: PayloadAction<string>) => {
-      state.followRequests = state.followRequests.filter(u => u.id !== action.payload);
-    },
-    togglePrivacy: (state) => {
-      if (state.currentUser) {
-        state.currentUser.isPublic = !state.currentUser.isPublic;
-      }
-    },
-    blockUser: (state, action: PayloadAction<string>) => {
-      const userId = action.payload;
-      if (!state.blockedUsers.find(u => u.id === userId)) {
-        const userToBlock = state.suggestedUsers.find(u => u.id === userId);
-        if (userToBlock) {
-          state.blockedUsers.push(userToBlock);
-        }
-      }
-    },
-    unblockUser: (state, action: PayloadAction<string>) => {
-      state.blockedUsers = state.blockedUsers.filter(u => u.id !== action.payload);
-    },
-    followUser: (state, action: PayloadAction<string>) => {
-      const userId = action.payload;
-      const userToFollow = state.suggestedUsers.find(u => u.id === userId);
-      if (userToFollow) {
-        if (!userToFollow.isPublic) {
-          // Send follow request
-          userToFollow.followRequestPending = true;
-        } else {
-          // Follow immediately
-          userToFollow.isFollowing = true;
-          if (state.currentUser) {
-            state.currentUser.followingCount += 1;
-          }
-        }
-      }
-    },
-    unfollowUser: (state, action: PayloadAction<string>) => {
-      const userId = action.payload;
-      const userToUnfollow = state.suggestedUsers.find(u => u.id === userId);
-      if (userToUnfollow) {
-        userToUnfollow.isFollowing = false;
-        userToUnfollow.followRequestPending = false;
-        if (state.currentUser) {
-          state.currentUser.followingCount -= 1;
-        }
-      }
-    },
+      );
   },
 });
 
-export const { 
-  setViewedUser, 
-  updateProfile, 
-  toggleFollow, 
-  acceptFollowRequest, 
-  denyFollowRequest, 
-  togglePrivacy, 
-  blockUser, 
-  unblockUser,
-  followUser,
-  unfollowUser
-} = userSlice.actions;
+export const { setViewedUser, updateProfile, clearUserError } = userSlice.actions;
 export default userSlice.reducer;
+
+// Optional selectors
+export const selectCurrentUser = (state: RootState) => state.user.currentUser;
+export const selectViewedUser = (state: RootState) => state.user.viewedUser;
+export const selectBlockedUsers = (state: RootState) => state.user.blockedUsers;
+export const selectBlockedCount = (state: RootState) => state.user.blockedCount;
+export const selectUserStatus = (state: RootState) => state.user.status;
+export const selectUserError = (state: RootState) => state.user.error;

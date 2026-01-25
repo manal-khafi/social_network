@@ -1,10 +1,7 @@
-import { Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import { AuthRequest } from "../../types/AuthRequest";
+import { Request, Response } from "express";
+import prisma from "../../config/prismaClient";
 
-const prisma = new PrismaClient();
-
-const Unfollow = async (req: AuthRequest, res: Response) => {
+const Unfollow = async (req: Request, res: Response) => {
   try {
     const userIdToUnfollow = req.params.userIdToUnfollow;
     const userId = req.user?.id; 

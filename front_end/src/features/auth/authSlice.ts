@@ -1,61 +1,126 @@
-import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import api from "../../api/axios";
+import type { FirebaseUserSafe } from "../../utils/authUtils";
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  role?: string;
+  avatar?: string;
+  isProfileComplete?: boolean;
+  onboarding_done?: boolean;
+}
 
 interface AuthState {
   isAuthenticated: boolean;
-  user: {
-    id: string;
-    username: string;
-    email: string;
-    avatar?: string;
-  } | null;
-  token: string | null;
+  user: User | null;                 
+  firebaseUser: FirebaseUserSafe | null; 
+  token: string | null;              
+  status: "idle" | "loading" | "succeeded" | "failed";
+  error: string | null;
 }
 
 const initialState: AuthState = {
-  isAuthenticated: true, // Default to true for demo
-  user: {
-    id: '1',
-    username: 'john_doe',
-    email: 'john@example.com',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
-  },
-  token: 'demo-token',
+  isAuthenticated: false,
+  user: null,
+  firebaseUser: null,
+  token: null,
+  status: "idle",
+  error: null,
 };
 
+export const fetchMe = createAsyncThunk(
+  "auth/fetchMe",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await api.get("/authentication/me");
+      return res.data; // { user }
+    } catch (err: any) {
+      return rejectWithValue(
+        err?.response?.data?.message ?? "Unauthorized"
+      );
+    }
+  }
+);
+
+export const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, { dispatch }) => {
+    try {
+      await api.post("/authentication/logout");
+    } catch (error) {
+      console.error("Logout API failed", error);
+    } finally {
+      dispatch(authSlice.actions.logout());
+    }
+  }
+);
+
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
-    login: (state, action: PayloadAction<{ email: string; password: string }>) => {
+    setAuth: (
+      state,
+      action: PayloadAction<{
+        firebaseUser: FirebaseUserSafe | null;
+        token: string;
+      }>
+    ) => {
+      state.firebaseUser = action.payload.firebaseUser;
+      state.token = action.payload.token;
       state.isAuthenticated = true;
-      state.user = {
-        id: '1',
-        username: 'john_doe',
-        email: action.payload.email,
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
-      };
-      state.token = 'demo-token';
+      state.status = "succeeded";
+      state.error = null;
     },
-    register: (state, action: PayloadAction<{ username: string; email: string; password: string; isPublic: boolean }>) => {
-      state.isAuthenticated = true;
-      state.user = {
-        id: Math.random().toString(36).substr(2, 9),
-        username: action.payload.username,
-        email: action.payload.email,
-      };
-      state.token = 'demo-token';
+
+    setAuthLoading: (state) => {
+      state.status = "loading";
+      state.error = null;
     },
+
+    setAuthError: (state, action: PayloadAction<string>) => {
+      state.status = "failed";
+      state.error = action.payload;
+    },
+
     logout: (state) => {
       state.isAuthenticated = false;
       state.user = null;
+      state.firebaseUser = null;
       state.token = null;
+      state.status = "idle";
+      state.error = null;
     },
-    resetPassword: (state, action: PayloadAction<{ email: string }>) => {
-      // Password reset logic
-    },
+  },
+
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchMe.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchMe.fulfilled, (state, action: any) => {
+        state.status = "succeeded";
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+      })
+      .addCase(fetchMe.rejected, (state, action: any) => {
+        state.status = "failed";
+        state.user = null;
+        state.isAuthenticated = false;
+        state.token = null;
+        state.error = action.payload ?? "Unauthorized";
+      });
   },
 });
 
-export const { login, register, logout, resetPassword } = authSlice.actions;
+export const {
+  setAuth,
+  setAuthLoading,
+  setAuthError,
+  logout,
+} = authSlice.actions;
+
 export default authSlice.reducer;

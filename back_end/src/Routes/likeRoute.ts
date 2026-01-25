@@ -1,6 +1,6 @@
-import { Router } from 'e';
+import { Router } from 'express';
 import { toggleLike } from '../Controllers/likeController';
-import { authMiddleware } from '../Middlware/authMiddlware';
+import { authMiddleware } from '../Middleware/authMiddlware';
 
 const router = Router();
 

@@ -1,6 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, User, Bell, Lock, MessageSquare, Palette, Database, Info, Shield } from 'lucide-react';
-import { Card } from '../../Componenets/ui/card';
+import { 
+  ChevronRight, User, Bell, Lock, Palette, UserX, Heart, Archive, Activity, Info, LogOut 
+} from 'lucide-react';
+import { Card } from '../../Components/ui/card';
+import { useAppDispatch } from '../../hooks';
+import { logoutUser } from '../../features/auth/authSlice';
+import { PATHS } from '../../routes/paths';
+import { Separator } from '../../Components/ui/separator';
 
 const settingsSections = [
   {
@@ -8,7 +14,7 @@ const settingsSections = [
     title: 'Account Settings',
     description: 'Manage your profile and account security',
     icon: User,
-    path: '/settings/account',
+    path: 'account',
     color: 'text-[#18534f]'
   },
   {
@@ -16,48 +22,79 @@ const settingsSections = [
     title: 'Notifications',
     description: 'Configure how you receive updates',
     icon: Bell,
-    path: '/settings/notifications',
+    path: 'notifications',
     color: 'text-[#226d68]'
   },
   {
-    id: 'content',
-    title: 'Content Preferences',
-    description: 'Customize your feed and content',
-    icon: Shield,
-    path: '/settings/content',
-    color: 'text-[#18534f]'
+    id: 'privacy',
+    title: 'Privacy',
+    description: 'Control your privacy settings',
+    icon: Lock,
+    path: 'privacy',
+    color: 'text-[#d6955b]'
   },
   {
     id: 'appearance',
     title: 'Appearance',
-    description: 'Theme, blocked accounts, and liked posts',
+    description: 'Customize the theme, text, and layout',
     icon: Palette,
-    path: '/settings/appearance',
+    path: 'appearance',
     color: 'text-[#226d68]'
   },
   {
-    id: 'about',
-    title: 'About & Support',
-    description: 'App info, help, and support',
+    id: 'blocked',
+    title: 'Blocked Contacts',
+    description: 'Manage the accounts you have blocked',
+    icon: UserX,
+    path: 'blocked-contacts',
+    color: 'text-red-500'
+  },
+  {
+    id: 'liked',
+    title: 'Liked Posts',
+    description: 'View all the posts you have liked',
+    icon: Heart,
+    path: 'liked-posts',
+    color: 'text-pink-500'
+  },
+  {
+    id: 'archive',
+    title: 'Archive',
+    description: 'View your archived posts and chats',
+    icon: Archive,
+    path: 'archive',
+    color: 'text-purple-500'
+  },
+  {
+    id: 'activity',
+    title: 'Your Activity',
+    description: 'Interactions, content, and account history',
+    icon: Activity,
+    path: 'activity',
+    color: 'text-blue-500'
+  },
+  {
+    id: 'support',
+    title: 'Info & Support',
+    description: 'Help, privacy, and about ANMOUGAR',
     icon: Info,
-    path: '/settings/about',
-    color: 'text-[#18534f]'
+    path: 'info',
+    color: 'text-gray-500'
   }
 ];
 
 export default function SettingsView() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  const handleLogout = () => {
+    dispatch(logoutUser()).then(() => {
+      navigate(PATHS.AUTH, { replace: true });
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center gap-3 z-10">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-xl font-bold">Settings</h1>
-      </div>
-
       {/* Settings Sections */}
       <div className="p-4 space-y-2 max-w-2xl mx-auto pb-24">
         {settingsSections.map((section) => {
@@ -81,6 +118,23 @@ export default function SettingsView() {
             </Card>
           );
         })}
+
+        <Separator className="my-4" />
+
+        <Card
+          className="hover:bg-muted/50 transition-colors cursor-pointer"
+          onClick={handleLogout}
+        >
+          <div className="p-4 flex items-center gap-4">
+            <div className="p-3 bg-muted rounded-full text-red-500">
+              <LogOut className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-500">Logout</h3>
+              <p className="text-sm text-muted-foreground">You will be returned to the login screen.</p>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );

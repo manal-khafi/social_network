@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { archiveConversation, deleteConversation } from '../../features/messages/messagesSlice';
-import { Card } from '../../Componenets/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
-import { Badge } from '../../Componenets/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../Componenets/ui/dropdown-menu';
+import { Card } from '../../Components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
+import { Badge } from '../../Components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../Components/ui/dropdown-menu';
 import { Archive, MoreVertical, Trash2 } from 'lucide-react';
 
 export default function InboxView() {

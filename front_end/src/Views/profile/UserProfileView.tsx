@@ -2,11 +2,11 @@ import { useParams, Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { toggleFollow } from '../../features/user/userSlice';
 import { MessageCircle, Lock } from 'lucide-react';
-import { Button } from '../../Componenets/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Componenets/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../Componenets/ui/tabs';
+import { Button } from '../../Components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../Components/ui/tabs';
 import { toast } from 'sonner';
-import PostCard from '../../Componenets/post/PostCard';
+import PostCard from '../../Components/post/PostCard';
 
 export default function UserProfileView() {
   const { userId } = useParams();
