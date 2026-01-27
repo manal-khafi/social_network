@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { PrismaClient, PostVisibility } from "@prisma/client";
 import prisma from "../../config/prismaClient";
 
 export const createPost = async (req: Request, res: Response) => {
@@ -29,12 +28,53 @@ export const createPost = async (req: Request, res: Response) => {
       data: {
         content: content.trim(),
         media_urls: media_urls ?? null,
-        visibility: (visibility || "public") as PostVisibility,
+        visibility: (visibility || "public") as "public" | "private" | "friends",
         user_id: req.user.id,
-      }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            display_name: true,
+            avatar_url: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+            shares: true,
+            saves: true,
+          },
+        },
+      },
     });
 
-    return res.status(201).json({ message: "Post created successfully", post });
+    const normalizedPost = {
+      id: post.id,
+      userId: post.user_id,
+      username: post.user.username || post.user.display_name || "Unknown User",
+      avatar: post.user.avatar_url ?? undefined,
+      content: post.content ?? "",
+      images: (post.media_urls as string[] | null) ?? undefined,
+      likes: post._count.likes ?? 0,
+      comments: post._count.comments ?? 0,
+      shares: post._count.shares ?? 0,
+      saves: post._count.saves ?? 0,
+      isLiked: false,
+      isSaved: false,
+      isReposted: false,
+      isArchived: false,
+      isEdited: false,
+      timestamp: post.created_at.toISOString(),
+      commentsAllowed: true,
+      likesVisible: true,
+    };
+
+    return res
+      .status(201)
+      .json({ message: "Post created successfully", post: normalizedPost });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Server error while creating post" });

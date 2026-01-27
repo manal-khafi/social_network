@@ -1,19 +1,20 @@
 import { Request, Response } from "express";
 import { admin } from "../../config/fireBase";
 import prisma from "../../config/prismaClient";
-import { generateAccessToken } from "../../util/jwt"; // Import generateAccessToken
+import { generateAccessToken, generateRefreshToken } from "../../util/jwt";
 
 export const socialLogin = async (req: Request, res: Response) => {
   console.log("Social login request received."); // Log request hit
-  const { idToken } = req.body;
+  const { idToken, token } = req.body;
+  const firebaseIdToken = idToken || token;
 
-  if (!idToken) {
+  if (!firebaseIdToken) {
     console.log("idToken missing from request body."); // Log missing idToken
     return res.status(400).json({ success: false, message: "idToken required" });
   }
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
     console.log("Firebase ID token verified successfully. UID:", decodedToken.uid); // Log verifyIdToken success
 
     const email = decodedToken.email;
@@ -52,15 +53,49 @@ export const socialLogin = async (req: Request, res: Response) => {
       }
     }
 
-    // Issue backend JWT
-    const token = generateAccessToken({ userId: user.id, email: user.email, role: user.role_id || "user" }); // Assuming 'role' exists and defaults to 'user'
-    console.log("Backend JWT issued. First 10 chars:", token.substring(0, 10)); // Log issued token (partial)
+    const userWithRole = await prisma.user.findUnique({
+      where: { id: user.id },
+      include: {
+        role: {
+          include: { rolePermissions: { include: { permission: true } } },
+        },
+      },
+    });
+
+    const permissions =
+      userWithRole?.role?.rolePermissions.map(
+        (rp: { permission: { code: string } }) => rp.permission.code
+      ) || [];
+
+    // Issue backend JWT + refresh token
+    const accessToken = generateAccessToken({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      avatar_url: user.avatar_url ?? null,
+      role: userWithRole?.role?.name,
+      permissions,
+      onboarding_done: user.onboarding_done,
+    });
+    const refreshToken = generateRefreshToken({
+      id: user.id,
+      token_version: user.token_version,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    console.log("Backend JWT issued. First 10 chars:", accessToken.substring(0, 10)); // Log issued token (partial)
 
     // Log the keys of the returned response
     console.log("Responding with keys: success, token, user");
     res.json({
       success: true,
-      token, // Return the backend JWT
+      token: accessToken, // Return the backend JWT
       user: {
         id: user.id,
         email: user.email,

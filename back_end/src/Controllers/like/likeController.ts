@@ -4,12 +4,18 @@ import prisma from '../config/prismaClient';
 export const toggleLike = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.id;
-        const { postId } = req.params;
+        const { postId, commentId } = req.params;
+        const targetPostId = postId ?? null;
+        const targetCommentId = commentId ?? null;
+
+        if (!targetPostId && !targetCommentId) {
+            return res.status(400).json({ message: "postId or commentId is required" });
+        }
         const existingLike = await prisma.like.findFirst({
             where: {
                 user_id: userId!,
-                post_id: postId,
-                comment_id: null, // Explicitly look for a like on a post, not a comment
+                post_id: targetPostId,
+                comment_id: targetCommentId,
             },
         });
         //unlike 
@@ -17,9 +23,17 @@ export const toggleLike = async (req: Request, res: Response) => {
             await prisma.like.delete({
                 where: { id: existingLike.id },
             });
+            
+            // Get updated counts
+            const post = targetPostId ? await prisma.post.findUnique({
+                where: { id: targetPostId },
+                include: { _count: { select: { likes: true } } }
+            }) : null;
+            
             return res.json({
                 liked: false,
-                message: 'Post unliked'
+                message: 'Post unliked',
+                likes: post?._count.likes ?? 0
             });
         }
 
@@ -27,11 +41,21 @@ export const toggleLike = async (req: Request, res: Response) => {
         await prisma.like.create({
             data: {
                 user_id: userId!,
-                post_id: postId,
+                post_id: targetPostId,
+                comment_id: targetCommentId,
             },
         });
-        return res.json({ liked: true,
-            message: 'Post liked'
+        
+        // Get updated counts
+        const post = targetPostId ? await prisma.post.findUnique({
+            where: { id: targetPostId },
+            include: { _count: { select: { likes: true } } }
+        }) : null;
+        
+        return res.json({ 
+            liked: true,
+            message: 'Post liked',
+            likes: post?._count.likes ?? 0
         });
     } catch (error) {
         res.status(500).json({ message: "something went wrong" });

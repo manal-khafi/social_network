@@ -10,6 +10,7 @@ import FollowRoutes from "./Routes/Following";
 import SignaleRouter from "./Routes/Signale";
 import ComptRouter from "./Routes/Comproutes";
 import ProfileRouter from "./Routes/Profile";
+import postsRouter from "./Routes/Posts";
 import { initializeEmailService } from "./config/EmailConfig";
 import AccountRouter from "./Routes/accountroutes";
 
@@ -44,7 +45,7 @@ app.use("/api/follow", FollowRoutes);
 app.use("/api/reports", SignaleRouter);
 app.use("/api/Compte", ComptRouter);
 app.use("/api/profile", ProfileRouter);
-app.use("/api/account", AccountRouter);
+app.use("/api/posts", postsRouter);
 
 app.get("/", (req, res) => {
   res.json({

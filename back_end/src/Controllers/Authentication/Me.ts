@@ -9,16 +9,26 @@ export const Me = async (req: Request, res: Response) => {
       });
     }
 
+    const headerToken = res.getHeader("x-access-token") as string | undefined;
+    const authHeader = req.headers.authorization;
+    const bearerToken =
+      authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : undefined;
+    const token = headerToken || bearerToken || null;
+
     return res.status(200).json({
       success: true,
       user: {
         id: req.user.id,
         email: req.user.email,
         username: req.user.username ?? "",
+        avatar_url: req.user.avatar_url ?? null,
         role: req.user.role,
         permissions: req.user.permissions ?? [],
         onboarding_done: req.user.onboarding_done
       },
+      token,
     });
   } catch (error) {
     console.error("Me endpoint error:", error);

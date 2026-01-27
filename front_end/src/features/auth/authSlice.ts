@@ -13,20 +13,53 @@ export interface User {
   onboarding_done?: boolean;
 }
 
+const AUTH_STORAGE_KEY = "auth_session";
+
+const loadPersistedAuth = (): { token: string | null; user: User | null } => {
+  try {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return { token: null, user: null };
+    const parsed = JSON.parse(raw) as { token?: string; user?: User };
+    return {
+      token: parsed.token ?? null,
+      user: parsed.user ?? null,
+    };
+  } catch {
+    return { token: null, user: null };
+  }
+};
+
+const persistAuth = (token: string | null, user: User | null) => {
+  try {
+    if (!token) {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      return;
+    }
+    localStorage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ token, user: user ?? null })
+    );
+  } catch {
+    // ignore persistence errors
+  }
+};
+
 interface AuthState {
   isAuthenticated: boolean;
-  user: User | null;                 
-  firebaseUser: FirebaseUserSafe | null; 
-  token: string | null;              
+  user: User | null;
+  firebaseUser: FirebaseUserSafe | null;
+  token: string | null;
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
 }
 
+const persisted = loadPersistedAuth();
+
 const initialState: AuthState = {
-  isAuthenticated: false,
-  user: null,
+  isAuthenticated: Boolean(persisted.token),
+  user: persisted.user,
   firebaseUser: null,
-  token: null,
+  token: persisted.token,
   status: "idle",
   error: null,
 };
@@ -65,15 +98,29 @@ const authSlice = createSlice({
     setAuth: (
       state,
       action: PayloadAction<{
-        firebaseUser: FirebaseUserSafe | null;
-        token: string;
+        token: string | null;
+        user?: User | null;
+        firebaseUser?: FirebaseUserSafe | null;
       }>
     ) => {
-      state.firebaseUser = action.payload.firebaseUser;
-      state.token = action.payload.token;
-      state.isAuthenticated = true;
+      if ("firebaseUser" in action.payload) {
+        state.firebaseUser = action.payload.firebaseUser ?? null;
+      }
+      if ("user" in action.payload) {
+        state.user = action.payload.user ?? null;
+      }
+      state.token = action.payload.token ?? null;
+      state.isAuthenticated = Boolean(state.token);
+      persistAuth(state.token, state.user);
       state.status = "succeeded";
       state.error = null;
+    },
+
+    setFirebaseUser: (
+      state,
+      action: PayloadAction<FirebaseUserSafe | null>
+    ) => {
+      state.firebaseUser = action.payload;
     },
 
     setAuthLoading: (state) => {
@@ -93,6 +140,7 @@ const authSlice = createSlice({
       state.token = null;
       state.status = "idle";
       state.error = null;
+      persistAuth(null, null);
     },
   },
 
@@ -121,6 +169,7 @@ export const {
   setAuthLoading,
   setAuthError,
   logout,
+  setFirebaseUser,
 } = authSlice.actions;
 
 export default authSlice.reducer;

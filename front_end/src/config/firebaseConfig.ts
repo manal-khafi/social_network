@@ -34,15 +34,29 @@ export const storage = getStorage(app); // ✅ THIS IS WHAT YOU NEED
 const googleProvider = new GoogleAuthProvider();
 const facebookProvider = new FacebookAuthProvider();
 
-// Auth helpers
-export const signInWithGoogle = async () => {
-  const result = await signInWithPopup(auth, googleProvider);
-  return result.user;
+// Auth functions (Step 4)
+export const loginWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    // User signed in successfully
+    // The Firebase SDK automatically manages idToken and refreshToken
+    return result.user;
+  } catch (error) {
+    console.error("Google sign-in error:", error);
+    throw error;
+  }
 };
 
-export const signInWithFacebook = async () => {
-  const result = await signInWithPopup(auth, facebookProvider);
-  return result.user;
+export const loginWithFacebook = async () => {
+  try {
+    const result = await signInWithPopup(auth, facebookProvider);
+    // User signed in successfully
+    // The Firebase SDK automatically manages idToken and refreshToken
+    return result.user;
+  } catch (error) {
+    console.error("Facebook sign-in error:", error);
+    throw error;
+  }
 };
 
 export const firebaseSignOut = async () => {

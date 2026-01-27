@@ -9,25 +9,21 @@ import i18n from "./i18n/i18n";
 import App from "./App";
 import { Toaster } from "./Components/ui/sonner";
 import "./style/index.css";
-import { auth } from "./config/firebase";
+import { auth } from "./config/firebaseConfig"; // Import Firebase auth instance
 import { onAuthStateChanged } from "firebase/auth";
-import { setAuth, setAuthLoading } from "./features/auth/authSlice";
-import { toSafeUser } from "./utils/authUtils"; 
-import { fetchCurrentUserProfile } from "./features/user/userSlice";
+import { setAuthLoading, setFirebaseUser } from "./features/auth/authSlice"; // Import actions from authSlice
+import { toSafeUser } from "./utils/authUtils"; // Import toSafeUser helper
 
 store.dispatch(setAuthLoading()); 
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const idToken = await user.getIdToken();
-    const serializableUser = toSafeUser(user);
-
-    store.dispatch(setAuth({ firebaseUser: serializableUser, token: idToken }));
-
-    // ✅ fetch backend user profile into userSlice.currentUser
-    store.dispatch(fetchCurrentUserProfile());
+    const serializableUser = toSafeUser(user); // Convert Firebase User to serializable object
+    store.dispatch(setFirebaseUser(serializableUser));
+    console.log("DEBUG: Firebase user logged in. UID:", user.uid);
   } else {
-    store.dispatch(setAuth({ firebaseUser: null, token: null }));
+    store.dispatch(setFirebaseUser(null));
+    console.log("DEBUG: Firebase user logged out.");
   }
 });
 

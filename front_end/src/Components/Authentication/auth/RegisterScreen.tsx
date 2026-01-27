@@ -100,7 +100,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
       const data = await handleSocialAuth(provider);
 
       if (!data?.success) {
-        const msg = data?.message || "Social registration failed";
+        const msg = "Social registration failed";
         toast.error(msg);
         dispatch(setAuthError(msg));
         return;
@@ -114,7 +114,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
       }
 
       // ✅ Store BACKEND JWT only
-      dispatch(setAuth({ firebaseUser: null, token: data.token }));
+      dispatch(setAuth({ token: data.token, user: data.user ?? null }));
 
       goNextAfterAuth(data.user);
       toast.success(`Successfully signed up with ${provider}`);

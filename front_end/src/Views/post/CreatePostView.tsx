@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { addPost } from '../../features/posts/postsSlice';
+import { createPost } from '../../features/posts/postsSlice';
 import { Button } from '../../Components/ui/button';
 import { Textarea } from '../../Components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
@@ -20,31 +20,40 @@ export default function CreatePostView() {
   const [images, setImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePost = () => {
-    if (content.trim() && authUser) {
-      dispatch(addPost({
-        userId: authUser.id,
-        username: authUser.username,
-        avatar: authUser.avatar,
-        content,
-        images: images.length > 0 ? images : undefined,
-        commentsAllowed: true,
-        likesVisible: true,
-        isLiked: false,
-        isSaved: false,
-        isReposted: false,
-      }));
+  const handlePost = async () => {
+    if (!content.trim() || !authUser) return;
+
+    try {
+      await dispatch(
+        createPost({
+          content,
+          media_urls: images.length > 0 ? images : undefined,
+        })
+      ).unwrap();
       toast.success('Post created successfully');
       navigate(PATHS.HOME);
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to create post';
+      toast.error(message);
     }
   };
 
-  const handleImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageAdd = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      // Simulate image upload with preview
-      const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-      setImages(prev => [...prev, ...newImages]);
+      const fileArray = Array.from(files);
+      const dataUrls = await Promise.all(
+        fileArray.map(
+          (file) =>
+            new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => reject(reader.error);
+              reader.readAsDataURL(file);
+            })
+        )
+      );
+      setImages((prev) => [...prev, ...dataUrls]);
     }
   };
 

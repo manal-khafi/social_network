@@ -72,7 +72,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       toast.success(data.message || "Logged in successfully!");
 
       // ✅ Store BACKEND JWT only. Firebase user is not involved in password login.
-      dispatch(setAuth({ firebaseUser: null, token: data.token }));
+      dispatch(setAuth({ token: data.token, user: data.user ?? null }));
 
       goNextAfterAuth(data.user, data.redirectTo);
     } catch (error: any) {
@@ -107,7 +107,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       }
 
       // ✅ Store BACKEND JWT only. Firebase user stays out of Redux.
-      dispatch(setAuth({ firebaseUser: null, token: data.token }));
+      dispatch(setAuth({ token: data.token, user: data.user ?? null }));
 
       goNextAfterAuth(data.user, data.redirectTo);
       toast.success(`Successfully logged in with ${provider}`);

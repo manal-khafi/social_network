@@ -29,7 +29,7 @@ export default function DesktopSidebar() {
 
   return (
     <aside
-      className="hidden lg:flex w-80 h-screen flex-col border-r border-border bg-card"
+      className="hidden lg:flex w-80 h-screen flex-col border-r border-border bg-card sticky top-0"
     >
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between">
