@@ -1,4 +1,4 @@
-import { loginWithGoogle, loginWithFacebook } from "../../../config/firebaseConfig";
+import { loginWithGoogle, loginWithFacebook } from "../../../config/firebase";
 import { socialLoginBackend } from "../../../utils/api";
 
 export const handleSocialAuth = async (provider: "google" | "facebook") => {

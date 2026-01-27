@@ -29,7 +29,7 @@ onAuthStateChanged(auth, async (user) => {
     // store.dispatch(fetchMe()); // You might want to fetch backend user data here
   } else {
     // User is signed out
-    store.dispatch(setAuth({ firebaseUser: null, token: null }));
+    store.dispatch(setAuth({ firebaseUser: null, token: "" }));
     console.log("DEBUG: Firebase user logged out.");
   }
 });

@@ -32,7 +32,7 @@ const googleProvider = new GoogleAuthProvider();
 const facebookProvider = new FacebookAuthProvider();
 
 // Auth functions (Step 4)
-export const signInWithGoogle = async () => {
+export const loginWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     // User signed in successfully
@@ -44,7 +44,7 @@ export const signInWithGoogle = async () => {
   }
 };
 
-export const signInWithFacebook = async () => {
+export const loginWithFacebook = async () => {
   try {
     const result = await signInWithPopup(auth, facebookProvider);
     // User signed in successfully

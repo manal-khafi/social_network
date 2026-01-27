@@ -1,4 +1,4 @@
-import { prisma } from "@/config/PrismaBlock";
+import prisma from "../config/prismaClient";
 
 /**
  * Validation commune
