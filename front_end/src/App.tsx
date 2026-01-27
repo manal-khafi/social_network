@@ -20,6 +20,7 @@ import ChatView from "./Views/inbox/ChatView";
 import ArchivedChatsView from "./Views/inbox/ArchivedChatsView";
 import NotificationsView from "./Views/notifications/NotificationsView";
 import MyProfileView from "./Views/profile/MyProfileView";
+import MyPostsView from "./Views/profile/MyPostsView";
 import UserProfileView from "./Views/profile/UserProfileView";
 import FollowersView from "./Views/profile/FollowersView";
 import EditProfileView from "./Views/profile/EditProfileView";
@@ -74,6 +75,7 @@ function AppContent() {
           <Route index element={<Navigate to="feed" replace />} />
           <Route path="feed" element={<FeedView />} />
           <Route path="create-post" element={<CreatePostView />} />
+          <Route path="my-posts" element={<MyPostsView />} />
           <Route path="story/:storyId" element={<StoryViewerView />} />
           <Route path="community" element={<CommunityView />} />
           <Route path="inbox" element={<InboxView />} />

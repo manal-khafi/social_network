@@ -46,6 +46,7 @@ interface PostsState {
   feed: Post[];
   savedPosts: Post[];
   archivedPosts: Post[];
+  myPosts: Post[];
   userPosts: { [userId: string]: Post[] };
   postComments: { [postId: string]: Comment[] };
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -56,6 +57,7 @@ const initialState: PostsState = {
   feed: [],
   savedPosts: [],
   archivedPosts: [],
+  myPosts: [],
   userPosts: {},
   postComments: {},
   status: 'idle',
@@ -64,6 +66,11 @@ const initialState: PostsState = {
 
 export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
   const response = await api.get('/posts');
+  return response.data.posts as Post[];
+});
+
+export const fetchMyPosts = createAsyncThunk('posts/fetchMyPosts', async () => {
+  const response = await api.get('/posts/me');
   return response.data.posts as Post[];
 });
 
@@ -85,8 +92,8 @@ export const togglePostLike = createAsyncThunk(
   'posts/togglePostLike',
   async (postId: string) => {
     const response = await api.post(`/posts/${postId}/like`);
-    return { 
-      postId, 
+    return {
+      postId,
       liked: response.data.liked as boolean,
       likes: response.data.likes as number | undefined
     };
@@ -97,8 +104,8 @@ export const togglePostSave = createAsyncThunk(
   'posts/togglePostSave',
   async (postId: string) => {
     const response = await api.post(`/posts/${postId}/save`);
-    return { 
-      postId, 
+    return {
+      postId,
       saved: response.data.saved as boolean,
       saves: response.data.saves as number | undefined
     };
@@ -109,8 +116,8 @@ export const togglePostRepost = createAsyncThunk(
   'posts/togglePostRepost',
   async (postId: string) => {
     const response = await api.post(`/posts/${postId}/repost`);
-    return { 
-      postId, 
+    return {
+      postId,
       reposted: response.data.reposted as boolean,
       shares: response.data.shares as number | undefined
     };
@@ -238,6 +245,17 @@ const postsSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message || 'Failed to fetch posts';
       })
+      .addCase(fetchMyPosts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchMyPosts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.myPosts = action.payload;
+      })
+      .addCase(fetchMyPosts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message || 'Failed to fetch posts';
+      })
       .addCase(createPost.fulfilled, (state, action) => {
         state.feed.unshift(action.payload);
       })
@@ -250,8 +268,6 @@ const postsSlice = createSlice({
           post.isLiked = action.payload.liked;
           if (action.payload.likes !== undefined) {
             post.likes = action.payload.likes;
-          } else {
-            post.likes += action.payload.liked ? 1 : -1;
           }
         }
       })
@@ -268,8 +284,6 @@ const postsSlice = createSlice({
             if (!state.savedPosts.find(p => p.id === post.id)) {
               state.savedPosts.push(post);
             }
-          } else {
-            state.savedPosts = state.savedPosts.filter(p => p.id !== post.id);
           }
         }
       })
@@ -279,8 +293,6 @@ const postsSlice = createSlice({
           post.isReposted = action.payload.reposted;
           if (action.payload.shares !== undefined) {
             post.shares = action.payload.shares;
-          } else {
-            post.shares += action.payload.reposted ? 1 : -1;
           }
         }
       })
@@ -336,7 +348,16 @@ const postsSlice = createSlice({
         }
       })
       .addCase(deletePost.fulfilled, (state, action) => {
-        state.feed = state.feed.filter(p => p.id !== action.payload);
+        const deletedId = action.payload; // your thunk returns postId (string)
+
+        state.myPosts = state.myPosts.filter((p) => p.id !== deletedId);
+        state.feed = state.feed.filter((p) => p.id !== deletedId);
+        state.savedPosts = state.savedPosts.filter((p) => p.id !== deletedId);
+        state.archivedPosts = state.archivedPosts.filter((p) => p.id !== deletedId);
+
+        if (state.postComments[deletedId]) {
+          delete state.postComments[deletedId];
+        }
       });
   },
 });
