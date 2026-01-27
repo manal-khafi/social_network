@@ -1,5 +1,5 @@
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { storage, auth } from "../config/firebase";
+import { storage, auth } from "../config/firebaseConfig";
 
 export async function uploadImageAndGetURL(file: File, folder: "avatars" | "covers") {
   const uid = auth.currentUser?.uid;

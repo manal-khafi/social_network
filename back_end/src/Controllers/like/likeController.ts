@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import prisma from '../config/prismaClient';
+import prisma from '../../config/prismaClient';
 
 export const toggleLike = async (req: Request, res: Response) => {
     try {

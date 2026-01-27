@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authMiddleware } from "../Middleware/authMiddlware";
 import { createPost } from "../Controllers/Posts/CreatePost";
 import { getPosts } from "../Controllers/Posts/GetPosts";
-import { toggleLike } from "../Controllers/likeController";
+import { toggleLike } from "../Controllers/like/likeController";
 import { toggleSave } from "../Controllers/Posts/ToggleSave";
 import { toggleRepost } from "../Controllers/Posts/ToggleRepost";
 import { updatePost } from "../Controllers/Posts/UpdatePost";

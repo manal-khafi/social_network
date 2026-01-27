@@ -1,6 +1,19 @@
-import { Response } from "express";
-import { AuthRequest } from "@/types/AuthRequest";
-import * as BlockService from "@/Service/BlockService";
+import { Request, Response } from "express";
+// Utilisation du chemin relatif pour éviter l'erreur TS2307 (Cannot find module)
+import * as BlockService from "../../Service/BlockService";
+
+/**
+ * Interface AuthRequest : Définition locale pour résoudre l'erreur sur blockedUserId 
+ * et lier les propriétés de ton modèle Prisma User.
+ */
+interface AuthRequest extends Request {
+  user?: Request['user'];
+  // On définit explicitement la structure du body pour que TypeScript reconnaisse blockedUserId
+  body: {
+    blockedUserId: string;
+    [key: string]: any;
+  };
+}
 
 /**
  * Utilitaire : vérifier l'Authentication
@@ -10,6 +23,7 @@ const requireAuth = (userId?: string) => {
     throw new Error("Non authentifié");
   }
 };
+
 /**
  * POST /api/blocks
  * Bloquer un utilisateur

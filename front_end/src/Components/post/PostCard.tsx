@@ -93,7 +93,7 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
           </div>
           
           <div className="flex items-center gap-4 mt-1 px-3">
-            <span className="text-xs text-muted-foreground">{formatTime(comment.timestamp)}</span>
+            <span className="text-xs text-muted-foreground">{formatTime(comment?.timestamp)}</span>
             <button
               onClick={handleLike}
               className="text-xs text-muted-foreground hover:text-red-500 transition-colors"
@@ -326,7 +326,7 @@ export default function PostCard({ post }: PostCardProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <p className="text-sm text-muted-foreground">{formatTime(post.timestamp)}</p>
+            <p className="text-sm text-muted-foreground">{formatTime(post?.timestamp)}</p>
           </div>
         </div>
 

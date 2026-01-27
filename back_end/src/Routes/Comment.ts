@@ -4,7 +4,7 @@ import modifierComment from "../Controllers/Comment/ModifierComment";
 import getCommet from "../Controllers/Comment/getComment";
 import { authMiddleware } from "../Middleware/authMiddlware";
 import { Router } from "express";
-import { toggleLike } from "../Controllers/likeController";
+import { toggleLike } from "../Controllers/like/likeController";
 
 const commentRouter= Router();
 

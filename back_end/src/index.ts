@@ -13,6 +13,9 @@ import ProfileRouter from "./Routes/Profile";
 import postsRouter from "./Routes/Posts";
 import { initializeEmailService } from "./config/EmailConfig";
 import AccountRouter from "./Routes/accountroutes";
+import MyLikedPosts from "./Routes/postRoutes";
+import BlockRoutes from "./Routes/BlockRoute";
+import SaveRoutes from "./Routes/saveRoutes";
 
 const port = process.env.PORT || 3500;
 const app = express();
@@ -46,6 +49,9 @@ app.use("/api/reports", SignaleRouter);
 app.use("/api/Compte", ComptRouter);
 app.use("/api/profile", ProfileRouter);
 app.use("/api/posts", postsRouter);
+app.use("/api/posts", MyLikedPosts);
+app.use("/api", BlockRoutes);
+app.use("/api/saves", SaveRoutes);
 
 app.get("/", (req, res) => {
   res.json({

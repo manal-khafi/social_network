@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { isBlocked } from "@/Service/BlockService";
+import { isBlocked } from "../../Service/BlockService";
 
 /**
  * Middleware pour vérifier les blocages avant d'autoriser une action
