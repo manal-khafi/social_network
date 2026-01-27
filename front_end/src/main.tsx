@@ -9,9 +9,9 @@ import i18n from "./i18n/i18n";
 import App from "./App";
 import { Toaster } from "./Components/ui/sonner";
 import "./style/index.css";
-import { auth } from "./config/firebase"; // Import Firebase auth instance
+import { auth } from "./config/firebaseConfig"; // Import Firebase auth instance
 import { onAuthStateChanged } from "firebase/auth";
-import { setAuth, setAuthLoading } from "./features/auth/authSlice"; // Import actions from authSlice
+import { setAuthLoading, setFirebaseUser } from "./features/auth/authSlice"; // Import actions from authSlice
 import { toSafeUser } from "./utils/authUtils"; // Import toSafeUser helper
 
 // Global Firebase Auth State Listener
@@ -19,17 +19,11 @@ store.dispatch(setAuthLoading()); // Set loading state initially
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    // User is signed in, get the ID token
-    const idToken = await user.getIdToken();
     const serializableUser = toSafeUser(user); // Convert Firebase User to serializable object
-    store.dispatch(setAuth({ firebaseUser: serializableUser, token: idToken }));
+    store.dispatch(setFirebaseUser(serializableUser));
     console.log("DEBUG: Firebase user logged in. UID:", user.uid);
-    console.log("DEBUG: Firebase ID token length (main.tsx):", idToken.length);
-    // Optionally, if your backend user profile needs to be fetched
-    // store.dispatch(fetchMe()); // You might want to fetch backend user data here
   } else {
-    // User is signed out
-    store.dispatch(setAuth({ firebaseUser: null, token: null }));
+    store.dispatch(setFirebaseUser(null));
     console.log("DEBUG: Firebase user logged out.");
   }
 });

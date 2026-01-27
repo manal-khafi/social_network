@@ -1,6 +1,21 @@
 import axios from "axios";
 import { store } from "../store";
-import { logout } from "../features/auth/authSlice"; 
+import { logout, setAuth } from "../features/auth/authSlice";
+
+const AUTH_STORAGE_KEY = "auth_session";
+
+const readPersistedAuth = () => {
+  try {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return { token: null };
+    const parsed = JSON.parse(raw) as { token?: string };
+    return {
+      token: parsed.token ?? null,
+    };
+  } catch {
+    return { token: null };
+  }
+};
 
 const rawBaseURL = import.meta.env.VITE_API_URL || "http://localhost:3500";
 const baseURL = rawBaseURL.endsWith("/api") ? rawBaseURL : `${rawBaseURL}/api`;
@@ -16,7 +31,15 @@ api.interceptors.request.use((config) => {
   if (url.includes("/authentication/social-login")) {
     return config;
   }
-  const token = store.getState().auth.token;
+  let token = store.getState().auth.token;
+  if (!token) {
+    const persisted = readPersistedAuth();
+    if (persisted.token) {
+      token = persisted.token;
+      const currentUser = store.getState().auth.user;
+      store.dispatch(setAuth({ token: persisted.token, user: currentUser ?? null }));
+    }
+  }
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
@@ -28,11 +51,19 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const newToken = response.headers?.["x-access-token"];
+    if (newToken) {
+      const currentUser = store.getState().auth.user;
+      store.dispatch(setAuth({ token: newToken, user: currentUser ?? null }));
+    }
+    return response;
+  },
   async (error) => {
     const status = error.response?.status;
+    const url = error.config?.url ?? "";
 
-    if (status === 401) {
+    if (status === 401 && !url.includes("/authentication/me")) {
       store.dispatch(logout());
     }
 

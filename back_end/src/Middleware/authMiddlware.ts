@@ -46,6 +46,8 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       const newAccessToken = generateAccessToken({
         id: user.id,
         email: user.email,
+        username: user.username,
+        avatar_url: user.avatar_url ?? null,
         role: user.role?.name,
         permissions,
       });
@@ -55,6 +57,8 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       req.user = {
         id: user.id,
         email: user.email,
+        username: user.username,
+        avatar_url: user.avatar_url ?? null,
         role: user.role?.name,
         permissions,
         onboarding_done: user.onboarding_done
@@ -70,6 +74,8 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       const decoded = verifyAccessToken(token) as {
         id: string;
         email: string;
+        username?: string;
+        avatar_url?: string | null;
         role?: string;
         permissions: string[];
         onboarding_done: boolean;
@@ -114,6 +120,8 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       const newAccessToken = generateAccessToken({
         id: user.id,
         email: user.email,
+        username: user.username,
+        avatar_url: user.avatar_url ?? null,
         role: user.role?.name,
         permissions,
       });
@@ -123,6 +131,8 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       req.user = {
         id: user.id,
         email: user.email,
+        username: user.username,
+        avatar_url: user.avatar_url ?? null,
         role: user.role?.name,
         permissions,
         onboarding_done: user.onboarding_done

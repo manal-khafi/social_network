@@ -1,17 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { 
-  toggleLike, 
-  toggleSave, 
-  addComment, 
-  repostPost, 
+  togglePostLike,
+  togglePostSave,
+  togglePostRepost,
+  fetchComments,
+  createComment,
   toggleCommentLike,
-  addReply,
-  toggleReplyLike,
   archivePost,
-  toggleCommentsAllowed,
-  toggleLikesVisible
+  deletePost
 } from '../../features/posts/postsSlice';
 import { blockUser } from '../../features/user/userSlice';
 import { Card } from '../ui/card';
@@ -26,12 +24,10 @@ import {
   Share, 
   Ban, 
   Flag, 
-  Eye, 
-  EyeOff,
-  MessageSquareOff,
-  MessageSquare,
   Archive,
-  Smile
+  Smile,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import type { Post, Comment } from '../../features/posts/postsSlice';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
@@ -41,6 +37,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
 import ShareDialog from './ShareDialog';
+import EditPostDialog from './EditPostDialog';
+import { formatTime } from '../../utils/timeUtils';
 
 interface PostCardProps {
   post: Post;
@@ -59,16 +57,18 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
   const [replyText, setReplyText] = useState('');
 
   const handleLike = () => {
-    if (isReply && parentCommentId) {
-      dispatch(toggleReplyLike({ postId, commentId: parentCommentId, replyId: comment.id }));
-    } else {
-      dispatch(toggleCommentLike({ postId, commentId: comment.id }));
-    }
+    dispatch(toggleCommentLike({ postId, commentId: comment.id }));
   };
 
   const handleReply = () => {
     if (replyText.trim()) {
-      dispatch(addReply({ postId, commentId: parentCommentId || comment.id, content: replyText }));
+      dispatch(
+        createComment({
+          postId,
+          content: replyText,
+          parent_comment_id: parentCommentId || comment.id,
+        })
+      );
       setReplyText('');
       setShowReplyInput(false);
     }
@@ -80,7 +80,7 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
         <Link to={`/profile/${comment.userId}`}>
           <Avatar className="w-8 h-8">
             <AvatarImage src={comment.avatar} />
-            <AvatarFallback>{comment.username[0].toUpperCase()}</AvatarFallback>
+            <AvatarFallback>{((comment.username || "?")[0] || "?").toUpperCase()}</AvatarFallback>
           </Avatar>
         </Link>
         
@@ -93,7 +93,7 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
           </div>
           
           <div className="flex items-center gap-4 mt-1 px-3">
-            <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
+            <span className="text-xs text-muted-foreground">{formatTime(comment.timestamp)}</span>
             <button
               onClick={handleLike}
               className="text-xs text-muted-foreground hover:text-red-500 transition-colors"
@@ -168,29 +168,32 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
 export default function PostCard({ post }: PostCardProps) {
   const dispatch = useAppDispatch();
   const { currentUser } = useAppSelector((state) => state.user);
+  const authUser = useAppSelector((state) => state.auth.user);
   const commentsFromState = useAppSelector((state) => state.posts.postComments[post.id]);
   const comments = commentsFromState || [];
   const [comment, setComment] = useState('');
+  const [showComments, setShowComments] = useState(false);
   const [showAllComments, setShowAllComments] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  const isOwnPost = currentUser?.id === post.userId;
+  const isOwnPost = authUser?.id === post.userId;
 
   const handleComment = () => {
     if (comment.trim()) {
-      dispatch(addComment({ postId: post.id, content: comment }));
+      dispatch(createComment({ postId: post.id, content: comment }));
       setComment('');
     }
   };
 
   const handleRepost = () => {
-    dispatch(repostPost(post.id));
-    toast.success('Post reposted!');
+    dispatch(togglePostRepost(post.id));
+    toast.success(post.isReposted ? 'Repost removed' : 'Post reposted!');
   };
 
   const handleSave = () => {
-    dispatch(toggleSave(post.id));
+    dispatch(togglePostSave(post.id));
     toast.success(post.isSaved ? 'Post unsaved' : 'Post saved!');
   };
 
@@ -210,17 +213,37 @@ export default function PostCard({ post }: PostCardProps) {
     toast.success('Post archived');
   };
 
-  const handleToggleLikesVisible = () => {
-    dispatch(toggleLikesVisible(post.id));
-    toast.success(post.likesVisible ? 'Like counts hidden' : 'Like counts visible');
+  const handleEdit = () => {
+    setShowEditDialog(true);
   };
 
-  const handleToggleCommentsAllowed = () => {
-    dispatch(toggleCommentsAllowed(post.id));
-    toast.success(post.commentsAllowed ? 'Comments disabled' : 'Comments enabled');
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await dispatch(deletePost(post.id)).unwrap();
+      toast.success('Post deleted successfully');
+    } catch (error: unknown) {
+      const message = 
+        (error && typeof error === 'object' && 'response' in error && 
+         error.response && typeof error.response === 'object' && 'data' in error.response &&
+         error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data)
+          ? String(error.response.data.message)
+          : 'Failed to delete post';
+      toast.error(message);
+    }
   };
 
   const displayedComments = showAllComments ? comments : comments.slice(0, 2);
+  const hasMoreComments = comments.length > 2;
+
+  useEffect(() => {
+    if (showComments) {
+      dispatch(fetchComments(post.id));
+    }
+  }, [dispatch, post.id, showComments]);
 
   return (
     <Card className="overflow-hidden">
@@ -230,15 +253,20 @@ export default function PostCard({ post }: PostCardProps) {
           <Link to={`/profile/${post.userId}`}>
             <Avatar>
               <AvatarImage src={post.avatar} />
-              <AvatarFallback>{post.username[0].toUpperCase()}</AvatarFallback>
+              <AvatarFallback>{((post.username || "?")[0] || "?").toUpperCase()}</AvatarFallback>
             </Avatar>
           </Link>
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <Link to={`/profile/${post.userId}`} className="hover:underline">
-                <p className="font-semibold">{post.username}</p>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link to={`/profile/${post.userId}`} className="hover:underline">
+                  <p className="font-semibold">{post.username}</p>
+                </Link>
+                {post.isEdited && (
+                  <span className="text-xs text-muted-foreground italic">EDITED</span>
+                )}
+              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="p-1 hover:bg-muted rounded-full">
@@ -249,31 +277,13 @@ export default function PostCard({ post }: PostCardProps) {
                   {isOwnPost ? (
                     <>
                       {/* Options for own posts */}
-                      <DropdownMenuItem onClick={handleToggleLikesVisible}>
-                        {post.likesVisible ? (
-                          <>
-                            <EyeOff className="w-4 h-4 mr-2" />
-                            Hide like counts
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="w-4 h-4 mr-2" />
-                            Show like counts
-                          </>
-                        )}
+                      <DropdownMenuItem onClick={handleEdit}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit Post
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleToggleCommentsAllowed}>
-                        {post.commentsAllowed ? (
-                          <>
-                            <MessageSquareOff className="w-4 h-4 mr-2" />
-                            Disable comments
-                          </>
-                        ) : (
-                          <>
-                            <MessageSquare className="w-4 h-4 mr-2" />
-                            Enable comments
-                          </>
-                        )}
+                      <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Post
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleSave}>
@@ -316,7 +326,7 @@ export default function PostCard({ post }: PostCardProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <p className="text-sm text-muted-foreground">{post.timestamp}</p>
+            <p className="text-sm text-muted-foreground">{formatTime(post.timestamp)}</p>
           </div>
         </div>
 
@@ -345,20 +355,23 @@ export default function PostCard({ post }: PostCardProps) {
         {/* Post Actions */}
         <div className="flex items-center justify-between text-muted-foreground mb-3">
           <button
-            onClick={() => dispatch(toggleLike(post.id))}
+            onClick={() => dispatch(togglePostLike(post.id))}
             className="flex items-center gap-2 hover:text-red-500 transition-colors"
           >
             <Heart className={`w-5 h-5 ${post.isLiked ? 'fill-red-500 text-red-500' : ''}`} />
             {post.likesVisible && <span className="text-sm">{post.likes}</span>}
           </button>
 
-          <button className="flex items-center gap-2 hover:text-blue-500 transition-colors">
+          <button 
+            onClick={() => setShowComments(!showComments)}
+            className="flex items-center gap-2 hover:text-blue-500 transition-colors"
+          >
             <MessageCircle className="w-5 h-5" />
             <span className="text-sm">{post.comments}</span>
           </button>
 
           <button
-            onClick={() => dispatch(repostPost(post.id))}
+            onClick={() => dispatch(togglePostRepost(post.id))}
             className="flex items-center gap-2 hover:text-green-500 transition-colors"
           >
             <Repeat className={`w-5 h-5 ${post.isReposted ? 'text-green-500' : ''}`} />
@@ -373,7 +386,7 @@ export default function PostCard({ post }: PostCardProps) {
           </button>
 
           <button
-            onClick={() => dispatch(toggleSave(post.id))}
+            onClick={() => dispatch(togglePostSave(post.id))}
             className="hover:text-primary transition-colors"
           >
             <Bookmark className={`w-5 h-5 ${post.isSaved ? 'fill-current text-primary' : ''}`} />
@@ -381,7 +394,7 @@ export default function PostCard({ post }: PostCardProps) {
         </div>
 
         {/* Comments Section */}
-        {post.commentsAllowed ? (
+        {post.commentsAllowed && showComments && (
           <>
             {comments.length > 0 && (
               <>
@@ -399,7 +412,7 @@ export default function PostCard({ post }: PostCardProps) {
                 </div>
 
                 {/* Show more/less comments */}
-                {comments.length > 2 && (
+                {hasMoreComments && (
                   <button
                     onClick={() => setShowAllComments(!showAllComments)}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-2 px-3"
@@ -418,8 +431,10 @@ export default function PostCard({ post }: PostCardProps) {
             {/* Add Comment Input */}
             <div className="flex gap-2">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={currentUser?.avatar} />
-                <AvatarFallback>{currentUser?.username[0].toUpperCase()}</AvatarFallback>
+                <AvatarImage src={currentUser?.avatar_url ?? authUser?.avatar ?? undefined} />
+                <AvatarFallback>
+                  {((currentUser?.username || authUser?.username || "?")[0] || "?").toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <Input
                 placeholder="Add a comment..."
@@ -449,10 +464,6 @@ export default function PostCard({ post }: PostCardProps) {
               </Button>
             </div>
           </>
-        ) : (
-          <div className="text-center py-3">
-            <p className="text-sm text-muted-foreground">Comments are disabled for this post</p>
-          </div>
         )}
       </div>
 
@@ -461,6 +472,13 @@ export default function PostCard({ post }: PostCardProps) {
         postId={post.id}
         open={showShareDialog} 
         onOpenChange={setShowShareDialog}
+      />
+
+      {/* Edit Post Dialog */}
+      <EditPostDialog
+        post={post}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
       />
     </Card>
   );

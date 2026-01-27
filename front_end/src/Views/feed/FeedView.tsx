@@ -1,9 +1,16 @@
-import { useAppSelector } from '../../hooks';
+import { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import StoryBar from '../../Components/story/StoryBar';
 import PostCard from '../../Components/post/PostCard';
+import { fetchPosts } from '../../features/posts/postsSlice';
 
 export default function FeedView() {
+  const dispatch = useAppDispatch();
   const { feed } = useAppSelector((state) => state.posts);
+
+  useEffect(() => {
+    dispatch(fetchPosts());
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen">

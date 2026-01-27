@@ -70,6 +70,8 @@ export const Login = async (req: Request, res: Response) => {
     const tokenPayload = {
       id: user.id,
       email: user.email,
+      username: user.username,
+      avatar_url: user.avatar_url ?? null,
       role: user.role?.name,
       permissions,
     };
