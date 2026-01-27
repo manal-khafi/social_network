@@ -6,11 +6,11 @@ import {
   FacebookAuthProvider,
   browserLocalPersistence,
   setPersistence,
-  signOut, // Added for logout
+  signOut,
 } from "firebase/auth";
+import { getStorage } from "firebase/storage"; // ✅ ADD THIS
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCKB3zKrAUvWBJ3E83tLlLw5vGvfrOqX1E",
   authDomain: "exam9-1.firebaseapp.com",
@@ -22,45 +22,29 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
 
-// Enforce local persistence (Step 3)
+// 🔐 Auth
+export const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence);
+
+// 📦 Storage (FOR AVATAR / COVER UPLOADS)
+export const storage = getStorage(app); // ✅ THIS IS WHAT YOU NEED
 
 // Providers
 const googleProvider = new GoogleAuthProvider();
 const facebookProvider = new FacebookAuthProvider();
 
-// Auth functions (Step 4)
+// Auth helpers
 export const signInWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    // User signed in successfully
-    // The Firebase SDK automatically manages idToken and refreshToken
-    return result.user;
-  } catch (error) {
-    console.error("Google sign-in error:", error);
-    throw error;
-  }
+  const result = await signInWithPopup(auth, googleProvider);
+  return result.user;
 };
 
 export const signInWithFacebook = async () => {
-  try {
-    const result = await signInWithPopup(auth, facebookProvider);
-    // User signed in successfully
-    // The Firebase SDK automatically manages idToken and refreshToken
-    return result.user;
-  } catch (error) {
-    console.error("Facebook sign-in error:", error);
-    throw error;
-  }
+  const result = await signInWithPopup(auth, facebookProvider);
+  return result.user;
 };
 
 export const firebaseSignOut = async () => {
-  try {
-    await signOut(auth);
-  } catch (error) {
-    console.error("Firebase sign out error:", error);
-    throw error;
-  }
+  await signOut(auth);
 };

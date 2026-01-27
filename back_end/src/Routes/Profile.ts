@@ -1,13 +1,20 @@
 import { Router } from "express";
-import { getUserProfile, getCurrentUserProfile } from "../Controllers/user/profileController";
+import {
+  getUserProfile,
+  getCurrentUserProfile,
+  updateCurrentUserProfile,
+  updateMyAvatar,
+} from "../Controllers/user/profileController";
 import { authMiddleware } from "../Middleware/authMiddlware";
 
 const ProfileRouter = Router();
 
-// Route to get the current logged-in user's profile
+// Current user profile
 ProfileRouter.get("/me", authMiddleware, getCurrentUserProfile);
+ProfileRouter.put("/me", authMiddleware, updateCurrentUserProfile);
+ProfileRouter.put("/me/avatar", authMiddleware, updateMyAvatar);
 
-// Route to get a user's profile. Auth is required to check for private profiles.
+// Public profile (by username)
 ProfileRouter.get("/:username", authMiddleware, getUserProfile);
 
 export default ProfileRouter;

@@ -10,9 +10,6 @@ import communitiesReducer from './features/communities/communitiesSlice';
 import textSizeReducer from './features/textSize/textSizeSlice';
 import accessibilityReducer from './features/accessibility/accessibilitySlice';
 import layoutDensityReducer from './features/layoutDensity/layoutDensitySlice';
-import { saveTextSize } from './utils/persistTextSize';
-import { saveAccessibility } from './utils/persistAccessibility';
-import { saveLayoutDensity } from './utils/persistLayoutDensity';
 import type { AccessibilityPersistedState } from './utils/persistAccessibility';
 import type { LayoutDensity } from './utils/persistLayoutDensity';
 

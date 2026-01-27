@@ -121,7 +121,6 @@ function AppContent() {
 }
 
 function App() {
-  // Font size management
   const fontSize = useAppSelector((state) => state.textSize.fontSize);
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
@@ -140,7 +139,6 @@ function App() {
     root.classList.toggle("a11y-touch", largerTouchTargets);
   }, [highContrast, reducedMotion, screenReader, largerTouchTargets]);
 
-  // Layout Density class management
   const { density } = useAppSelector((state) => state.layoutDensity);
   useEffect(() => {
     const root = document.documentElement;
@@ -157,7 +155,6 @@ function App() {
   return <AppContent />;
 }
 
-// The AppWrapper is used in main.tsx to provide the store to the App.
 function AppWrapper() {
   return (
     <Provider store={store}>

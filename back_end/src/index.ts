@@ -11,6 +11,7 @@ import SignaleRouter from "./Routes/Signale";
 import ComptRouter from "./Routes/Comproutes";
 import ProfileRouter from "./Routes/Profile";
 import { initializeEmailService } from "./config/EmailConfig";
+import AccountRouter from "./Routes/accountroutes";
 
 const port = process.env.PORT || 3500;
 const app = express();
@@ -43,6 +44,7 @@ app.use("/api/follow", FollowRoutes);
 app.use("/api/reports", SignaleRouter);
 app.use("/api/Compte", ComptRouter);
 app.use("/api/profile", ProfileRouter);
+app.use("/api/account", AccountRouter);
 
 app.get("/", (req, res) => {
   res.json({

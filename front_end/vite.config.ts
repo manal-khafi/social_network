@@ -10,7 +10,7 @@ export default defineConfig({
     strictPort: true,
     hmr: {
       protocol: "ws",
-      host: "127.0.0.1",   // browser connects to your host machine
+      host: "127.0.0.1",  
       clientPort: 5173,
     },
     watch: {
