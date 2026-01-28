@@ -11,24 +11,36 @@ export const deleteComment = async (req: Request, res: Response) => {
 
   try {
     const comment = await prisma.comment.findUnique({
-      where: { id: commentId }
+      where: { id: commentId },
+      include: {
+        post: {
+          select: {
+            user_id: true,
+          },
+        },
+      },
     });
 
     if (!comment || comment.is_deleted) {
       return res.status(404).json({ message: "Comment not found or already deleted" });
     }
-    if (comment.user_id !== userId) {
+
+    const isCommentOwner = comment.user_id === userId;
+    const isPostOwner = comment.post.user_id === userId;
+
+    if (!isCommentOwner && !isPostOwner) {
       return res.status(403).json({ message: "You are not allowed to delete this comment" });
     }
 
     await prisma.comment.update({
       where: { id: commentId },
-      data: { is_deleted: true }
+      data: { is_deleted: true },
     });
 
-    res.status(200).json({ message: "Comment deleted successfully" });
+    res.status(200).json({ success: true, commentId });
 
   } catch (error) {
+    console.error("Error deleting comment:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

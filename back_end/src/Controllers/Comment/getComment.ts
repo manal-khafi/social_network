@@ -43,6 +43,15 @@ export const getComment = async (req: Request, res: Response) => {
       }
     }
 
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { user_id: true }
+    });
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
     const include: {
       user: { select: { id: true; username: true; display_name: true; avatar_url: true } };
       _count: { select: { likes: true } };
@@ -78,7 +87,7 @@ export const getComment = async (req: Request, res: Response) => {
     }));
     const commentsTree = buildCommentTree(normalized, null);
 
-    res.status(200).json({ comments: commentsTree });
+    res.status(200).json({ postOwnerId: post.user_id, comments: commentsTree });
 
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });

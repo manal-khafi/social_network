@@ -19,7 +19,7 @@ export interface Comment {
 export interface Post {
   id: string;
   userId: string;
-  username:string;
+  username: string;
   avatar?: string;
   content: string;
   images?: string[];
@@ -49,7 +49,7 @@ interface PostsState {
   myPosts: Post[];
   myReposts: Post[];
   userPosts: { [userId: string]: Post[] };
-  postComments: { [postId: string]: Comment[] };
+  postComments: { [postId: string]: { comments: Comment[]; postOwnerId: string } };
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   loadMoreStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
   nextOffset: number | null;
@@ -187,21 +187,47 @@ export const unarchivePost = createAsyncThunk(
 export const fetchComments = createAsyncThunk(
   'posts/fetchComments',
   async (postId: string) => {
-    const response = await api.get(`/comments/${postId}`);
-    return { postId, comments: response.data.comments as Comment[] };
+    const response = await api.get(`/comments/get-comments/${postId}`);
+    return {
+      postId,
+      comments: response.data.comments as Comment[],
+      postOwnerId: response.data.postOwnerId as string
+    };
   }
 );
 
 export const createComment = createAsyncThunk(
   'posts/createComment',
   async (payload: { postId: string; content: string; parent_comment_id?: string | null }) => {
-    const response = await api.post(`/comments/${payload.postId}`, {
+    const response = await api.post(`/comments/create-comment`, {
+      postId: payload.postId,
       content: payload.content,
       parent_comment_id: payload.parent_comment_id ?? null,
     });
     return { postId: payload.postId, comment: response.data.comment as Comment };
   }
 );
+
+export const updateComment = createAsyncThunk(
+  'posts/updateComment',
+  async (payload: { postId: string; commentId: string; content: string }) => {
+    const response = await api.put(`/comments/modify-comment/${payload.commentId}`, { content: payload.content });
+    return { postId: payload.postId, commentId: payload.commentId, updatedComment: response.data.comment };
+  }
+);
+
+export const deleteComment = createAsyncThunk(
+  "posts/deleteComment",
+  async (payload: { postId: string; commentId: string }, { rejectWithValue }) => {
+    try {
+      await api.delete(`/comments/delete-comment/${payload.commentId}`);
+      return payload;
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message ?? "Failed to delete comment");
+    }
+  }
+);
+
 
 export const toggleCommentLike = createAsyncThunk(
   'posts/toggleCommentLike',
@@ -415,15 +441,18 @@ const postsSlice = createSlice({
         state.archivedPosts = state.archivedPosts.filter(p => p.id !== postId);
       })
       .addCase(fetchComments.fulfilled, (state, action) => {
-        state.postComments[action.payload.postId] = action.payload.comments;
+        state.postComments[action.payload.postId] = {
+          comments: action.payload.comments,
+          postOwnerId: action.payload.postOwnerId,
+        };
       })
       .addCase(createComment.fulfilled, (state, action) => {
         const { postId, comment } = action.payload;
         if (!state.postComments[postId]) {
-          state.postComments[postId] = [];
+          state.postComments[postId] = { comments: [], postOwnerId: '' }; // This should ideally be set by fetchComments
         }
         if (comment.parent_comment_id) {
-          const stack = [...state.postComments[postId]];
+          const stack = [...state.postComments[postId].comments];
           while (stack.length > 0) {
             const current = stack.shift();
             if (!current) continue;
@@ -437,13 +466,80 @@ const postsSlice = createSlice({
             }
           }
         } else {
-          state.postComments[postId].push(comment);
+          state.postComments[postId].comments.push(comment);
         }
         const post = state.feed.find(p => p.id === postId);
         if (post) post.comments += 1;
       })
+      .addCase(updateComment.fulfilled, (state, action) => {
+        const { postId, commentId, updatedComment } = action.payload;
+        const postComments = state.postComments[postId];
+        if (!postComments) return;
+
+        const findAndUpdate = (comments: Comment[]): boolean => {
+          for (let i = 0; i < comments.length; i++) {
+            if (comments[i].id === commentId) {
+              comments[i].content = updatedComment.content;
+              comments[i].timestamp = updatedComment.updatedAt;
+              return true;
+            }
+            if (comments[i].replies && findAndUpdate(comments[i].replies!)) {
+              return true;
+            }
+          }
+          return false;
+        };
+        findAndUpdate(postComments.comments);
+      })
+      .addCase(deleteComment.fulfilled, (state, action) => {
+        const { postId, commentId } = action.payload;
+        const bucket = state.postComments[postId];
+        if (!bucket) return;
+
+        const removeRecursive = (comments: Comment[]): [Comment[], number] => {
+          let removed = 0;
+
+          const next = comments.filter((c) => {
+            if (c.id === commentId) {
+              const countReplies = (arr?: Comment[]): number =>
+                !arr ? 0 : arr.reduce((acc, r) => acc + 1 + countReplies(r.replies), 0);
+
+              removed = 1 + countReplies(c.replies);
+              return false;
+            }
+            return true;
+          }).map((c) => {
+            if (!c.replies?.length) return c;
+            const [nextReplies, removedInReplies] = removeRecursive(c.replies);
+            removed += removedInReplies;
+            return { ...c, replies: nextReplies };
+          });
+
+          return [next, removed];
+        };
+
+        const [nextComments, removedCount] = removeRecursive(bucket.comments);
+        bucket.comments = nextComments;
+
+        const dec = Math.max(0, removedCount);
+
+        const decInList = (list: Post[]) => {
+          const p = list.find((x) => x.id === postId);
+          if (p) p.comments = Math.max(0, (p.comments ?? 0) - dec);
+        };
+
+        decInList(state.feed);
+        decInList(state.myPosts);
+        decInList(state.myReposts);
+        decInList(state.savedPosts);
+        decInList(state.archivedPosts);
+
+        for (const uid of Object.keys(state.userPosts)) {
+          decInList(state.userPosts[uid]);
+        }
+      })
       .addCase(toggleCommentLike.fulfilled, (state, action) => {
-        const comments = state.postComments[action.payload.postId];
+        const comments = state.postComments[action.payload.postId]?.comments;
         if (!comments) return;
         const stack = [...comments];
         while (stack.length > 0) {

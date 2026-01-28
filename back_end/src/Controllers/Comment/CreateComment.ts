@@ -4,9 +4,8 @@ import { isBlockedEitherWay } from "../../Service/BlockService";
 
 const Comment = async (req: Request, res: Response) => {
   try {
-    const { content, parent_comment_id } = req.body;
-    const postId = req.params.postId ?? req.body.postId;
-    const userId = req.user?.id ?? req.params.userId;
+    const { content, parent_comment_id, postId } = req.body;
+    const userId = req.user?.id;
 
     if (!postId) {
       return res.status(400).json({ message: "Post ID is required" });
@@ -85,3 +84,4 @@ const Comment = async (req: Request, res: Response) => {
 };
 
 export default Comment;
+
