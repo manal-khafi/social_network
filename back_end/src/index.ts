@@ -16,6 +16,7 @@ import AccountRouter from "./Routes/accountroutes";
 import MyLikedPosts from "./Routes/postRoutes";
 import BlockRoutes from "./Routes/BlockRoute";
 import SaveRoutes from "./Routes/saveRoutes";
+import PrivacySettingsRoutes from "./Routes/privacySEttingsRoutes";
 
 const port = process.env.PORT || 3500;
 const app = express();
@@ -52,6 +53,8 @@ app.use("/api/posts", postsRouter);
 app.use("/api/posts", MyLikedPosts);
 app.use("/api", BlockRoutes);
 app.use("/api/saves", SaveRoutes);
+app.use("/api/account", AccountRouter);
+app.use("/api/privacy", PrivacySettingsRoutes);
 
 app.get("/", (req, res) => {
   res.json({

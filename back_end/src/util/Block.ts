@@ -1,3 +1,4 @@
+
 /**
  * Valider que l'utilisateur ne se bloque pas lui-même
  */
@@ -41,3 +42,4 @@ export const formatBlockedUsersList = (blocks: any[]) => {
     blocked_at: block.created_at,
   }));
 };
+

@@ -69,27 +69,31 @@ enum ReportStatus {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  username      String   @unique
-  email         String   @unique
-  password_hash String?
-  display_name  String
-  bio           String?
-  avatar_url    String?
-  is_private    Boolean  @default(false)
-  is_verified   Boolean  @default(false)
-  is_active     Boolean  @default(true)
-  provider      String?  @default("local")
-  last_login    DateTime @default(now())
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  token_version Int      @default(0)
-  onboarding_done Boolean @default(false)
-  
-  gender          String?
-  date_of_birth   DateTime?
-  account_name    String?
-  adresse        String?
+  id                   String   @id @default(uuid())
+  username             String   @unique
+  email                String   @unique
+  password_hash        String?
+  display_name         String
+  bio                  String?
+  avatar_url           String?
+  cover_image          String?
+  is_private           Boolean  @default(false)
+  is_verified          Boolean  @default(false)
+  is_active            Boolean  @default(true)
+  provider             String?  @default("local")
+  last_login           DateTime @default(now())
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+  token_version        Int      @default(0)
+  onboarding_done      Boolean  @default(false)
+  allow_comments       Boolean  @default(true)
+  allow_mentions       Boolean  @default(true)
+  show_activity_status Boolean  @default(true)
+
+  gender        String?
+  date_of_birth DateTime?
+  account_name  String?
+  adresse       String?
 
   role_id String?
   role    Role?   @relation(fields: [role_id], references: [id])
@@ -115,8 +119,8 @@ model User {
   groupMembers             GroupMember[]
   joinRequests             JoinRequest[]
   notifications            Notification[]
-  reportsMade     Report[] @relation("UserReportsMade")
-  reportsReceived Report[] @relation("UserReportsReceived")
+  reportsMade              Report[]                  @relation("UserReportsMade")
+  reportsReceived          Report[]                  @relation("UserReportsReceived")
 }
 
 model Follow {
@@ -147,20 +151,20 @@ model Block {
 }
 
 model Post {
-  id         String         @id @default(uuid())
-  content    String?
-  media_urls Json?
-  is_deleted Boolean        @default(false)
-  is_archived Boolean       @default(false)
-  visibility PostVisibility @default(public)
-  created_at DateTime       @default(now())
-  updated_at DateTime       @updatedAt
+  id          String         @id @default(uuid())
+  content     String?
+  media_urls  Json?
+  is_deleted  Boolean        @default(false)
+  is_archived Boolean        @default(false)
+  visibility  PostVisibility @default(public)
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
 
   user_id String
   user    User   @relation(fields: [user_id], references: [id])
 
   // Relations
-  reports Report[]
+  reports  Report[]
   comments Comment[]
   likes    Like[]
   shares   Share[]
@@ -471,22 +475,20 @@ model Notification {
   typeNotification TypeNotification @relation(fields: [type_notification_id], references: [id])
 }
 
-
-
 model Report {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   reason      String
   description String?
   status      ReportStatus @default(PENDING)
-  created_at  DateTime @default(now())
+  created_at  DateTime     @default(now())
 
-  reporter_id        String
-  reported_user_id   String
-  post_id            String?
-  comment_id         String?
+  reporter_id      String
+  reported_user_id String
+  post_id          String?
+  comment_id       String?
 
-  reporter      User  @relation("UserReportsMade", fields: [reporter_id], references: [id], onDelete: Cascade)
-  reportedUser  User  @relation("UserReportsReceived", fields: [reported_user_id], references: [id], onDelete: Cascade)
-  post          Post? @relation(fields: [post_id], references: [id], onDelete: SetNull)
-  comment       Comment? @relation(fields: [comment_id], references: [id], onDelete: SetNull)
+  reporter     User     @relation("UserReportsMade", fields: [reporter_id], references: [id], onDelete: Cascade)
+  reportedUser User     @relation("UserReportsReceived", fields: [reported_user_id], references: [id], onDelete: Cascade)
+  post         Post?    @relation(fields: [post_id], references: [id], onDelete: SetNull)
+  comment      Comment? @relation(fields: [comment_id], references: [id], onDelete: SetNull)
 }

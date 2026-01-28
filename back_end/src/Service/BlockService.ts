@@ -185,3 +185,45 @@ export const getBlockedCount = async (userId: string): Promise<number> => {
     },
   });
 };
+
+export const isBlockedEitherWay = async (viewerId: string, targetId: string) => {
+  const block = await prisma.block.findFirst({
+    where: {
+      OR: [
+        { blocker_id: viewerId, blocked_id: targetId },
+        { blocker_id: targetId, blocked_id: viewerId },
+      ],
+    },
+    select: { id: true },
+  });
+
+  return !!block;
+};
+
+export const getBlockedUserIds = async (viewerId: string): Promise<string[]> => {
+  // Users blocked by the viewer
+  const blockedByViewer = await prisma.block.findMany({
+    where: {
+      blocker_id: viewerId,
+    },
+    select: {
+      blocked_id: true,
+    },
+  });
+
+  // Users who have blocked the viewer
+  const blockingViewer = await prisma.block.findMany({
+    where: {
+      blocked_id: viewerId,
+    },
+    select: {
+      blocker_id: true,
+    },
+  });
+
+  const blockedIds = new Set<string>();
+  blockedByViewer.forEach((block) => blockedIds.add(block.blocked_id));
+  blockingViewer.forEach((block) => blockedIds.add(block.blocker_id));
+
+  return Array.from(blockedIds);
+};

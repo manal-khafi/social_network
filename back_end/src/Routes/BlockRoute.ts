@@ -8,33 +8,20 @@ import {
   getBlockedUsers,
 } from "../Controllers/Block/BlockController";
 import { authMiddleware } from "../Middleware/authMiddlware";
-import { checkBlockMiddleware } from "../Middleware/Block/CheckBlockMiddleware";
 
 const BlockRoutes = Router();
-
-// Toutes les routes nécessitent une Authentication
 BlockRoutes.use(authMiddleware);
 
-// POST /api/blocks - Bloquer un utilisateur
-BlockRoutes.post("/blocks", blockUser, checkBlockMiddleware);
+BlockRoutes.post("/blocks", blockUser);
 
-// DELETE /api/blocks - Débloquer un utilisateur
-BlockRoutes.delete("/blocks", unblockUser, checkBlockMiddleware);
+BlockRoutes.delete("/blocks", unblockUser);
 
-// GET /api/blocks/check/:targetUserId - Vérifier si bloqué (simple)
-BlockRoutes.get("/blocks/check/:targetUserId", checkBlock, checkBlockMiddleware);
+BlockRoutes.get("/blocks/check/:targetUserId", checkBlock);
 
-// GET /api/blocks/status/:targetUserId - Statut détaillé du blocage
-BlockRoutes.get(
-  "/blocks/status/:targetUserId",
-  getBlockStatus,
-  checkBlockMiddleware
-);
+BlockRoutes.get("/blocks/status/:targetUserId", getBlockStatus);
 
-// GET /api/blocks/count - Nombre d'utilisateurs bloqués
-BlockRoutes.get("/blocks/count", getBlockedCount, checkBlockMiddleware);
+BlockRoutes.get("/blocks/count", getBlockedCount);
 
-// GET /api/blocks - Liste des utilisateurs bloqués (doit être en dernier)
-BlockRoutes.get("/blocks", getBlockedUsers, checkBlockMiddleware);
+BlockRoutes.get("/blocks", getBlockedUsers);
 
 export default BlockRoutes;

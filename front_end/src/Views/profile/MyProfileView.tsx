@@ -43,6 +43,13 @@ export default function MyProfileView() {
   };
 
   const user = currentUser ?? authUser;
+  const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:3500").replace(/\/api$/, "");
+
+  const makeUrl = (url?: string | null) => {
+    if (!url) return null;
+    return url.startsWith("http") ? url : `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+
 
   if (profileStatus === "loading" && !user) {
     return (
@@ -63,14 +70,35 @@ export default function MyProfileView() {
     );
   }
 
+  const avatarUrl = (currentUser?.avatar_url ?? (authUser as any)?.avatar_url ?? null) as string | null;
+
+  console.log("Avatar URL:", avatarUrl);
+
+
+  const coverImageRaw = (currentUser?.cover_image ?? (authUser as any)?.cover_image ?? null) as string | null;
+
+  const coverImage = makeUrl(coverImageRaw);
+  console.log("Cover Image RAW:", coverImageRaw);
+  console.log("Cover Image FINAL:", coverImage);
+
+
   return (
     <div>
-      <div className="h-48 bg-muted" />
+      <div className="h-48 bg-muted overflow-hidden">
+        {coverImage ? (
+          <img
+            src={`${coverImage}${coverImage.includes("?") ? "&" : "?"}v=${Date.now()}`}
+            alt="Cover"
+            className="w-full h-full object-cover"
+          />
+        ) : null}
+      </div>
 
       <div className="p-4">
         <div className="flex items-end justify-between -mt-16 mb-4">
           <Avatar className="w-24 h-24 border-4 border-background">
-            <AvatarImage src={user.avatar_url ?? user.avatar ?? undefined} />
+            <AvatarImage src={avatarUrl ?? undefined} />
+
             <AvatarFallback className="text-2xl">
               {(user?.username?.[0] ?? "?").toUpperCase()}
             </AvatarFallback>

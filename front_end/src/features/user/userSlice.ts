@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "../../api/axios";
-import type { RootState } from "../../store";
+import type { RootState, AppDispatch } from "../../store";
+import { removePostsByUserId } from '../posts/postsSlice';
 
 export interface UserProfile {
   id: string;
@@ -10,26 +11,18 @@ export interface UserProfile {
   bio: string | null;
   avatar_url: string | null;
 
-  // Extended fields for Edit Profile (backend-supported if you add them)
-  location?: string | null;        // maps to backend "adresse" if you want
-  date_of_birth?: string | null;   // backend DateTime -> you can store as ISO string
-  allowComments?: boolean;
-  allowMentions?: boolean;
-  showActivityStatus?: boolean;
+  adresse?: string | null;
+  date_of_birth?: string | null;
 
-  // optional fields (only if your backend returns them)
-  coverImage?: string | null;
-  isPublic?: boolean;
+  is_private?: boolean;
+  allow_comments?: boolean;
+  allow_mentions?: boolean;
+  show_activity_status?: boolean;
 
-  // social/other UI flags
-  followersCount?: number;
-  followingCount?: number;
-  postsCount?: number;
-  isFollowing?: boolean;
-  isFollowedBy?: boolean;
-  followRequestPending?: boolean;
-  isBlocked?: boolean;
+  cover_image?: string | null;
+  isBlocked?: boolean; 
 }
+
 
 interface UserState {
   currentUser: UserProfile | null;
@@ -59,9 +52,6 @@ const initialState: UserState = {
   blockedCount: 0,
 };
 
-// -------------------------
-// PROFILE (BACKEND)
-// -------------------------
 export const fetchCurrentUserProfile = createAsyncThunk<
   UserProfile,
   void,
@@ -82,9 +72,12 @@ export const saveMyProfile = createAsyncThunk<
     username: string;
     display_name: string;
     bio: string | null;
-    adresse: string | null;        // backend field
-    date_of_birth: string | null;  // "YYYY-MM-DD"
-    isPublic: boolean;             // frontend field mapped in backend -> is_private
+    adresse: string | null;
+    date_of_birth: string | null;
+    is_private: boolean;
+    allow_comments: boolean;
+    allow_mentions: boolean;
+    show_activity_status: boolean;
   },
   { rejectValue: string }
 >("user/saveMyProfile", async (payload, { rejectWithValue }) => {
@@ -95,6 +88,7 @@ export const saveMyProfile = createAsyncThunk<
     return rejectWithValue(error.response?.data?.message || "Failed to update profile");
   }
 });
+
 
 export const updateMyAvatar = createAsyncThunk<
   UserProfile,
@@ -109,6 +103,24 @@ export const updateMyAvatar = createAsyncThunk<
   }
 });
 
+export const updateCoverImage = createAsyncThunk<
+  { cover_image: string },
+  { cover_image: string },
+  { rejectValue: string }
+>("user/updateCoverImage", async (payload, { rejectWithValue }) => {
+  try {
+    const res = await api.put("/profile/me/cover", payload);
+    const cover = res.data?.user?.cover_image;
+    if (!cover) return rejectWithValue("Server did not return cover_image");
+    return { cover_image: cover as string };
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to update cover image"
+    );
+  }
+});
+
+
 // If you want privacy toggle to really hit backend:
 export const togglePrivacy = createAsyncThunk<
   { isPublic: boolean },
@@ -119,16 +131,15 @@ export const togglePrivacy = createAsyncThunk<
     const currentUser = getState().user.currentUser;
     if (!currentUser) return rejectWithValue("No current user loaded");
 
-    const newIsPublic = !(currentUser.isPublic ?? true);
+    const newIsPublic = !(currentUser.is_private ?? false);
 
-    // backend expects isPublic, and maps to is_private = !isPublic
     await api.put("/profile/me", {
       username: currentUser.username,
       display_name: currentUser.display_name,
       bio: currentUser.bio,
-      adresse: currentUser.location ?? null,
+      adresse: currentUser.adresse ?? null,
       date_of_birth: currentUser.date_of_birth ?? null,
-      isPublic: newIsPublic,
+      is_private: !newIsPublic,
     });
 
     return { isPublic: newIsPublic };
@@ -137,9 +148,6 @@ export const togglePrivacy = createAsyncThunk<
   }
 });
 
-// -------------------------
-// FOLLOW SYSTEM (your routes)
-// -------------------------
 export const followUser = createAsyncThunk<
   { userId: string },
   string,
@@ -244,15 +252,23 @@ export const fetchFollowing = createAsyncThunk<
 export const blockUser = createAsyncThunk<
   { blockedUserId: string },
   string,
-  { rejectValue: string }
->("user/blockUser", async (blockedUserId, { rejectWithValue }) => {
+  { dispatch: AppDispatch; rejectValue: string }
+>("user/blockUser", async (blockedUserId, thunkAPI) => {
   try {
     await api.post(`/blocks`, { blockedUserId });
+
+    thunkAPI.dispatch(removePostsByUserId(blockedUserId));
+    thunkAPI.dispatch(fetchBlockedUsers());
+    thunkAPI.dispatch(fetchBlockedCount());
+
     return { blockedUserId };
   } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to block user");
+    return thunkAPI.rejectWithValue(
+      error.response?.data?.message || "Failed to block user"
+    );
   }
 });
+
 
 export const unblockUser = createAsyncThunk<
   { blockedUserId: string },
@@ -357,11 +373,27 @@ const userSlice = createSlice({
       .addCase(updateMyAvatar.fulfilled, (state, action) => {
         state.currentUser = action.payload;
       })
+      // cover image (backend)
+      .addCase(updateCoverImage.fulfilled, (state, action) => {
+        const newCover = action.payload.cover_image;
+
+        if (state.currentUser) {
+          state.currentUser.cover_image = newCover;
+        }
+        if (state.viewedUser && state.currentUser && state.viewedUser.id === state.currentUser.id) {
+          state.viewedUser.cover_image = newCover;
+        }
+      })
+
+
 
       // privacy
       .addCase(togglePrivacy.fulfilled, (state, action) => {
-        if (state.currentUser) state.currentUser.isPublic = action.payload.isPublic;
+        if (state.currentUser) {
+          state.currentUser.is_private = !action.payload.isPublic;
+        }
       })
+
 
       // follow
       .addCase(followUser.fulfilled, (state, action) => {
@@ -394,8 +426,18 @@ const userSlice = createSlice({
       // block
       .addCase(blockUser.fulfilled, (state, action) => {
         const targetId = action.payload.blockedUserId;
-        if (state.viewedUser?.id === targetId) state.viewedUser.isBlocked = true;
+        const blockedUserProfile =
+          state.suggestedUsers.find((u) => u.id === targetId) || state.viewedUser;
+
+        if (blockedUserProfile && !state.blockedUsers.some((u) => u.id === targetId)) {
+          state.blockedUsers.push({ ...blockedUserProfile, isBlocked: true });
+        }
+
+        if (state.viewedUser?.id === targetId) {
+          state.viewedUser.isBlocked = true;
+        }
       })
+
       .addCase(unblockUser.fulfilled, (state, action) => {
         const targetId = action.payload.blockedUserId;
         if (state.viewedUser?.id === targetId) state.viewedUser.isBlocked = false;
@@ -412,6 +454,11 @@ const userSlice = createSlice({
         state.blockedUsers = action.payload;
       })
 
+      .addCase(updatePrivacySettings.fulfilled, (state, action) => {
+        if (!state.currentUser) return;
+        state.currentUser = { ...state.currentUser, ...action.payload };
+      })
+
       // generic error capture
       .addMatcher(
         (action) => action.type.startsWith("user/") && action.type.endsWith("/rejected"),
@@ -419,8 +466,23 @@ const userSlice = createSlice({
           state.error = action.payload || action.error?.message || "Request failed";
         }
       );
+
   },
 });
+
+export const updatePrivacySettings = createAsyncThunk<
+  Pick<UserProfile, "is_private" | "allow_comments" | "allow_mentions" | "show_activity_status">,
+  Partial<Pick<UserProfile, "is_private" | "allow_comments" | "allow_mentions" | "show_activity_status">>,
+  { rejectValue: string }
+>("user/updatePrivacySettings", async (payload, { rejectWithValue }) => {
+  try {
+    const res = await api.patch("/users/me/privacy", payload);
+    return res.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to update privacy");
+  }
+});
+
 
 export const { setViewedUser, updateProfileLocal, clearUserError } = userSlice.actions;
 export default userSlice.reducer;

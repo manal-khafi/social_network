@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
+import { isBlockedEitherWay } from "../../Service/BlockService";
 
 const Unfollow = async (req: Request, res: Response) => {
   try {
@@ -16,6 +17,12 @@ const Unfollow = async (req: Request, res: Response) => {
     if (!userToUnfollow) {
       return res.status(404).json({ message: "User to unfollow not found" });
     }
+
+    // Check if either user has blocked the other
+    if (await isBlockedEitherWay(userId, userIdToUnfollow)) {
+        return res.status(403).json({ message: "Forbidden" });
+    }
+
     const existingFollow = await prisma.follow.findFirst({
       where: {
         follower_id: userId,

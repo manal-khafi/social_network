@@ -16,7 +16,7 @@ export default function UserProfileView() {
   
   const user = suggestedUsers.find(u => u.id === userId);
   
-  if (!user) return <div className="p-4">User not found</div>;
+  if (!user) return <div className="p-4">User not available</div>;
 
   const userPosts = feed.filter(p => p.userId === userId && !p.originalPost);
   const userReposts = feed.filter(p => p.userId === userId && p.originalPost);

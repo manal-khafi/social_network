@@ -1,30 +1,24 @@
-import { Request, Response, NextFunction } from 'express';
-import { isBlocked } from '../../Service/BlockService';
+import type { RequestHandler } from "express";
+import { isBlockedEitherWay } from "../../Service/BlockService";
 
-export const checkBlockMiddleware = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const checkBlockMiddleware: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user?.id;
     const targetUserId = req.params.userId || req.body.userId;
 
-    if (!userId || !targetUserId) {
-      return next();
-    }
+    if (!userId || !targetUserId) return next();
 
-    const blocked = await isBlocked(userId, targetUserId);
+    const blocked = await isBlockedEitherWay(userId, targetUserId);
 
     if (blocked) {
       return res.status(403).json({
         success: false,
-        message: "Action non autorisée en raison d'un blocage"
+        message: "Action non autorisée en raison d'un blocage",
       });
     }
 
-    next();
-  } catch (error: any) {
-    next(error);
+    return next();
+  } catch (error) {
+    return next(error);
   }
 };

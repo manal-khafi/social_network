@@ -6,6 +6,7 @@ import {
   deleteAccount,
 } from "../Controllers/Account/accountcontroller";
 
+
 const router = Router();
 
 router.put("/me/password", authMiddleware, changePassword);

@@ -1,27 +1,33 @@
-import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import StoryBar from '../../Components/story/StoryBar';
 import PostCard from '../../Components/post/PostCard';
 import { fetchPosts } from '../../features/posts/postsSlice';
+import { selectBlockedUsers } from '../../features/user/userSlice'; 
+import { useEffect } from 'react';
 
 export default function FeedView() {
   const dispatch = useAppDispatch();
   const { feed } = useAppSelector((state) => state.posts);
+  const blockedUsers = useAppSelector(selectBlockedUsers); 
 
   useEffect(() => {
     dispatch(fetchPosts());
   }, [dispatch]);
+
+  const filteredFeed = feed.filter(post =>
+    !blockedUsers.some(blockedUser => blockedUser.id === post.userId)
+  );
 
   return (
     <div className="min-h-screen">
       <StoryBar />
       
       <div className="space-y-4 p-4">
-        {feed.map((post) => (
+        {filteredFeed.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
         
-        {feed.length === 0 && (
+        {filteredFeed.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">No posts yet. Start following people to see their posts!</p>
           </div>

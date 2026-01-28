@@ -248,6 +248,23 @@ const postsSlice = createSlice({
         post.likesVisible = !post.likesVisible;
       }
     },
+    removePostsByUserId: (state, action: PayloadAction<string>) => {
+      const userIdToRemove = action.payload;
+      state.feed = state.feed.filter(post => post.userId !== userIdToRemove);
+      state.savedPosts = state.savedPosts.filter(post => post.userId !== userIdToRemove);
+      state.archivedPosts = state.archivedPosts.filter(post => post.userId !== userIdToRemove);
+      state.myPosts = state.myPosts.filter(post => post.userId !== userIdToRemove);
+      // For reposts, we need to filter originalPost.userId
+      state.myReposts = state.myReposts.filter(repost => repost.originalPost?.userId !== userIdToRemove);
+      // Also clear any comments related to posts by this user from postComments
+      // This is a simple approach; a more granular approach would filter comments within posts
+      for (const postId in state.postComments) {
+        // Check if any comment in this post's comments belongs to the user being blocked
+        if (state.postComments[postId].some(comment => comment.userId === userIdToRemove)) {
+          delete state.postComments[postId];
+        }
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -441,5 +458,6 @@ export const {
   repostPost,
   toggleCommentsAllowed,
   toggleLikesVisible,
+  removePostsByUserId, // Export the new action
 } = postsSlice.actions;
 export default postsSlice.reducer;

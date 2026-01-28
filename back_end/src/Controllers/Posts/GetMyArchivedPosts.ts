@@ -20,7 +20,8 @@ export const getMyArchivedPosts = async (req: Request, res: Response) => {
       },
       include: {
         user: {
-          select: { id: true, username: true, avatar_url: true },
+          // ✅ include allow_comments
+          select: { id: true, username: true, avatar_url: true, allow_comments: true },
         },
         _count: {
           select: {
@@ -31,7 +32,7 @@ export const getMyArchivedPosts = async (req: Request, res: Response) => {
           },
         },
         likes: {
-          where: { user_id: userId },
+          where: { user_id: userId, comment_id: null },
           select: { id: true },
           take: 1,
         },
@@ -49,10 +50,7 @@ export const getMyArchivedPosts = async (req: Request, res: Response) => {
     });
 
     const formatted = archivedPosts.map((p) => {
-      const images =
-        Array.isArray(p.media_urls)
-          ? (p.media_urls as unknown as string[])
-          : [];
+      const images = Array.isArray(p.media_urls) ? (p.media_urls as unknown as string[]) : [];
 
       return {
         id: p.id,
@@ -61,18 +59,23 @@ export const getMyArchivedPosts = async (req: Request, res: Response) => {
         avatar: p.user.avatar_url,
         content: p.content ?? "",
         images,
+
         likes: p._count.likes,
         comments: p._count.comments,
         shares: p._count.reposts,
         saves: p._count.saves,
+
         isLiked: p.likes.length > 0,
         isSaved: p.saves.length > 0,
         isReposted: p.reposts.length > 0,
+
         isArchived: true,
-        isEdited: false,
-        commentsAllowed: true,
+        isEdited: p.updated_at > p.created_at,
+
+        commentsAllowed: p.user.allow_comments !== false,
+
         likesVisible: true,
-        timestamp: p.updated_at,
+        timestamp: p.updated_at.toISOString(),
       };
     });
 

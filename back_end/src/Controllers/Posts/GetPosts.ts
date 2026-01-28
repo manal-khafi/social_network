@@ -1,16 +1,20 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { verifyAccessToken } from "../../util/jwt";
+import { getBlockedUserIds } from "../../Service/BlockService"; // Added import
 
 export const getPosts = async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
     let userId: string | null = null;
+    let blockedIds: string[] = []; // Initialize blockedIds
+
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.split(" ")[1];
       try {
         const decoded = verifyAccessToken(token) as { id: string };
         userId = decoded.id;
+        blockedIds = await getBlockedUserIds(userId); // Retrieve blocked IDs
       } catch {
         userId = null;
       }
@@ -18,7 +22,13 @@ export const getPosts = async (req: Request, res: Response) => {
 
     const include: {
       user: {
-        select: { id: true; username: true; display_name: true; avatar_url: true };
+        select: {
+          id: true;
+          username: true;
+          display_name: true;
+          avatar_url: true;
+          allow_comments: true;
+        };
       };
       _count: {
         select: { likes: true; comments: true; shares: true; saves: true; reposts: true };
@@ -27,7 +37,7 @@ export const getPosts = async (req: Request, res: Response) => {
       saves?: { where: { user_id: string }; select: { id: true } };
       reposts?: { where: { user_id: string }; select: { id: true } };
     } = {
-      user: { select: { id: true, username: true, display_name: true, avatar_url: true } },
+      user: { select: { id: true, username: true, display_name: true, avatar_url: true, allow_comments: true } },
       _count: { select: { likes: true, comments: true, shares: true, saves: true, reposts: true } },
     };
 
@@ -38,12 +48,19 @@ export const getPosts = async (req: Request, res: Response) => {
     }
 
     const posts = await prisma.post.findMany({
-      where: { is_deleted: false, visibility: "public", is_archived: false },
+      where: {
+        is_deleted: false,
+        visibility: "public",
+        is_archived: false,
+        user_id: {
+          notIn: blockedIds, // Filter out posts from blocked users
+        },
+      },
       include,
       orderBy: { created_at: "desc" },
     });
 
-    const normalizedPosts = posts.map((post: typeof posts[number]) => ({
+    const normalizedPosts = posts.map((post: (typeof posts)[number]) => ({
       id: post.id,
       userId: post.user_id,
       username: post.user.username || post.user.display_name || "Unknown User",
@@ -60,7 +77,9 @@ export const getPosts = async (req: Request, res: Response) => {
       isArchived: false,
       isEdited: post.updated_at > post.created_at,
       timestamp: post.created_at.toISOString(),
-      commentsAllowed: true,
+
+      commentsAllowed: post.user.allow_comments !== false,
+
       likesVisible: true,
     }));
 

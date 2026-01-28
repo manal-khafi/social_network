@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../../config/prismaClient';
+import { isBlockedEitherWay } from '../../Service/BlockService';
 
 export const toggleLike = async (req: Request, res: Response) => {
     try {
@@ -11,6 +12,35 @@ export const toggleLike = async (req: Request, res: Response) => {
         if (!targetPostId && !targetCommentId) {
             return res.status(400).json({ message: "postId or commentId is required" });
         }
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        let targetOwnerId: string | null = null;
+        if (targetPostId) {
+            const post = await prisma.post.findUnique({
+                where: { id: targetPostId },
+                select: { user_id: true }
+            });
+            if (!post) {
+                return res.status(404).json({ message: "Post not found" });
+            }
+            targetOwnerId = post.user_id;
+        } else if (targetCommentId) {
+            const comment = await prisma.comment.findUnique({
+                where: { id: targetCommentId },
+                select: { user_id: true }
+            });
+            if (!comment) {
+                return res.status(404).json({ message: "Comment not found" });
+            }
+            targetOwnerId = comment.user_id;
+        }
+
+        if (targetOwnerId && await isBlockedEitherWay(userId, targetOwnerId)) {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+
         const existingLike = await prisma.like.findFirst({
             where: {
                 user_id: userId!,

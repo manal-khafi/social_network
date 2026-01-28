@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { 
+import {
   togglePostLike,
   togglePostSave,
   togglePostRepost,
@@ -9,29 +9,35 @@ import {
   createComment,
   toggleCommentLike,
   archivePost,
-  unarchivePost, // Added unarchivePost import
-  deletePost
+  unarchivePost,
+  deletePost,
 } from '../../features/posts/postsSlice';
 import { blockUser } from '../../features/user/userSlice';
 import { Card } from '../ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { Button } from '../ui/button';
-import { 
-  Heart, 
-  MessageCircle, 
-  Repeat, 
-  Bookmark, 
-  MoreVertical, 
-  Share, 
-  Ban, 
-  Flag, 
+import {
+  Heart,
+  MessageCircle,
+  Repeat,
+  Bookmark,
+  MoreVertical,
+  Share,
+  Ban,
+  Flag,
   Archive,
   Smile,
   Edit,
-  Trash2
+  Trash2,
 } from 'lucide-react';
 import type { Post, Comment } from '../../features/posts/postsSlice';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '../ui/dropdown-menu';
 import { Input } from '../ui/input';
 import { Separator } from '../ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -50,9 +56,16 @@ interface CommentItemProps {
   postId: string;
   isReply?: boolean;
   parentCommentId?: string;
+  commentsAllowed: boolean;
 }
 
-function CommentItem({ comment, postId, isReply = false, parentCommentId }: CommentItemProps) {
+function CommentItem({
+  comment,
+  postId,
+  isReply = false,
+  parentCommentId,
+  commentsAllowed,
+}: CommentItemProps) {
   const dispatch = useAppDispatch();
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState('');
@@ -62,6 +75,10 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
   };
 
   const handleReply = () => {
+    if (!commentsAllowed) {
+      toast.error("Comments are disabled for this post");
+      return;
+    }
     if (replyText.trim()) {
       dispatch(
         createComment({
@@ -81,10 +98,10 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
         <Link to={`/profile/${comment.userId}`}>
           <Avatar className="w-8 h-8">
             <AvatarImage src={comment.avatar} />
-            <AvatarFallback>{((comment.username || "?")[0] || "?").toUpperCase()}</AvatarFallback>
+            <AvatarFallback>{((comment.username || '?')[0] || '?').toUpperCase()}</AvatarFallback>
           </Avatar>
         </Link>
-        
+
         <div className="flex-1 min-w-0">
           <div className="bg-muted rounded-2xl px-3 py-2">
             <Link to={`/profile/${comment.userId}`} className="font-semibold text-sm hover:underline">
@@ -92,7 +109,7 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
             </Link>
             <p className="text-sm mt-0.5">{comment.content}</p>
           </div>
-          
+
           <div className="flex items-center gap-4 mt-1 px-3">
             <span className="text-xs text-muted-foreground">{formatTime(comment?.timestamp)}</span>
             <button
@@ -102,15 +119,19 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
               {comment.isLiked ? 'Liked' : 'Like'}
               {comment.likes > 0 && ` · ${comment.likes}`}
             </button>
-            <button
-              onClick={() => setShowReplyInput(!showReplyInput)}
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              Reply
-            </button>
+
+            {/* Hide Reply button if comments not allowed */}
+            {commentsAllowed && (
+              <button
+                onClick={() => setShowReplyInput(!showReplyInput)}
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                Reply
+              </button>
+            )}
           </div>
 
-          {showReplyInput && (
+          {commentsAllowed && showReplyInput && (
             <div className="flex gap-2 mt-2">
               <div className="relative flex-1">
                 <Input
@@ -129,18 +150,15 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 border-0" align="end" side="top">
                     <EmojiPicker
-                      onEmojiClick={(emojiData) => setReplyText(prev => prev + emojiData.emoji)}
+                      onEmojiClick={(emojiData) => setReplyText((prev) => prev + emojiData.emoji)}
                       width={350}
                       height={400}
                     />
                   </PopoverContent>
                 </Popover>
               </div>
-              <Button 
-                onClick={handleReply}
-                size="sm"
-                className="bg-[#d6955b] hover:bg-[#c58549] h-8"
-              >
+              <Button onClick={handleReply} size="sm" className="bg-[#d6955
+                95b] hover:bg-[#c58549] h-8">
                 Reply
               </Button>
             </div>
@@ -158,6 +176,7 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
               postId={postId}
               isReply={true}
               parentCommentId={comment.id}
+              commentsAllowed={commentsAllowed}
             />
           ))}
         </div>
@@ -168,10 +187,14 @@ function CommentItem({ comment, postId, isReply = false, parentCommentId }: Comm
 
 export default function PostCard({ post }: PostCardProps) {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate(); // Initialize useNavigate
+  const location = useLocation(); // Initialize useLocation
   const { currentUser } = useAppSelector((state) => state.user);
   const authUser = useAppSelector((state) => state.auth.user);
+
   const commentsFromState = useAppSelector((state) => state.posts.postComments[post.id]);
   const comments = commentsFromState || [];
+
   const [comment, setComment] = useState('');
   const [showComments, setShowComments] = useState(false);
   const [showAllComments, setShowAllComments] = useState(false);
@@ -181,7 +204,16 @@ export default function PostCard({ post }: PostCardProps) {
 
   const isOwnPost = authUser?.id === post.userId;
 
+  const handleToggleComments = () => {
+    if (!post.commentsAllowed) return; // hard block
+    setShowComments((v) => !v);
+  };
+
   const handleComment = () => {
+    if (!post.commentsAllowed) {
+      toast.error("Comments are disabled for this post");
+      return;
+    }
     if (comment.trim()) {
       dispatch(createComment({ postId: post.id, content: comment }));
       setComment('');
@@ -198,15 +230,25 @@ export default function PostCard({ post }: PostCardProps) {
     toast.success(post.isSaved ? 'Post unsaved' : 'Post saved!');
   };
 
-  const handleBlock = () => {
+  const handleBlock = async () => {
     if (confirm(`Block @${post.username}?`)) {
-      dispatch(blockUser(post.userId));
-      toast.success(`Blocked @${post.username}`);
+      try {
+        await dispatch(blockUser(post.userId)).unwrap();
+        toast.success(`Blocked @${post.username}`);
+        
+        // Redirect if currently on the blocked user's profile page
+        if (location.pathname === `/profile/${post.userId}`) {
+          navigate('/'); // Redirect to home page or feed
+        }
+      } catch (error) {
+        toast.error("Failed to block user");
+        console.error("Error blocking user:", error);
+      }
     }
   };
 
   const handleReport = () => {
-    toast.success('Post reported. We\'ll review it shortly.');
+    toast.success("Post reported. We'll review it shortly.");
   };
 
   const handleArchive = () => {
@@ -224,19 +266,23 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
-      return;
-    }
+    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) return;
 
     try {
       await dispatch(deletePost(post.id)).unwrap();
       toast.success('Post deleted successfully');
     } catch (error: unknown) {
-      const message = 
-        (error && typeof error === 'object' && 'response' in error && 
-         error.response && typeof error.response === 'object' && 'data' in error.response &&
-         error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data)
-          ? String(error.response.data.message)
+      const message =
+        (error &&
+          typeof error === 'object' &&
+          'response' in error &&
+          (error as any).response &&
+          typeof (error as any).response === 'object' &&
+          'data' in (error as any).response &&
+          (error as any).response.data &&
+          typeof (error as any).response.data === 'object' &&
+          'message' in (error as any).response.data)
+          ? String((error as any).response.data.message)
           : 'Failed to delete post';
       toast.error(message);
     }
@@ -246,10 +292,10 @@ export default function PostCard({ post }: PostCardProps) {
   const hasMoreComments = comments.length > 2;
 
   useEffect(() => {
-    if (showComments) {
+    if (showComments && post.commentsAllowed) {
       dispatch(fetchComments(post.id));
     }
-  }, [dispatch, post.id, showComments]);
+  }, [dispatch, post.id, showComments, post.commentsAllowed]);
 
   return (
     <Card className="overflow-hidden">
@@ -259,10 +305,10 @@ export default function PostCard({ post }: PostCardProps) {
           <Link to={`/profile/${post.userId}`}>
             <Avatar>
               <AvatarImage src={post.avatar} />
-              <AvatarFallback>{((post.username || "?")[0] || "?").toUpperCase()}</AvatarFallback>
+              <AvatarFallback>{((post.username || '?')[0] || '?').toUpperCase()}</AvatarFallback>
             </Avatar>
           </Link>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -273,6 +319,7 @@ export default function PostCard({ post }: PostCardProps) {
                   <span className="text-xs text-muted-foreground italic">EDITED</span>
                 )}
               </div>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="p-1 hover:bg-muted rounded-full">
@@ -282,7 +329,6 @@ export default function PostCard({ post }: PostCardProps) {
                 <DropdownMenuContent align="end">
                   {isOwnPost ? (
                     <>
-                      {/* Options for own posts */}
                       <DropdownMenuItem onClick={handleEdit}>
                         <Edit className="w-4 h-4 mr-2" />
                         Edit Post
@@ -315,7 +361,6 @@ export default function PostCard({ post }: PostCardProps) {
                     </>
                   ) : (
                     <>
-                      {/* Options for other users' posts */}
                       <DropdownMenuItem onClick={handleBlock}>
                         <Ban className="w-4 h-4 mr-2" />
                         Block @{post.username}
@@ -339,6 +384,7 @@ export default function PostCard({ post }: PostCardProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+
             <p className="text-sm text-muted-foreground">{formatTime(post?.timestamp)}</p>
           </div>
         </div>
@@ -357,11 +403,7 @@ export default function PostCard({ post }: PostCardProps) {
         {/* Post Images */}
         {post.images && post.images.length > 0 && (
           <div className="mb-3 rounded-lg overflow-hidden">
-            <img
-              src={post.images[0]}
-              alt="Post content"
-              className="w-full object-cover max-h-96"
-            />
+            <img src={post.images[0]} alt="Post content" className="w-full object-cover max-h-96" />
           </div>
         )}
 
@@ -375,13 +417,16 @@ export default function PostCard({ post }: PostCardProps) {
             {post.likesVisible && <span className="text-sm">{post.likes}</span>}
           </button>
 
-          <button 
-            onClick={() => setShowComments(!showComments)}
-            className="flex items-center gap-2 hover:text-blue-500 transition-colors"
-          >
-            <MessageCircle className="w-5 h-5" />
-            <span className="text-sm">{post.comments}</span>
-          </button>
+          {/* ✅ Hide comment button if comments are disabled */}
+          {post.commentsAllowed && (
+            <button
+              onClick={handleToggleComments}
+              className="flex items-center gap-2 hover:text-blue-500 transition-colors"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span className="text-sm">{post.comments}</span>
+            </button>
+          )}
 
           <button
             onClick={() => dispatch(togglePostRepost(post.id))}
@@ -412,28 +457,27 @@ export default function PostCard({ post }: PostCardProps) {
             {comments.length > 0 && (
               <>
                 <Separator className="my-3" />
-                
-                {/* Comments List */}
                 <div className="space-y-0">
                   {displayedComments.map((commentItem) => (
                     <CommentItem
                       key={commentItem.id}
                       comment={commentItem}
                       postId={post.id}
+                      commentsAllowed={post.commentsAllowed}
                     />
                   ))}
                 </div>
 
-                {/* Show more/less comments */}
                 {hasMoreComments && (
                   <button
                     onClick={() => setShowAllComments(!showAllComments)}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-2 px-3"
                   >
-                    {showAllComments 
-                      ? 'Show less' 
-                      : `View ${comments.length - 2} more comment${comments.length - 2 > 1 ? 's' : ''}`
-                    }
+                    {showAllComments
+                      ? 'Show less'
+                      : `View ${comments.length - 2} more comment${
+                          comments.length - 2 > 1 ? 's' : ''
+                        }`}
                   </button>
                 )}
 
@@ -446,9 +490,10 @@ export default function PostCard({ post }: PostCardProps) {
               <Avatar className="w-8 h-8">
                 <AvatarImage src={currentUser?.avatar_url ?? authUser?.avatar ?? undefined} />
                 <AvatarFallback>
-                  {((currentUser?.username || authUser?.username || "?")[0] || "?").toUpperCase()}
+                  {((currentUser?.username || authUser?.username || '?')[0] || '?').toUpperCase()}
                 </AvatarFallback>
               </Avatar>
+
               <Input
                 placeholder="Add a comment..."
                 value={comment}
@@ -456,20 +501,22 @@ export default function PostCard({ post }: PostCardProps) {
                 onKeyPress={(e) => e.key === 'Enter' && handleComment()}
                 className="flex-1"
               />
+
               <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
                 <PopoverTrigger>
                   <Smile className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
                 </PopoverTrigger>
                 <PopoverContent className="w-60">
                   <EmojiPicker
-                    onEmojiClick={(emoji) => setComment(comment + emoji.emoji)}
+                    onEmojiClick={(emoji) => setComment((prev) => prev + emoji.emoji)}
                     previewConfig={{ showPreview: false }}
                   />
                 </PopoverContent>
               </Popover>
-              <Button 
-                onClick={handleComment} 
-                size="sm" 
+
+              <Button
+                onClick={handleComment}
+                size="sm"
                 className="bg-[#d6955b] hover:bg-[#c58549]"
                 disabled={!comment.trim()}
               >
@@ -480,19 +527,9 @@ export default function PostCard({ post }: PostCardProps) {
         )}
       </div>
 
-      {/* Share Dialog */}
-      <ShareDialog 
-        postId={post.id}
-        open={showShareDialog} 
-        onOpenChange={setShowShareDialog}
-      />
+      <ShareDialog postId={post.id} open={showShareDialog} onOpenChange={setShowShareDialog} />
 
-      {/* Edit Post Dialog */}
-      <EditPostDialog
-        post={post}
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-      />
+      <EditPostDialog post={post} open={showEditDialog} onOpenChange={setShowEditDialog} />
     </Card>
   );
 }

@@ -7,14 +7,16 @@ import Following from "../Controllers/Following/Folloing";
 import Follower from "../Controllers/Following/Follower";
 import { authMiddleware } from "../Middleware/authMiddlware";
 
+import { blockGuard } from "../Middleware/Block/blockGuardMiddleware";
+
 const FollowRoutes= Router();
 
-FollowRoutes.post("/follow/:userIdToFollow",authMiddleware, Follow);
-FollowRoutes.delete("/unfollow/:userIdToUnfollow",authMiddleware, Unfollow);
-FollowRoutes.post("/accept-follow/:demandeId",authMiddleware, Acceptdemande);
-FollowRoutes.post("/refuse-follow/:requestId",authMiddleware, refuseFollowRequest);
-FollowRoutes.get("/following/:userId",authMiddleware, Following);
-FollowRoutes.get("/followers/:userId",authMiddleware, Follower);
+FollowRoutes.post("/follow/:userIdToFollow",authMiddleware, blockGuard(), Follow);
+FollowRoutes.delete("/unfollow/:userIdToUnfollow",authMiddleware, blockGuard(), Unfollow);
+FollowRoutes.post("/accept-follow/:demandeId",authMiddleware, blockGuard(), Acceptdemande);
+FollowRoutes.post("/refuse-follow/:requestId",authMiddleware, blockGuard(), refuseFollowRequest);
+FollowRoutes.get("/following/:userId",authMiddleware, blockGuard(), Following);
+FollowRoutes.get("/followers/:userId",authMiddleware, blockGuard(), Follower);
 
 export default FollowRoutes;
 

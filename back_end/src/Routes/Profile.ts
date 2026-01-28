@@ -4,6 +4,7 @@ import {
   getCurrentUserProfile,
   updateCurrentUserProfile,
   updateMyAvatar,
+  updateCoverImage
 } from "../Controllers/user/profileController";
 import { authMiddleware } from "../Middleware/authMiddlware";
 
@@ -13,6 +14,7 @@ const ProfileRouter = Router();
 ProfileRouter.get("/me", authMiddleware, getCurrentUserProfile);
 ProfileRouter.put("/me", authMiddleware, updateCurrentUserProfile);
 ProfileRouter.put("/me/avatar", authMiddleware, updateMyAvatar);
+ProfileRouter.put("/me/cover", authMiddleware, updateCoverImage);
 
 // Public profile (by username)
 ProfileRouter.get("/:username", authMiddleware, getUserProfile);

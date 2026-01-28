@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
+import { isBlockedEitherWay } from "../../Service/BlockService";
 
 export const toggleSave = async (req: Request, res: Response) => {
   try {
@@ -13,6 +14,11 @@ export const toggleSave = async (req: Request, res: Response) => {
     const post = await prisma.post.findUnique({ where: { id: postId } });
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Check if the viewer is blocked by the post owner, or vice versa
+    if (await isBlockedEitherWay(userId, post.user_id)) {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     const existingSave = await prisma.save.findFirst({

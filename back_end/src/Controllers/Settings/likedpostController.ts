@@ -1,14 +1,19 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
+import { getBlockedUserIds } from "../../Service/BlockService";
 
 export const getMyLikedPosts = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
+    const blockedIds = await getBlockedUserIds(userId!); // Retrieve blocked IDs
 
     const likedPosts = await prisma.like.findMany({
       where: {
         user_id: userId,
         post_id: { not: null },
+        post: {
+          user_id: { notIn: blockedIds }, // Filter out liked posts from blocked users
+        },
       },
       include: {
         post: {

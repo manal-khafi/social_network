@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
+import { getBlockedUserIds } from "../../Service/BlockService";
 
 export const getMyPosts = async (req: Request, res: Response) => {
   const userId = req.user?.id;
@@ -12,30 +13,27 @@ export const getMyPosts = async (req: Request, res: Response) => {
     const posts = await prisma.post.findMany({
       where: {
         user_id: userId,
-        is_deleted: false, 
+        is_deleted: false,
       },
       orderBy: { created_at: "desc" },
       include: {
         user: {
-          select: { id: true, username: true, avatar_url: true },
+          select: { id: true, username: true, avatar_url: true, allow_comments: true },
         },
-
         _count: {
           select: {
             comments: true,
             likes: true,
             reposts: true,
             saves: true,
-            shares: true, 
+            shares: true,
           },
         },
-
         likes: {
-          where: { user_id: userId },
+          where: { user_id: userId, comment_id: null },
           select: { id: true },
           take: 1,
         },
-
         saves: {
           where: { user_id: userId },
           select: { id: true },
@@ -46,7 +44,6 @@ export const getMyPosts = async (req: Request, res: Response) => {
           select: { id: true },
           take: 1,
         },
-
         shares: {
           where: { user_id: userId },
           select: { id: true },
@@ -56,33 +53,34 @@ export const getMyPosts = async (req: Request, res: Response) => {
     });
 
     const formatted = posts.map((p) => {
-      const images =
-        Array.isArray(p.media_urls)
-          ? (p.media_urls as unknown as string[])
-          : [];
+      const images = Array.isArray(p.media_urls) ? (p.media_urls as unknown as string[]) : [];
 
       return {
         id: p.id,
         userId: p.user_id,
         username: p.user.username,
-        avatar: p.user.avatar_url,
+        avatar: p.user.avatar_url ?? undefined,
         content: p.content ?? "",
         images,
-        likes: p._count.likes,
-        comments: p._count.comments,
-        shares: p._count.reposts,
-        saves: p._count.saves,
-        isLiked: p.likes.length > 0,
-        isSaved: p.saves.length > 0,
-        isReposted: p.reposts.length > 0,
-        sharedCount: p._count.shares,
-        isShared: p.shares.length > 0,
-        isArchived: false,
-        isEdited: false,
-        commentsAllowed: true,
-        likesVisible: true,
 
-        timestamp: p.created_at,
+        likes: p._count.likes ?? 0,
+        comments: p._count.comments ?? 0,
+        shares: p._count.reposts ?? 0,
+        saves: p._count.saves ?? 0,
+
+        isLiked: (p.likes?.length ?? 0) > 0,
+        isSaved: (p.saves?.length ?? 0) > 0,
+        isReposted: (p.reposts?.length ?? 0) > 0,
+
+        sharedCount: p._count.shares ?? 0,
+        isShared: (p.shares?.length ?? 0) > 0,
+
+        isArchived: false,
+        isEdited: p.updated_at > p.created_at,
+        commentsAllowed: p.user.allow_comments ?? true,
+
+        likesVisible: true,
+        timestamp: p.created_at.toISOString(),
       };
     });
 
@@ -101,14 +99,22 @@ export const getMyReposts = async (req: Request, res: Response) => {
   }
 
   try {
+    const blockedIds = await getBlockedUserIds(userId); // Retrieve blocked IDs
+
     const reposts = await prisma.repost.findMany({
-      where: { user_id: userId },
+      where: {
+        user_id: userId,
+        originalPost: {
+          user_id: { notIn: blockedIds }, // Filter out reposts of posts from blocked users
+        },
+      },
       orderBy: { created_at: "desc" },
       include: {
         originalPost: {
           include: {
             user: {
-              select: { id: true, username: true, avatar_url: true },
+              // ✅ add allow_comments here too
+              select: { id: true, username: true, avatar_url: true, allow_comments: true },
             },
             _count: {
               select: {
@@ -119,7 +125,7 @@ export const getMyReposts = async (req: Request, res: Response) => {
               },
             },
             likes: {
-              where: { user_id: userId },
+              where: { user_id: userId, comment_id: null },
               select: { id: true },
               take: 1,
             },
@@ -140,30 +146,32 @@ export const getMyReposts = async (req: Request, res: Response) => {
 
     const formatted = reposts.map((r) => {
       const p = r.originalPost;
-      const images =
-        Array.isArray(p.media_urls)
-          ? (p.media_urls as unknown as string[])
-          : [];
+      const images = Array.isArray(p.media_urls) ? (p.media_urls as unknown as string[]) : [];
 
       return {
         id: p.id,
         userId: p.user_id,
         username: p.user.username,
-        avatar: p.user.avatar_url,
+        avatar: p.user.avatar_url ?? undefined,
         content: p.content ?? "",
         images,
-        likes: p._count.likes,
-        comments: p._count.comments,
-        shares: p._count.reposts,
-        saves: p._count.saves,
-        isLiked: p.likes.length > 0,
-        isSaved: p.saves.length > 0,
-        isReposted: p.reposts.length > 0,
+
+        likes: p._count.likes ?? 0,
+        comments: p._count.comments ?? 0,
+        shares: p._count.reposts ?? 0,
+        saves: p._count.saves ?? 0,
+
+        isLiked: (p.likes?.length ?? 0) > 0,
+        isSaved: (p.saves?.length ?? 0) > 0,
+        isReposted: (p.reposts?.length ?? 0) > 0,
+
         isArchived: false,
-        isEdited: false,
-        commentsAllowed: true,
+        isEdited: p.updated_at > p.created_at,
+        commentsAllowed: p.user.allow_comments ?? true,
+
         likesVisible: true,
-        timestamp: r.created_at, // Use repost timestamp
+        timestamp: r.created_at.toISOString(),
+
         originalPost: {
           id: p.id,
           username: p.user.username,

@@ -1,5 +1,6 @@
 import {Request, Response } from "express";
 import prisma from "../../config/prismaClient";
+import { isBlockedEitherWay } from "../../Service/BlockService";
 
 const Follow = async (req: Request, res: Response) => {
   try {
@@ -18,6 +19,11 @@ const Follow = async (req: Request, res: Response) => {
 
     if (!userToFollow) {
       return res.status(404).json({ message: "User to follow not found" });
+    }
+
+    // Check if either user has blocked the other
+    if (await isBlockedEitherWay(userId, userIdToFollow)) {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     // 3️⃣ Vérifier qu’on ne follow pas soi-même
