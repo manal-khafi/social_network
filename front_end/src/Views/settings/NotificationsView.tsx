@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { toggleAllNotifications, toggleNotification, updateNotificationChannel } from '../../features/settings/settingsSlice';
+import { toggleAllNotifications, toggleNotification} from '../../features/settings/settingsSlice';
 import { ArrowLeft, Bell, Smartphone, Mail, MessageSquare } from 'lucide-react';
 import { Card } from '../../Components/ui/card';
 import { Switch } from '../../Components/ui/switch';

@@ -1,6 +1,6 @@
-import { useAppSelector } from '../hooks';
-import { Card } from '../Components/ui/card';
-import PostCard from '../Components/post/PostCard';
+import { useAppSelector } from '../../hooks';
+import { Card } from '../../Components/ui/card';
+import PostCard from '../../Components/post/PostCard';
 import { Archive } from 'lucide-react';
 
 export default function ArchivedPostsView() {

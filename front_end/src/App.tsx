@@ -17,15 +17,14 @@ import StoryViewerView from "./Views/story/StoryViewerView";
 import CommunityView from "./Views/community/CommunityView";
 import InboxView from "./Views/inbox/InboxView";
 import ChatView from "./Views/inbox/ChatView";
-import ArchivedChatsView from "./Views/inbox/ArchivedChatsView";
 import NotificationsView from "./Views/notifications/NotificationsView";
 import MyProfileView from "./Views/profile/MyProfileView";
 import MyPostsView from "./Views/profile/MyPostsView";
 import UserProfileView from "./Views/profile/UserProfileView";
 import FollowersView from "./Views/profile/FollowersView";
 import EditProfileView from "./Views/profile/EditProfileView";
-import ArchivedPostsView from "./Views/ArchivedPostsView";
-import LikedPostsView from "./Views/LikedPostsView";
+import MyArchivedPostsView from "./Views/archive/MyArchivedPostsView";
+import LikedPostsView from "./Views/settings/LikedPostsView";
 
 // Settings Views
 import SettingsView from "./Views/settings/SettingsView";
@@ -35,15 +34,11 @@ import PrivacyView from "./Views/settings/PrivacyView";
 import AppearanceView from "./Views/settings/AppearanceView";
 import BlockedContactsView from "./Views/settings/BlockedContactsView";
 import LikedPostsSettingsView from "./Views/settings/LikedPostsSettingsView";
-import ArchiveView from "./Views/settings/ArchiveView";
-import ActivityView from './Views/settings/ActivityView';
-import InteractionsView from './Views/settings/InteractionsView';
-import ContentSharedView from './Views/settings/ContentSharedView';
-import AccountHistoryView from './Views/settings/AccountHistoryView';
 import InfoSupportView from './Views/settings/InfoSupportView';
 import HelpView from './Views/settings/HelpView';
 import PrivacyCenterView from './Views/settings/PrivacyCenterView';
 import AboutView from './Views/settings/AboutView';
+import ArchivedPostsView from './Views/settings/ArchivedPostsView';
 
 // Auth components
 import VerifyEmail from './Components/Authentication/auth/verifyEmil';
@@ -79,7 +74,6 @@ function AppContent() {
           <Route path="story/:storyId" element={<StoryViewerView />} />
           <Route path="community" element={<CommunityView />} />
           <Route path="inbox" element={<InboxView />} />
-          <Route path="inbox/archived" element={<ArchivedChatsView />} />
           <Route path="inbox/:conversationId" element={<ChatView />} />
           <Route path="notifications" element={<NotificationsView />} />
           <Route path="profile/me" element={<MyProfileView />} />
@@ -96,15 +90,8 @@ function AppContent() {
             <Route path="blocked-contacts" element={<BlockedContactsView />} />
             <Route path="liked-posts" element={<LikedPostsSettingsView />} />
             <Route path="archive">
-              <Route index element={<ArchiveView />} />
-              <Route path="chats" element={<ArchivedChatsView />} />
-              <Route path="posts" element={<ArchivedPostsView />} />
-            </Route>
-            <Route path="activity">
-              <Route index element={<ActivityView />} />
-              <Route path="interactions" element={<InteractionsView />} />
-              <Route path="content" element={<ContentSharedView />} />
-              <Route path="history" element={<AccountHistoryView />} />
+              <Route index element={<Navigate to="posts" replace />} />
+              <Route path="posts" element={<MyArchivedPostsView />} />
             </Route>
             <Route path="info">
               <Route index element={<InfoSupportView />} />

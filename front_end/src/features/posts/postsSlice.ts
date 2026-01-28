@@ -19,7 +19,7 @@ export interface Comment {
 export interface Post {
   id: string;
   userId: string;
-  username: string;
+  username:string;
   avatar?: string;
   content: string;
   images?: string[];
@@ -47,6 +47,7 @@ interface PostsState {
   savedPosts: Post[];
   archivedPosts: Post[];
   myPosts: Post[];
+  myReposts: Post[];
   userPosts: { [userId: string]: Post[] };
   postComments: { [postId: string]: Comment[] };
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -58,6 +59,7 @@ const initialState: PostsState = {
   savedPosts: [],
   archivedPosts: [],
   myPosts: [],
+  myReposts: [],
   userPosts: {},
   postComments: {},
   status: 'idle',
@@ -71,6 +73,21 @@ export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
 
 export const fetchMyPosts = createAsyncThunk('posts/fetchMyPosts', async () => {
   const response = await api.get('/posts/me');
+  return response.data.posts as Post[];
+});
+
+export const fetchMyReposts = createAsyncThunk('posts/fetchMyReposts', async () => {
+  const response = await api.get('/posts/me/reposts');
+  return response.data.reposts as Post[];
+});
+
+export const fetchSavedPosts = createAsyncThunk('posts/fetchSavedPosts', async () => {
+  const response = await api.get('/posts/me/saved');
+  return response.data.posts as Post[];
+});
+
+export const fetchMyArchivedPosts = createAsyncThunk('posts/fetchMyArchivedPosts', async () => {
+  const response = await api.get('/posts/me/archived');
   return response.data.posts as Post[];
 });
 
@@ -121,6 +138,22 @@ export const togglePostRepost = createAsyncThunk(
       reposted: response.data.reposted as boolean,
       shares: response.data.shares as number | undefined
     };
+  }
+);
+
+export const archivePost = createAsyncThunk(
+  'posts/archivePost',
+  async (postId: string) => {
+    const response = await api.patch(`/posts/${postId}/archive`);
+    return response.data.postId as string;
+  }
+);
+
+export const unarchivePost = createAsyncThunk(
+  'posts/unarchivePost',
+  async (postId: string) => {
+    const response = await api.patch(`/posts/${postId}/unarchive`);
+    return response.data.postId as string;
   }
 );
 
@@ -203,22 +236,6 @@ const postsSlice = createSlice({
         originalPost.shares += originalPost.isReposted ? 1 : -1;
       }
     },
-    archivePost: (state, action: PayloadAction<string>) => {
-      const post = state.feed.find(p => p.id === action.payload);
-      if (post) {
-        post.isArchived = true;
-        state.archivedPosts.push(post);
-        state.feed = state.feed.filter(p => p.id !== action.payload);
-      }
-    },
-    unarchivePost: (state, action: PayloadAction<string>) => {
-      const post = state.archivedPosts.find(p => p.id === action.payload);
-      if (post) {
-        post.isArchived = false;
-        state.feed.unshift(post);
-        state.archivedPosts = state.archivedPosts.filter(p => p.id !== action.payload);
-      }
-    },
     toggleCommentsAllowed: (state, action: PayloadAction<string>) => {
       const post = state.feed.find(p => p.id === action.payload);
       if (post) {
@@ -256,6 +273,39 @@ const postsSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message || 'Failed to fetch posts';
       })
+      .addCase(fetchMyReposts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchMyReposts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.myReposts = action.payload;
+      })
+      .addCase(fetchMyReposts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message || 'Failed to fetch reposts';
+      })
+      .addCase(fetchSavedPosts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchSavedPosts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.savedPosts = action.payload;
+      })
+      .addCase(fetchSavedPosts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message || 'Failed to fetch saved posts';
+      })
+      .addCase(fetchMyArchivedPosts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchMyArchivedPosts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.archivedPosts = action.payload;
+      })
+      .addCase(fetchMyArchivedPosts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message || 'Failed to fetch archived posts';
+      })
       .addCase(createPost.fulfilled, (state, action) => {
         state.feed.unshift(action.payload);
       })
@@ -272,19 +322,19 @@ const postsSlice = createSlice({
         }
       })
       .addCase(togglePostSave.fulfilled, (state, action) => {
-        const post = state.feed.find(p => p.id === action.payload.postId);
-        if (post) {
-          post.isSaved = action.payload.saved;
+        const postInFeed = state.feed.find(p => p.id === action.payload.postId);
+        if (postInFeed) {
+          postInFeed.isSaved = action.payload.saved;
           if (action.payload.saves !== undefined) {
-            post.saves = action.payload.saves;
-          } else {
-            post.saves += action.payload.saved ? 1 : -1;
+            postInFeed.saves = action.payload.saves;
           }
-          if (post.isSaved) {
-            if (!state.savedPosts.find(p => p.id === post.id)) {
-              state.savedPosts.push(post);
-            }
+        }
+        if (action.payload.saved) {
+          if (postInFeed && !state.savedPosts.find(p => p.id === action.payload.postId)) {
+            state.savedPosts.push(postInFeed);
           }
+        } else {
+          state.savedPosts = state.savedPosts.filter(p => p.id !== action.payload.postId);
         }
       })
       .addCase(togglePostRepost.fulfilled, (state, action) => {
@@ -295,6 +345,27 @@ const postsSlice = createSlice({
             post.shares = action.payload.shares;
           }
         }
+      })
+      .addCase(archivePost.fulfilled, (state, action) => {
+        const postId = action.payload;
+        const post = state.feed.find(p => p.id === postId);
+        if (post) {
+          post.isArchived = true;
+          state.archivedPosts.push(post);
+        }
+        state.feed = state.feed.filter(p => p.id !== postId);
+        state.myPosts = state.myPosts.filter(p => p.id !== postId);
+        state.myReposts = state.myReposts.filter(p => p.id !== postId);
+        state.savedPosts = state.savedPosts.filter(p => p.id !== postId);
+      })
+      .addCase(unarchivePost.fulfilled, (state, action) => {
+        const postId = action.payload;
+        const post = state.archivedPosts.find(p => p.id === postId);
+        if (post) {
+          post.isArchived = false;
+          state.feed.unshift(post);
+        }
+        state.archivedPosts = state.archivedPosts.filter(p => p.id !== postId);
       })
       .addCase(fetchComments.fulfilled, (state, action) => {
         state.postComments[action.payload.postId] = action.payload.comments;
@@ -351,6 +422,7 @@ const postsSlice = createSlice({
         const deletedId = action.payload; // your thunk returns postId (string)
 
         state.myPosts = state.myPosts.filter((p) => p.id !== deletedId);
+        state.myReposts = state.myReposts.filter((p) => p.id !== deletedId);
         state.feed = state.feed.filter((p) => p.id !== deletedId);
         state.savedPosts = state.savedPosts.filter((p) => p.id !== deletedId);
         state.archivedPosts = state.archivedPosts.filter((p) => p.id !== deletedId);
@@ -367,7 +439,7 @@ export const {
   toggleLike,
   toggleSave,
   repostPost,
-  archivePost,
-  unarchivePost,
+  toggleCommentsAllowed,
+  toggleLikesVisible,
 } = postsSlice.actions;
 export default postsSlice.reducer;

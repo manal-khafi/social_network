@@ -38,7 +38,7 @@ export const getPosts = async (req: Request, res: Response) => {
     }
 
     const posts = await prisma.post.findMany({
-      where: { is_deleted: false, visibility: "public" },
+      where: { is_deleted: false, visibility: "public", is_archived: false },
       include,
       orderBy: { created_at: "desc" },
     });

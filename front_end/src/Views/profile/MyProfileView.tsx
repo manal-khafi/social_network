@@ -3,12 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../hooks";
 import { logoutUser } from "../../features/auth/authSlice";
 import { fetchCurrentUserProfile } from "../../features/user/userSlice";
+import { fetchSavedPosts } from "../../features/posts/postsSlice";
 import { Edit, Settings, Menu, LogOut, Loader2 } from "lucide-react";
 import { Button } from "../../Components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../../Components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../Components/ui/tabs";
 import { PATHS } from "../../routes/paths";
 import MyPostsView from "./MyPostsView";
+import MyRepostsView from "./MyRepostsView";
 
 import {
   DropdownMenu,
@@ -24,11 +26,14 @@ export default function MyProfileView() {
 
   const { user: authUser, isAuthenticated } = useAppSelector((state) => state.auth);
   const { currentUser, status: profileStatus } = useAppSelector((state) => state.user);
-  const { savedPosts, archivedPosts } = useAppSelector((state) => state.posts);
+  const { savedPosts, archivedPosts, status: postsStatus, error: postsError } = useAppSelector((state) => state.posts);
 
   useEffect(() => {
     if (isAuthenticated && !currentUser && profileStatus === "idle") {
       dispatch(fetchCurrentUserProfile());
+    }
+    if (isAuthenticated) {
+      dispatch(fetchSavedPosts());
     }
   }, [isAuthenticated, currentUser, profileStatus, dispatch]);
 
@@ -121,9 +126,6 @@ export default function MyProfileView() {
           <TabsTrigger value="saved" className="flex-1">
             Saved
           </TabsTrigger>
-          <TabsTrigger value="archived" className="flex-1">
-            Archived
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="posts" className="p-4">
@@ -131,22 +133,16 @@ export default function MyProfileView() {
         </TabsContent>
 
         <TabsContent value="reposts" className="p-4 space-y-4">
-          <p className="text-center text-muted-foreground py-8">Reposts are not yet implemented.</p>
+          <MyRepostsView />
         </TabsContent>
 
         <TabsContent value="saved" className="p-4 space-y-4">
-          {savedPosts.length > 0 ? (
+          {postsStatus === 'loading' && <div className="text-center text-muted-foreground py-8">Loading...</div>}
+          {postsStatus === 'failed' && <div className="text-center text-destructive py-8">{postsError}</div>}
+          {postsStatus === 'succeeded' && savedPosts.length > 0 ? (
             savedPosts.map((post) => <PostCard key={post.id} post={post} />)
           ) : (
             <p className="text-center text-muted-foreground py-8">No saved posts</p>
-          )}
-        </TabsContent>
-
-        <TabsContent value="archived" className="p-4 space-y-4">
-          {archivedPosts.length > 0 ? (
-            archivedPosts.map((post) => <PostCard key={post.id} post={post} />)
-          ) : (
-            <p className="text-center text-muted-foreground py-8">No archived posts</p>
           )}
         </TabsContent>
       </Tabs>

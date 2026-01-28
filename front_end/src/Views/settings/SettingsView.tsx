@@ -60,18 +60,10 @@ const settingsSections = [
   {
     id: 'archive',
     title: 'Archive',
-    description: 'View your archived posts and chats',
+    description: 'View your archived posts',
     icon: Archive,
-    path: 'archive',
+    path: 'archive/posts',
     color: 'text-purple-500'
-  },
-  {
-    id: 'activity',
-    title: 'Your Activity',
-    description: 'Interactions, content, and account history',
-    icon: Activity,
-    path: 'activity',
-    color: 'text-blue-500'
   },
   {
     id: 'support',

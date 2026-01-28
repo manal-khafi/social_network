@@ -9,6 +9,7 @@ import {
   createComment,
   toggleCommentLike,
   archivePost,
+  unarchivePost, // Added unarchivePost import
   deletePost
 } from '../../features/posts/postsSlice';
 import { blockUser } from '../../features/user/userSlice';
@@ -213,6 +214,11 @@ export default function PostCard({ post }: PostCardProps) {
     toast.success('Post archived');
   };
 
+  const handleUnarchive = () => {
+    dispatch(unarchivePost(post.id));
+    toast.success('Post unarchived');
+  };
+
   const handleEdit = () => {
     setShowEditDialog(true);
   };
@@ -295,10 +301,17 @@ export default function PostCard({ post }: PostCardProps) {
                         Repost
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleArchive}>
-                        <Archive className="w-4 h-4 mr-2" />
-                        Archive Post
-                      </DropdownMenuItem>
+                      {post.isArchived ? (
+                        <DropdownMenuItem onClick={handleUnarchive}>
+                          <Archive className="w-4 h-4 mr-2" />
+                          Unarchive Post
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem onClick={handleArchive}>
+                          <Archive className="w-4 h-4 mr-2" />
+                          Archive Post
+                        </DropdownMenuItem>
+                      )}
                     </>
                   ) : (
                     <>

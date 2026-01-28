@@ -14,4 +14,5 @@ export const PATHS = {
   SETTINGS_NOTIFICATIONS: "/home/settings/notifications",
   SETTINGS_PRIVACY: "/home/settings/privacy",
   SETTINGS_APPEARANCE: "/home/settings/appearance",
+  ARCHIVED_POSTS: "/home/archived-posts",
 };
