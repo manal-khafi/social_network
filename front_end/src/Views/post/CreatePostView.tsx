@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../Components/ui/pop
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
 import { PATHS } from '../../routes/paths';
+import { isVideoUrl } from '../../utils/mediaUtils';
 
 export default function CreatePostView() {
   const navigate = useNavigate();
@@ -123,11 +124,19 @@ export default function CreatePostView() {
               <div className="mt-4 grid grid-cols-2 gap-2">
                 {images.map((img, index) => (
                   <div key={index} className="relative group">
-                    <img
-                      src={img}
-                      alt={`Upload ${index + 1}`}
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
+                    {isVideoUrl(img) ? (
+                      <video
+                        src={img}
+                        controls
+                        className="w-full h-48 object-cover rounded-lg bg-black"
+                      />
+                    ) : (
+                      <img
+                        src={img}
+                        alt={`Upload ${index + 1}`}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    )}
                     <button
                       onClick={() => handleRemoveImage(index)}
                       className="absolute top-2 right-2 p-1.5 bg-background/90 rounded-full hover:bg-background shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
@@ -145,7 +154,7 @@ export default function CreatePostView() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,video/*"
                   multiple
                   onChange={handleImageAdd}
                   className="hidden"
@@ -208,12 +217,21 @@ export default function CreatePostView() {
                   {images.length > 0 && (
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       {images.map((img, index) => (
-                        <img
-                          key={index}
-                          src={img}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-48 object-cover rounded-lg"
-                        />
+                        isVideoUrl(img) ? (
+                          <video
+                            key={index}
+                            src={img}
+                            controls
+                            className="w-full h-48 object-cover rounded-lg bg-black"
+                          />
+                        ) : (
+                          <img
+                            key={index}
+                            src={img}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-48 object-cover rounded-lg"
+                          />
+                        )
                       ))}
                     </div>
                   )}

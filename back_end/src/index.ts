@@ -15,6 +15,7 @@ import { initializeEmailService } from "./config/EmailConfig";
 
 const port = process.env.PORT || 3500;
 const app = express();
+const bodyLimit = process.env.BODY_LIMIT || "100mb";
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
@@ -33,7 +34,8 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: bodyLimit }));
+app.use(express.urlencoded({ extended: true, limit: bodyLimit }));
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
