@@ -4,6 +4,11 @@ import { verifyAccessToken } from "../../util/jwt";
 
 export const getPosts = async (req: Request, res: Response) => {
   try {
+    const limitParam = Number(req.query.limit);
+    const offsetParam = Number(req.query.offset);
+    const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 50) : 5;
+    const offset = Number.isFinite(offsetParam) && offsetParam >= 0 ? offsetParam : 0;
+
     const authHeader = req.headers.authorization;
     let userId: string | null = null;
     if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -41,9 +46,15 @@ export const getPosts = async (req: Request, res: Response) => {
       where: { is_deleted: false, visibility: "public" },
       include,
       orderBy: { created_at: "desc" },
+      skip: offset,
+      take: limit + 1,
     });
 
-    const normalizedPosts = posts.map((post: typeof posts[number]) => ({
+    const hasMore = posts.length > limit;
+    const slicedPosts = hasMore ? posts.slice(0, limit) : posts;
+    const nextOffset = hasMore ? offset + limit : null;
+
+    const normalizedPosts = slicedPosts.map((post: typeof posts[number]) => ({
       id: post.id,
       userId: post.user_id,
       username: post.user.username || post.user.display_name || "Unknown User",
@@ -64,7 +75,7 @@ export const getPosts = async (req: Request, res: Response) => {
       likesVisible: true,
     }));
 
-    return res.status(200).json({ posts: normalizedPosts });
+    return res.status(200).json({ posts: normalizedPosts, nextOffset, hasMore });
   } catch (err) {
     console.error("Error fetching posts:", err);
     return res.status(500).json({ message: "Server error while fetching posts" });
