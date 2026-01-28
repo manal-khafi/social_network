@@ -11,6 +11,7 @@ export default function DesktopSidebar() {
   const dispatch = useAppDispatch();
   const { currentUser } = useAppSelector((state) => state.user);
   const { user: authUser } = useAppSelector((state) => state.auth);
+  const logoUrl = new URL('../../../logo.png', import.meta.url).href;
 
   // Use detailed profile if available, otherwise fallback to basic auth user
   const user = currentUser ?? authUser;
@@ -34,9 +35,7 @@ export default function DesktopSidebar() {
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between">
         <Link to={PATHS.HOME} className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-sm text-primary-foreground font-bold">A</span>
-          </div>
+          <img src={logoUrl} alt="ANMOUGAR logo" className="w-8 h-8 rounded-full object-cover" />
           <h1 className="text-lg font-bold text-foreground">ANMOUGAR</h1>
         </Link>
       </div>
