@@ -11,6 +11,7 @@ export default function DesktopSidebar() {
   const dispatch = useAppDispatch();
   const { currentUser } = useAppSelector((state) => state.user);
   const { user: authUser } = useAppSelector((state) => state.auth);
+  const logoUrl = new URL('../../../logo.png', import.meta.url).href;
 
   // Use detailed profile if available, otherwise fallback to basic auth user
   const user = currentUser ?? authUser;
@@ -29,15 +30,13 @@ export default function DesktopSidebar() {
 
   return (
     <aside
-      className="hidden lg:flex w-80 h-screen flex-col border-r border-border bg-card sticky top-0"
+      className="group hidden lg:flex h-screen w-20 flex-col border-r border-border bg-card sticky top-0 transition-all duration-200 hover:w-80"
     >
       {/* Header */}
-      <div className="p-4 border-b border-border flex items-center justify-between">
+      <div className="p-4 border-b border-border flex items-center justify-center group-hover:justify-between">
         <Link to={PATHS.HOME} className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-sm text-primary-foreground font-bold">A</span>
-          </div>
-          <h1 className="text-lg font-bold text-foreground">ANMOUGAR</h1>
+          <img src={logoUrl} alt="ANMOUGAR logo" className="w-8 h-8 rounded-full object-cover" />
+          <h1 className="hidden text-lg font-bold text-foreground group-hover:block">ANMOUGAR</h1>
         </Link>
       </div>
 
@@ -45,7 +44,7 @@ export default function DesktopSidebar() {
       {user ? (
         <Link
           to={PATHS.PROFILE_ME}
-          className="p-4 border-b border-border hover:bg-muted transition-colors"
+          className="hidden p-4 border-b border-border hover:bg-muted transition-colors group-hover:block"
         >
           <div className="flex items-center gap-3">
             <Avatar className="w-12 h-12">
@@ -59,7 +58,7 @@ export default function DesktopSidebar() {
           </div>
         </Link>
       ) : (
-        <div className="p-4 border-b border-border">
+        <div className="hidden p-4 border-b border-border group-hover:block">
           <div className="flex items-center gap-3">
             <Skeleton className="w-12 h-12 rounded-full" />
             <div className="flex-1 space-y-2">
@@ -72,7 +71,7 @@ export default function DesktopSidebar() {
 
 
       {/* Navigation Items */}
-      <nav className="flex-1 overflow-y-auto p-4">
+      <nav className="flex-1 overflow-y-auto p-3 group-hover:p-4">
         <div className="space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -82,14 +81,15 @@ export default function DesktopSidebar() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all ${
+                title={item.label}
+                className={`flex items-center justify-center px-2 py-3 rounded-lg transition-all group-hover:justify-start group-hover:gap-4 group-hover:px-4 ${
                   isActive
                     ? 'bg-primary text-primary-foreground'
                     : 'hover:bg-muted text-foreground'
                 }`}
               >
                 <Icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} />
-                <span className="font-medium">{item.label}</span>
+                <span className="hidden font-medium group-hover:inline">{item.label}</span>
               </Link>
             );
           })}
@@ -99,28 +99,30 @@ export default function DesktopSidebar() {
         <div className="mt-6 pt-6 border-t border-border space-y-2">
           <Link
             to={PATHS.SETTINGS}
-            className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all ${
+            title="Settings"
+            className={`flex items-center justify-center px-2 py-3 rounded-lg transition-all group-hover:justify-start group-hover:gap-4 group-hover:px-4 ${
               location.pathname.startsWith(PATHS.SETTINGS)
                 ? 'bg-primary text-primary-foreground'
                 : 'hover:bg-muted text-foreground'
             }`}
           >
             <Settings className={`w-6 h-6 ${location.pathname.startsWith(PATHS.SETTINGS) ? 'fill-current' : ''}`} />
-            <span className="font-medium">Settings</span>
+            <span className="hidden font-medium group-hover:inline">Settings</span>
           </Link>
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-all hover:bg-muted text-foreground"
+            title="Log out"
+            className="w-full flex items-center justify-center px-2 py-3 rounded-lg transition-all hover:bg-muted text-foreground group-hover:justify-start group-hover:gap-4 group-hover:px-4"
           >
             <LogOut className="w-6 h-6" />
-            <span className="font-medium">Log out</span>
+            <span className="hidden font-medium group-hover:inline">Log out</span>
           </button>
         </div>
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border">
+      <div className="hidden p-4 border-t border-border group-hover:block">
         {user ? (
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>{Number(user.followersCount ?? 0).toLocaleString()} Followers</span>

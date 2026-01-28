@@ -45,7 +45,9 @@ import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
 import ShareDialog from './ShareDialog';
 import EditPostDialog from './EditPostDialog';
+import VideoPlayer from './VideoPlayer';
 import { formatTime } from '../../utils/timeUtils';
+import { isVideoUrl } from '../../utils/mediaUtils';
 
 interface PostCardProps {
   post: Post;
@@ -290,6 +292,13 @@ export default function PostCard({ post }: PostCardProps) {
 
   const displayedComments = showAllComments ? comments : comments.slice(0, 2);
   const hasMoreComments = comments.length > 2;
+  const media = post.images ?? [];
+
+  const handleDoubleTapLike = () => {
+    if (!post.isLiked) {
+      dispatch(togglePostLike(post.id));
+    }
+  };
 
   useEffect(() => {
     if (showComments && post.commentsAllowed) {
@@ -400,10 +409,28 @@ export default function PostCard({ post }: PostCardProps) {
         {/* Post Content */}
         <p className="mb-3 whitespace-pre-wrap">{post.content}</p>
 
-        {/* Post Images */}
-        {post.images && post.images.length > 0 && (
-          <div className="mb-3 rounded-lg overflow-hidden">
-            <img src={post.images[0]} alt="Post content" className="w-full object-cover max-h-96" />
+        {/* Post Media */}
+        {media.length > 0 && (
+          <div className="mb-3">
+            <div className={media.length > 1 ? 'grid grid-cols-2 gap-2' : ''}>
+              {media.map((item, index) => (
+                <div key={`${post.id}-media-${index}`}>
+                  {isVideoUrl(item) ? (
+                    <VideoPlayer
+                      src={item}
+                      onDoubleTapLike={handleDoubleTapLike}
+                      className={media.length > 1 ? 'h-48' : ''}
+                    />
+                  ) : (
+                    <img
+                      src={item}
+                      alt="Post content"
+                      className={`w-full object-cover rounded-lg ${media.length > 1 ? 'h-48' : 'max-h-96'}`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

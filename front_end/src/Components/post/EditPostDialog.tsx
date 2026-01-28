@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
+import { isVideoUrl } from '../../utils/mediaUtils';
 import type { Post } from '../../features/posts/postsSlice';
 
 interface EditPostDialogProps {
@@ -97,11 +98,19 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
             <div className="grid grid-cols-2 gap-2">
               {images.map((img, index) => (
                 <div key={index} className="relative group">
-                  <img
-                    src={img}
-                    alt={`Upload ${index + 1}`}
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
+                  {isVideoUrl(img) ? (
+                    <video
+                      src={img}
+                      controls
+                      className="w-full h-48 object-cover rounded-lg bg-black"
+                    />
+                  ) : (
+                    <img
+                      src={img}
+                      alt={`Upload ${index + 1}`}
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                  )}
                   <button
                     onClick={() => handleRemoveImage(index)}
                     className="absolute top-2 right-2 p-1.5 bg-background/90 rounded-full hover:bg-background shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
@@ -118,7 +127,7 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*"
                 multiple
                 onChange={handleImageAdd}
                 className="hidden"

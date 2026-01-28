@@ -51,6 +51,9 @@ interface PostsState {
   userPosts: { [userId: string]: Post[] };
   postComments: { [postId: string]: Comment[] };
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  loadMoreStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+  nextOffset: number | null;
+  hasMore: boolean;
   error: string | null;
 }
 
@@ -63,12 +66,21 @@ const initialState: PostsState = {
   userPosts: {},
   postComments: {},
   status: 'idle',
+  loadMoreStatus: 'idle',
+  nextOffset: 0,
+  hasMore: true,
   error: null,
 };
 
+const DEFAULT_LIMIT = 5;
+
 export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
-  const response = await api.get('/posts');
-  return response.data.posts as Post[];
+  const response = await api.get('/posts', { params: { limit: DEFAULT_LIMIT, offset: 0 } });
+  return {
+    posts: response.data.posts as Post[],
+    nextOffset: response.data.nextOffset as number | null,
+    hasMore: response.data.hasMore as boolean,
+  };
 });
 
 export const fetchMyPosts = createAsyncThunk('posts/fetchMyPosts', async () => {
@@ -90,6 +102,21 @@ export const fetchMyArchivedPosts = createAsyncThunk('posts/fetchMyArchivedPosts
   const response = await api.get('/posts/me/archived');
   return response.data.posts as Post[];
 });
+export const fetchMorePosts = createAsyncThunk(
+  'posts/fetchMorePosts',
+  async (offset: number, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/posts', { params: { limit: DEFAULT_LIMIT, offset } });
+      return {
+        posts: response.data.posts as Post[],
+        nextOffset: response.data.nextOffset as number | null,
+        hasMore: response.data.hasMore as boolean,
+      };
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message ?? 'Failed to load more posts');
+    }
+  }
+);
 
 export const createPost = createAsyncThunk(
   'posts/createPost',
@@ -273,7 +300,10 @@ const postsSlice = createSlice({
       })
       .addCase(fetchPosts.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.feed = action.payload;
+        state.feed = action.payload.posts;
+        state.nextOffset = action.payload.nextOffset;
+        state.hasMore = action.payload.hasMore;
+        state.loadMoreStatus = 'idle';
       })
       .addCase(fetchPosts.rejected, (state, action) => {
         state.status = 'failed';

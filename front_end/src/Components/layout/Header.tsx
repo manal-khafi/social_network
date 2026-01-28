@@ -18,16 +18,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 bg-card border-b border-border z-40">
       <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          
-
-          <Link to={PATHS.HOME} className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-sm text-primary-foreground font-bold">A</span>
-            </div>
-            <h1 className="text-lg font-bold text-foreground">ANMOUGAR</h1>
-          </Link>
-        </div>
+        <div />
         
         <div className="flex items-center gap-3">
           <button className="p-2 hover:bg-muted rounded-full transition-colors">
