@@ -90,6 +90,11 @@ model User {
   allow_mentions       Boolean  @default(true)
   show_activity_status Boolean  @default(true)
 
+  two_factor_enabled       Boolean  @default(false)
+  two_factor_secret        String?
+  two_factor_temp_secret   String?
+  two_factor_confirmed_at  DateTime?
+
   gender        String?
   date_of_birth DateTime?
   account_name  String?

@@ -17,6 +17,7 @@ import MyLikedPosts from "./Routes/postRoutes";
 import BlockRoutes from "./Routes/BlockRoute";
 import SaveRoutes from "./Routes/saveRoutes";
 import PrivacySettingsRoutes from "./Routes/privacySEttingsRoutes";
+import twoFactorRouter from "./Routes/TwoFactorAuth";
 
 const port = process.env.PORT || 3500;
 const app = express();
@@ -57,6 +58,7 @@ app.use("/api", BlockRoutes);
 app.use("/api/saves", SaveRoutes);
 app.use("/api/account", AccountRouter);
 app.use("/api/privacy", PrivacySettingsRoutes);
+app.use("/api/auth", twoFactorRouter);
 
 app.get("/", (req, res) => {
   res.json({

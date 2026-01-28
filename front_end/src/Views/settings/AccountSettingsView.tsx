@@ -1,8 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { logout } from "../../features/auth/authSlice";
-import { ArrowLeft, Lock, Shield, LogOut, Trash2, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Lock,
+  Shield,
+  LogOut,
+  Trash2,
+  AlertCircle,
+  ChevronRight,
+} from "lucide-react";
 import { Card } from "../../Components/ui/card";
 import { Button } from "../../Components/ui/button";
 import { Separator } from "../../Components/ui/separator";
@@ -20,16 +28,31 @@ import { toast } from "sonner";
 
 import ProfileEditorSection from "../../Components/Profile/ProfileEditorSection";
 import api from "../../api/axios";
+import {
+  getTwoFactorAuthStatus,
+  setupTwoFactorAuth,
+  enableTwoFactorAuth,
+  disableTwoFactorAuth,
+  reset2FAState,
+} from "../../features/twoFactorAuth/twoFactorAuthSlice";
 
 export default function AccountSettingsView() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { currentUser } = useAppSelector((state) => state.user);
+  const {
+    isEnabled: is2FAEnabled,
+    qrCodeDataUrl,
+    manualKey,
+    status: twoFAStatus,
+    error: twoFAError,
+  } = useAppSelector((state) => state.twoFactorAuth);
 
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [show2FADialog, setShow2FADialog] = useState(false);
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
 
   const [deactivatePassword, setDeactivatePassword] = useState("");
   const [deactivateReason, setDeactivateReason] = useState("");
@@ -42,11 +65,51 @@ export default function AccountSettingsView() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    dispatch(getTwoFactorAuthStatus());
+  }, [dispatch]);
+
   const resetPasswordForm = () => {
     setPasswordError("");
     setCurrentPassword("");
     setNewPassword("");
     setConfirmNewPassword("");
+  };
+
+  const handleSetup2FA = () => {
+    dispatch(setupTwoFactorAuth());
+  };
+
+  const handleEnable2FA = async () => {
+    if (twoFactorCode.length === 6) {
+      const result = await dispatch(enableTwoFactorAuth(twoFactorCode));
+      if (enableTwoFactorAuth.fulfilled.match(result)) {
+        toast.success("2FA enabled successfully!");
+        setShow2FADialog(false);
+        dispatch(reset2FAState());
+        setTwoFactorCode("");
+      } else {
+        toast.error((result as any).payload?.message || "Failed to enable 2FA");
+      }
+    } else {
+      toast.error("Please enter a 6-digit code.");
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    if (twoFactorCode.length === 6) {
+      const result = await dispatch(disableTwoFactorAuth(twoFactorCode));
+      if (disableTwoFactorAuth.fulfilled.match(result)) {
+        toast.success("2FA disabled successfully!");
+        setShow2FADialog(false);
+        dispatch(reset2FAState());
+        setTwoFactorCode("");
+      } else {
+        toast.error((result as any).payload?.message || "Failed to disable 2FA");
+      }
+    } else {
+      toast.error("Please enter a 6-digit code.");
+    }
   };
 
   const handleChangePassword = async () => {
@@ -78,9 +141,7 @@ export default function AccountSettingsView() {
       resetPasswordForm();
     } catch (err: any) {
       const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to change password";
+        err?.response?.data?.message || err?.message || "Failed to change password";
       setPasswordError(String(msg));
       toast.error(String(msg));
     } finally {
@@ -160,10 +221,7 @@ export default function AccountSettingsView() {
       {/* Header */}
       <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-muted rounded-full"
-          >
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold">Account Settings</h1>
@@ -201,7 +259,10 @@ export default function AccountSettingsView() {
           <Separator />
 
           <button
-            onClick={() => setShow2FADialog(true)}
+            onClick={() => {
+              setTwoFactorCode("");
+              setShow2FADialog(true);
+            }}
             className="w-full flex items-center justify-between p-3 hover:bg-muted rounded-lg transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -209,7 +270,7 @@ export default function AccountSettingsView() {
               <div className="text-left">
                 <p className="font-medium">Two-Factor Authentication</p>
                 <p className="text-sm text-muted-foreground">
-                  Add extra security to your account
+                  {is2FAEnabled ? "2FA is currently enabled" : "Add extra security to your account"}
                 </p>
               </div>
             </div>
@@ -318,34 +379,85 @@ export default function AccountSettingsView() {
         </DialogContent>
       </Dialog>
 
-      {/* 2FA Dialog (UI only for now) */}
-      <Dialog open={show2FADialog} onOpenChange={setShow2FADialog}>
+      {/* 2FA Dialog */}
+      <Dialog
+        open={show2FADialog}
+        onOpenChange={(open) => {
+          setShow2FADialog(open);
+          if (!open) {
+            setTwoFactorCode("");
+            dispatch(reset2FAState());
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Enable Two-Factor Authentication</DialogTitle>
+            <DialogTitle>{is2FAEnabled ? "Disable" : "Enable"} Two-Factor Authentication</DialogTitle>
             <DialogDescription>
-              Add an extra layer of security to your account
+              {is2FAEnabled
+                ? "Enter the code from your authenticator app to disable 2FA."
+                : "Scan the QR code with your authenticator app."}
             </DialogDescription>
           </DialogHeader>
+
           <div className="py-4 space-y-4">
-            <p className="text-sm">
-              Two-factor authentication adds an additional layer of security to your
-              account by requiring more than just a password to log in.
-            </p>
-            <div className="p-4 bg-muted rounded-lg">
-              <p className="text-sm font-medium mb-2">Setup Steps:</p>
-              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                <li>Download an authenticator app</li>
-                <li>Scan the QR code</li>
-                <li>Enter the verification code</li>
-              </ol>
-            </div>
+            {is2FAEnabled ? (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Verification Code</label>
+                <Input
+                  placeholder="Enter 6-digit code"
+                  value={twoFactorCode}
+                  onChange={(e) => setTwoFactorCode(e.target.value)}
+                />
+              </div>
+            ) : qrCodeDataUrl ? (
+              <div className="flex flex-col items-center space-y-4">
+                <img src={qrCodeDataUrl} alt="2FA QR Code" />
+                <p className="text-sm text-muted-foreground">Or enter this code manually:</p>
+                <p className="text-lg font-semibold tracking-widest bg-muted p-2 rounded-md">{manualKey}</p>
+                <div className="w-full space-y-2 pt-4">
+                  <label className="text-sm font-medium">Verification Code</label>
+                  <Input
+                    placeholder="Enter 6-digit code"
+                    value={twoFactorCode}
+                    onChange={(e) => setTwoFactorCode(e.target.value)}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm font-medium mb-2">Setup Steps:</p>
+                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                  <li>Download an authenticator app (e.g., Google Authenticator).</li>
+                  <li>Click "Continue" to generate a QR code.</li>
+                  <li>Scan the QR code and enter the verification code.</li>
+                </ol>
+              </div>
+            )}
+
+            {twoFAStatus === "failed" && twoFAError && (
+              <p className="text-xs text-destructive">{twoFAError}</p>
+            )}
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setShow2FADialog(false)}>
               Cancel
             </Button>
-            <Button className="bg-[#d6955b] hover:bg-[#c58549]">Continue</Button>
+
+            {is2FAEnabled ? (
+              <Button onClick={handleDisable2FA} variant="destructive">
+                Disable
+              </Button>
+            ) : qrCodeDataUrl ? (
+              <Button onClick={handleEnable2FA} className="bg-[#d6955b] hover:bg-[#c58549]">
+                Verify & Enable
+              </Button>
+            ) : (
+              <Button onClick={handleSetup2FA} className="bg-[#d6955b] hover:bg-[#c58549]">
+                Continue
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -433,9 +545,7 @@ export default function AccountSettingsView() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Account</DialogTitle>
-            <DialogDescription className="text-destructive">
-              This action cannot be undone
-            </DialogDescription>
+            <DialogDescription className="text-destructive">This action cannot be undone</DialogDescription>
           </DialogHeader>
 
           <div className="py-4 space-y-4">
@@ -495,13 +605,5 @@ export default function AccountSettingsView() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function ChevronRight({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-    </svg>
   );
 }

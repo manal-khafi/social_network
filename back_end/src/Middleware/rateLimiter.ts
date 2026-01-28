@@ -21,3 +21,14 @@ export const registerLimiter = rateLimit({
 	standardHeaders: true,
 	legacyHeaders: false,
 });
+
+export const twoFactorLimiter = rateLimit({
+	windowMs: 5 * 60 * 1000, // 5 minutes
+	limit: 5, // Limit each IP to 5 requests per 5 minutes
+	message: {
+        success: false,
+        message: "Too many attempts, please try again after 5 minutes"
+    },
+	standardHeaders: true,
+	legacyHeaders: false,
+});

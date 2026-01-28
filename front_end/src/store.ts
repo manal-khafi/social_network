@@ -10,6 +10,7 @@ import communitiesReducer from './features/communities/communitiesSlice';
 import textSizeReducer from './features/textSize/textSizeSlice';
 import accessibilityReducer from './features/accessibility/accessibilitySlice';
 import layoutDensityReducer from './features/layoutDensity/layoutDensitySlice';
+import twoFactorAuthReducer from './features/twoFactorAuth/twoFactorAuthSlice';
 import type { AccessibilityPersistedState } from './utils/persistAccessibility';
 import type { LayoutDensity } from './utils/persistLayoutDensity';
 
@@ -26,6 +27,7 @@ export const store = configureStore({
     textSize: textSizeReducer,
     accessibility: accessibilityReducer,
     layoutDensity: layoutDensityReducer,
+    twoFactorAuth: twoFactorAuthReducer,
   },
 });
 
