@@ -337,6 +337,7 @@ model Community {
   members      CommunityMember[]
   groups       Group[]
   joinRequests JoinRequest[]
+  rules        CommunityRule[]
 }
 
 model CommunityMember {
@@ -467,4 +468,18 @@ model Notification {
 
   user             User             @relation(fields: [user_id], references: [id])
   typeNotification TypeNotification @relation(fields: [type_notification_id], references: [id])
+}
+
+model CommunityRule {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  order       Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  community_id String
+  community    Community @relation(fields: [community_id], references: [id], onDelete: Cascade)
+
+  @@index([community_id])
 }

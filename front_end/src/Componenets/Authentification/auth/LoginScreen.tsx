@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { AuthInput } from "./AuthInput";
 import { AuthButton } from "./AuthButton";
 import { SocialButton } from "./SocialButton";
@@ -15,6 +16,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onSwitchToRegister,
   onSwitchToForgotPassword,
 }) => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     emailOrUsername: "",
@@ -37,12 +39,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       });
 
       const data = await response.json();
-      console.log(data);
+      console.log("Login response:", data);
 
       if (data.success) {
-        alert(data.message);
+        console.log("Setting token:", data.token);
         localStorage.setItem("token", data.token);
-        window.location.href = data.redirectTo || "/dashboard";
+        localStorage.setItem("user", JSON.stringify(data.user));
+        alert(data.message);
+        navigate(data.redirectTo || "/home");
       } else {
         alert(`Error: ${data.message}`);
       }

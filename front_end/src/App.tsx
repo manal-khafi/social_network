@@ -11,6 +11,7 @@ import { ResetPasswordScreen } from "./Componenets/Authentification/auth/resetPa
 import { CommunityList } from './Views/communityList';
 import { CommunityPageWrapper } from './Views/communityPage';
 import { CreateCommunity } from './Views/createCommunity';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   const handleBack = () => {
@@ -36,9 +37,9 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/index" element={<Home />} />
 
-        <Route path='/community' element={<CommunityList onSelectCommunity={(id) => console.log(id)} onCreateClick={() => console.log("Create community")} />} />
-        <Route path='/community/:communityId' element={<CommunityPageWrapper onBack={handleBack} />} />
-        <Route path='/community/create' element={<CreateCommunity onBack={handleBack} onSubmit={(data) => console.log(data)} />} />
+        <Route path='/community' element={<ProtectedRoute><CommunityList onSelectCommunity={(id) => console.log(id)} onCreateClick={() => console.log("Create community")} /></ProtectedRoute>} />
+        <Route path='/community/:communityId' element={<ProtectedRoute><CommunityPageWrapper onBack={handleBack} /></ProtectedRoute>} />
+        <Route path='/community/create' element={<ProtectedRoute><CreateCommunity onBack={handleBack} onSubmit={(data) => console.log(data)} /></ProtectedRoute>} />
       </Routes>
     </Provider>
   );

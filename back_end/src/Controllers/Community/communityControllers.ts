@@ -28,6 +28,17 @@ const createCommunity = async (req: Request, res: Response, next: NextFunction) 
             created_by = firstUser.id;
         }
         
+        // Find or create OWNER/ADMIN role
+        let ownerRole = await prisma.role.findFirst({
+            where: { name: "OWNER" }
+        });
+
+        if (!ownerRole) {
+            ownerRole = await prisma.role.findFirst({
+                where: { name: "ADMIN" }
+            });
+        }
+
         const community = await prisma.community.create({
             data: {
                 name,
@@ -36,8 +47,22 @@ const createCommunity = async (req: Request, res: Response, next: NextFunction) 
                 banner_url: image || null, 
                 is_private: false,
                 created_by,
-                type: type || "other"
+                type: type || "other",
+                // Add creator as a member with OWNER/ADMIN role
+                members: {
+                    create: {
+                        user_id: created_by,
+                        role_id: ownerRole?.id,
+                        status: "active"
+                    }
+                }
             },
+            include: {
+                members: true,
+                _count: {
+                    select: { members: true }
+                }
+            }
         });
 
         res.status(201).json({
@@ -64,7 +89,13 @@ const createCommunity = async (req: Request, res: Response, next: NextFunction) 
 
 const getAllCommunities = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const communities = await prisma.community.findMany();
+        const communities = await prisma.community.findMany({
+            include: {
+                _count: {
+                    select: { members: true }
+                }
+            }
+        });
         res.status(200).json({
             status: "success",
             data: communities,
@@ -82,6 +113,11 @@ const getCommunityById = async (req: Request, res: Response, next: NextFunction)
         const { id } = req.params;
         const community = await prisma.community.findUnique({
             where: { id: id },
+            include: {
+                _count: {
+                    select: { members: true }
+                }
+            }
         });
 
         if (!community) {
@@ -106,7 +142,7 @@ const getCommunityById = async (req: Request, res: Response, next: NextFunction)
 const modifyCommunity = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
-        const { name, description, bio, banner_url, avatar_url, is_private } = req.body;
+        const { name, description, bio, banner_url, avatar_url, is_private, type } = req.body;
         
         // Build update object with only provided fields
         const updateData: any = {};
@@ -116,6 +152,7 @@ const modifyCommunity = async (req: Request, res: Response, next: NextFunction) 
         if (banner_url) updateData.banner_url = banner_url;
         if (avatar_url) updateData.avatar_url = avatar_url;
         if (is_private !== undefined) updateData.is_private = Boolean(is_private);
+        if (type) updateData.type = type;
         
         const updatedCommunity = await prisma.community.update({
             where: { id: id },

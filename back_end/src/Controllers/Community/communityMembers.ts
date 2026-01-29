@@ -75,6 +75,29 @@ const DeleteCommunityMember = async (req: Request, res: Response, next: NextFunc
   } catch (error) {
     next(error);
   }
+}
+
+const checkMembershipStatus = async (req: Request, res: Response, next: NextFunction) => {
+  const communityId = req.params.communityId;
+  const userId = req.params.userId;
+
+  try {
+    const member = await prisma.communityMember.findFirst({
+      where: {
+        community_id: communityId,
+        user_id: userId,
+        status: 'active',
+      },
+    });
+
+    res.status(200).json({ 
+      status: "success",
+      isMember: !!member,
+      member: member || null,
+    });
+  } catch (error) {
+    next(error);
+  }
 } 
 
 export default {
@@ -82,4 +105,5 @@ export default {
   giveMemberRole,
   getOneCommunityMember,
   DeleteCommunityMember,
+  checkMembershipStatus,
 };

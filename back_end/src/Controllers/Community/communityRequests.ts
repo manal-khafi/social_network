@@ -19,7 +19,7 @@ const communityRequest = async (req: Request, res: Response, next: NextFunction)
 }
 
 const createCommunityRequest = async (req: Request, res: Response, next: NextFunction) => {
-  const { userId, message, status } = req.body;
+  const { message } = req.body;
   const communityId = req.params.communityId;
   const userIdParam = req.params.userId;
   try {
@@ -27,12 +27,12 @@ const createCommunityRequest = async (req: Request, res: Response, next: NextFun
       data: {
         community_id: communityId,
         user_id: userIdParam,
-        message: message,
-        status: status,
+        message: message || null,
+        status: 'pending',
       },
     });
 
-    res.status(201).json({ request: newRequest });
+    res.status(201).json({ status: "success", request: newRequest });
   } catch (error) {
     next(error);
   }

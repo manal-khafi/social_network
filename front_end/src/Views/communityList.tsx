@@ -15,6 +15,9 @@ interface Community {
   image?: string;
   avatar_url?: string;
   type?: string;
+  _count?: {
+    members: number;
+  };
 }
 
 interface CommunityListProps {}
@@ -139,7 +142,7 @@ export function CommunityList({}: CommunityListProps) {
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-2 text-gray-600">
                         <Users className="h-4 w-4" />
-                        <span className="text-sm font-medium">{community.members ? community.members.toLocaleString() : 0} membres</span>
+                        <span className="text-sm font-medium">{community._count?.members || community.members || 0} membres</span>
                       </div>
                       {community.type && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#d6955b] text-white capitalize">

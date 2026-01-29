@@ -1,8 +1,18 @@
-import { PrismaClient } from '../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // ---- Roles ----
+  await prisma.role.createMany({
+    data: [
+      { id: 'role1', name: 'OWNER', description: 'Community Owner', is_system_role: true },
+      { id: 'role2', name: 'ADMIN', description: 'Community Administrator', is_system_role: true },
+      { id: 'role3', name: 'MODERATOR', description: 'Community Moderator', is_system_role: true },
+      { id: 'role4', name: 'MEMBER', description: 'Community Member', is_system_role: true },
+    ],
+  });
+
   // ---- Users ----
   await prisma.user.createMany({
     data: [

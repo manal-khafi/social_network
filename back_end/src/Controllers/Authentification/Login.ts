@@ -1,10 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import { generateAccessToken } from "../../util/jwt";
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || "votre_secret_jwt_ici";
 
 export const Login = async (req: Request, res: Response) => {
   try {
@@ -61,16 +60,12 @@ export const Login = async (req: Request, res: Response) => {
       });
     }
     const permissions = user.role?.rolePermissions.map((rp: any) => rp.permission.code) || [];
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role?.name,
-        permissions,
-      },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = generateAccessToken({
+      id: user.id,
+      email: user.email,
+      role: user.role?.name,
+      permissions,
+    });
     await prisma.user.update({
       where: { id: user.id },
       data: { last_login: new Date() },

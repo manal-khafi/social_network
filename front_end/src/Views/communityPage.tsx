@@ -1,7 +1,7 @@
-import { ArrowLeft, UserPlus, UserMinus, Users, TrendingUp, Hash, Settings, Upload, Image as ImageIcon, Palette, Shield } from "lucide-react";
+import { ArrowLeft, UserPlus, UserMinus, Users, TrendingUp, Hash, Settings, Upload, Image as ImageIcon, Palette, Shield, Check, X, Plus, Trash2, Edit2, Info, ShieldCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getCommunityById, getCommunityMembers, updateCommunity } from "../api/axios";
+import { getCommunityById, getCommunityMembers, updateCommunity, getCommunityRequests, approveJoinRequest, rejectJoinRequest, getCommunityRules, createCommunityRule, updateCommunityRule, deleteCommunityRule, checkMembershipStatus, joinCommunity, leaveCommunity } from "../api/axios";
 import { storage } from "../config/firebaseConfig";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
@@ -16,6 +16,7 @@ import { Label } from "../Componenets/Community/communityLabel";
 import { Textarea } from "../Componenets/Community/communityTextArea";
 import { Switch } from "../Componenets/Community/communitySwitch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../Componenets/Community/communitySelect";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../Componenets/Community/communityDialog";
 
 interface CommunityPageProps {
   communityId: string | number;
@@ -56,6 +57,32 @@ interface Community {
   require_approval?: boolean;
 }
 
+interface JoinRequest {
+  id: string;
+  user_id: string;
+  community_id: string;
+  message?: string;
+  status: string;
+  created_at: string;
+  user?: {
+    id: string;
+    username: string;
+    display_name: string;
+    email: string;
+    avatar_url?: string;
+  };
+}
+
+interface CommunityRule {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
+  community_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
   const navigate = useNavigate();
   const [isJoined, setIsJoined] = useState(false);
@@ -75,6 +102,18 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [logoImageFile, setLogoImageFile] = useState<File | null>(null);
+  const [isAdmin] = useState(true); // Pour la démo, l'utilisateur est admin
+  
+  // Admin states
+  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
+  const [rules, setRules] = useState<CommunityRule[]>([]);
+  const [newRuleTitle, setNewRuleTitle] = useState("");
+  const [newRuleDescription, setNewRuleDescription] = useState("");
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
+  
+  // Join dialog states
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
+  const [joinMessage, setJoinMessage] = useState("");
   
   // Fetch community data from backend
   useEffect(() => {
@@ -108,6 +147,66 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
     };
     
     fetchData();
+  }, [communityId]);
+  
+  // Fetch join requests for admin
+  useEffect(() => {
+    const fetchJoinRequests = async () => {
+      if (!isAdmin || !communityId) return;
+      
+      try {
+        const response = await getCommunityRequests(communityId);
+        const requestsData = response.data?.requests || response.data || [];
+        // Filter only pending requests
+        const pendingRequests = requestsData.filter((req: JoinRequest) => req.status === 'pending');
+        setJoinRequests(pendingRequests);
+      } catch (error) {
+        console.error("Failed to fetch join requests:", error);
+      }
+    };
+    
+    fetchJoinRequests();
+  }, [communityId, isAdmin]);
+  
+  // Check if user is member of the community
+  useEffect(() => {
+    const checkMembership = async () => {
+      if (!communityId) return;
+      
+      try {
+        // Get user from localStorage
+        const userStr = localStorage.getItem("user");
+        if (!userStr) return;
+        
+        const user = JSON.parse(userStr);
+        if (!user?.id) return;
+        
+        const response = await checkMembershipStatus(communityId, user.id);
+        const isMember = response.data?.isMember || false;
+        setIsJoined(isMember);
+      } catch (error) {
+        console.error("Failed to check membership status:", error);
+      }
+    };
+    
+    checkMembership();
+  }, [communityId]);
+  
+  // Fetch community rules
+  useEffect(() => {
+    const fetchRules = async () => {
+      if (!communityId) return;
+      
+      try {
+        const response = await getCommunityRules(communityId);
+        const rulesData = response.data?.data || response.data || [];
+        setRules(rulesData);
+      } catch (error) {
+        console.error("Failed to fetch community rules:", error);
+      }
+    };
+    
+    fetchRules();
   }, [communityId]);
   
   const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,6 +245,143 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
     }
   };
   
+  const handleApproveRequest = async (requestId: string, userId: string) => {
+    try {
+      await approveJoinRequest(communityId, requestId, userId);
+      setJoinRequests(joinRequests.filter(req => req.id !== requestId));
+      
+      // Refresh members list
+      const membersRes = await getCommunityMembers(communityId);
+      const membersData = membersRes.data?.data || membersRes.data?.members || membersRes.data || [];
+      setMembers(Array.isArray(membersData) ? membersData : []);
+      
+      // Show success message
+      alert("Demande acceptée avec succès!");
+    } catch (error) {
+      console.error("Failed to approve request:", error);
+      alert("Erreur lors de l'approbation de la demande");
+    }
+  };
+
+  const handleRejectRequest = async (requestId: string, userId: string) => {
+    try {
+      await rejectJoinRequest(communityId, requestId, userId);
+      setJoinRequests(joinRequests.filter(req => req.id !== requestId));
+      alert("Demande rejetée");
+    } catch (error) {
+      console.error("Failed to reject request:", error);
+      alert("Erreur lors du rejet de la demande");
+    }
+  };
+
+  const handleJoinLeave = async () => {
+    try {
+      const userStr = localStorage.getItem("user");
+      if (!userStr) {
+        alert("Vous devez être connecté pour effectuer cette action");
+        return;
+      }
+      
+      const user = JSON.parse(userStr);
+      if (!user?.id) {
+        alert("Utilisateur non trouvé");
+        return;
+      }
+
+      if (isJoined) {
+        // Leave community
+        await leaveCommunity(communityId, user.id);
+        setIsJoined(false);
+        alert("Vous avez quitté la communauté");
+        
+        // Refresh members list
+        const membersRes = await getCommunityMembers(communityId);
+        const membersData = membersRes.data?.data || membersRes.data?.members || membersRes.data || [];
+        setMembers(Array.isArray(membersData) ? membersData : []);
+      } else {
+        // Show join dialog
+        setShowJoinDialog(true);
+      }
+    } catch (error) {
+      console.error("Failed to join/leave community:", error);
+      alert("Erreur lors de l'opération");
+    }
+  };
+  
+  const handleSubmitJoinRequest = async () => {
+    try {
+      const userStr = localStorage.getItem("user");
+      if (!userStr) return;
+      
+      const user = JSON.parse(userStr);
+      if (!user?.id) return;
+
+      // Send join request with message
+      await joinCommunity(communityId, user.id, joinMessage);
+      setShowJoinDialog(false);
+      setJoinMessage("");
+      alert("Demande d'adhésion envoyée avec succès!");
+    } catch (error) {
+      console.error("Failed to send join request:", error);
+      alert("Erreur lors de l'envoi de la demande");
+    }
+  };
+
+  const handleAddRule = async () => {
+    if (newRuleTitle.trim() && newRuleDescription.trim()) {
+      try {
+        const response = await createCommunityRule(communityId, {
+          title: newRuleTitle,
+          description: newRuleDescription,
+          order: rules.length,
+        });
+        
+        const newRule = response.data?.data || response.data;
+        setRules([...rules, newRule]);
+        setNewRuleTitle("");
+        setNewRuleDescription("");
+        alert("Règle ajoutée avec succès!");
+      } catch (error) {
+        console.error("Failed to create rule:", error);
+        alert("Erreur lors de l'ajout de la règle");
+      }
+    }
+  };
+
+  const handleDeleteRule = async (ruleId: string) => {
+    try {
+      await deleteCommunityRule(communityId, ruleId);
+      setRules(rules.filter(rule => rule.id !== ruleId));
+      alert("Règle supprimée avec succès!");
+    } catch (error) {
+      console.error("Failed to delete rule:", error);
+      alert("Erreur lors de la suppression de la règle");
+    }
+  };
+
+  const handleEditRule = (ruleId: string) => {
+    setEditingRuleId(ruleId);
+  };
+
+  const handleSaveRule = async (ruleId: string, newTitle: string, newDescription: string) => {
+    try {
+      const response = await updateCommunityRule(communityId, ruleId, {
+        title: newTitle,
+        description: newDescription,
+      });
+      
+      const updatedRule = response.data?.data || response.data;
+      setRules(rules.map(rule => 
+        rule.id === ruleId ? updatedRule : rule
+      ));
+      setEditingRuleId(null);
+      alert("Règle mise à jour avec succès!");
+    } catch (error) {
+      console.error("Failed to update rule:", error);
+      alert("Erreur lors de la mise à jour de la règle");
+    }
+  };
+
   const handleSaveSettings = async () => {
     if (!community) return;
     
@@ -174,6 +410,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
         require_approval: requireApproval,
         banner_url: bannerUrl,
         avatar_url: avatarUrl,
+        type: editCategory,
       });
       
       // Update local state
@@ -187,6 +424,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
         is_private: !isPublic,
         allow_posts: allowPosts,
         require_approval: requireApproval,
+        type: editCategory,
       });
       
       // Clear file inputs
@@ -290,7 +528,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                 {/* Join/Leave Button */}
                 <div className="flex gap-3">
                   <Button
-                    onClick={() => setIsJoined(!isJoined)}
+                    onClick={handleJoinLeave}
                     className={
                       isJoined
                         ? "h-7 sm:h-8 px-2.5 sm:px-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white text-xs"
@@ -315,20 +553,69 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
           </Card>
         </div>
 
+        {/* Join Request Dialog */}
+        <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Rejoindre {community?.name}</DialogTitle>
+              <DialogDescription>
+                Ajoutez un message pour accompagner votre demande d'adhésion (optionnel)
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Textarea
+                placeholder="Pourquoi souhaitez-vous rejoindre cette communauté?"
+                value={joinMessage}
+                onChange={(e) => setJoinMessage(e.target.value)}
+                rows={4}
+                className="w-full border-2 focus:border-[#226d68] resize-none"
+              />
+              <p className="text-xs text-gray-500 mt-2">{joinMessage.length} caractères</p>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowJoinDialog(false);
+                  setJoinMessage("");
+                }}
+                className="border-2"
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleSubmitJoinRequest}
+                className="bg-[#d6955b] hover:bg-[#c5844a] text-white"
+              >
+                Envoyer la demande
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Tabs */}
         <Tabs defaultValue="members" className="pb-12">
-          <TabsList className="w-full h-11 sm:h-12 bg-white border-2 shadow-sm grid grid-cols-3">
+          <TabsList className={`w-full h-11 sm:h-12 bg-white border-2 shadow-sm grid ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="members" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
               <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               Membres
             </TabsTrigger>
             <TabsTrigger value="about" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
+              <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               À propos
             </TabsTrigger>
-            <TabsTrigger value="settings" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
-              <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Paramètres
-            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="admin" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
+                <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                Admin
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="settings" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
+                <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                Paramètres
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Members Tab */}
@@ -460,28 +747,211 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                   <div className="border-t pt-6">
                     <h4 className="font-semibold mb-3">Règles de la communauté</h4>
                     <ul className="space-y-2 text-gray-600">
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#18534f] font-bold">1.</span>
-                        <span>Soyez respectueux envers tous les membres</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#18534f] font-bold">2.</span>
-                        <span>Partagez du contenu pertinent et de qualité</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#18534f] font-bold">3.</span>
-                        <span>Pas de spam ou de contenu promotionnel non autorisé</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#18534f] font-bold">4.</span>
-                        <span>Aidez à maintenir une atmosphère positive</span>
-                      </li>
+                      {rules.map((rule, index) => (
+                        <li key={rule.id} className="flex items-start gap-2">
+                          <span className="text-[#18534f] font-bold">{index + 1}.</span>
+                          <span>{rule.description}</span>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Admin Tab */}
+          {isAdmin && (
+            <TabsContent value="admin" className="mt-6">
+              <div className="space-y-6">
+                {/* Join Requests Section */}
+                <Card className="border-2">
+                  <CardContent className="p-6">
+                    <div className="mb-6">
+                      <h3 className="text-xl font-semibold mb-2">
+                        Demandes d'adhésion ({joinRequests.length})
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Gérez les demandes de rejoindre la communauté
+                      </p>
+                    </div>
+
+                    {joinRequests.length === 0 ? (
+                      <div className="text-center py-12 text-gray-500">
+                        <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                        <p>Aucune demande en attente</p>
+                      </div>
+                    ) : (
+                      <ScrollArea className="h-[400px] pr-4">
+                        <div className="space-y-4">
+                          {joinRequests.map((request) => {
+                            const userName = request.user?.display_name || request.user?.username || "Utilisateur";
+                            const userEmail = request.user?.email || "";
+                            const userAvatar = request.user?.avatar_url;
+                            const initials = userName.split(" ").map(n => n[0]).join("").toUpperCase();
+                            
+                            return (
+                            <Card key={request.id} className="border-2 border-[#226d68]/20 hover:border-[#226d68] transition-colors">
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex items-start gap-4 flex-1">
+                                    <Avatar className="h-12 w-12 border-2 border-gray-200">
+                                      <AvatarImage src={userAvatar} />
+                                      <AvatarFallback className="bg-gradient-to-br from-[#18534f] to-[#226d68] text-white font-semibold">
+                                        {initials}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-semibold text-gray-900">
+                                          {userName}
+                                        </h4>
+                                        <span className="text-sm text-gray-500">@{request.user?.username}</span>
+                                      </div>
+                                      <p className="text-xs text-gray-500 mb-2">
+                                        {userEmail}
+                                      </p>
+                                      <p className="text-xs text-gray-500 mb-2">
+                                        Demande envoyée le {new Date(request.created_at).toLocaleDateString('fr-FR')}
+                                      </p>
+                                      {request.message && (
+                                        <p className="text-sm text-gray-600 bg-[#ecf8f6] p-3 rounded-lg">
+                                          {request.message}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleApproveRequest(request.id, request.user_id)}
+                                      className="bg-[#18534f] hover:bg-[#226d68] text-white"
+                                    >
+                                      <Check className="h-4 w-4 mr-1" />
+                                      Accepter
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleRejectRequest(request.id, request.user_id)}
+                                      className="border-2 border-red-500 text-red-500 hover:bg-red-50"
+                                    >
+                                      <X className="h-4 w-4 mr-1" />
+                                      Refuser
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )})}
+                        </div>
+                      </ScrollArea>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Community Rules Management Section */}
+                <Card className="border-2">
+                  <CardContent className="p-6">
+                    <div className="mb-6">
+                      <h3 className="text-xl font-semibold mb-2">
+                        Gestion des règles ({rules.length})
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Définissez et gérez les règles de votre communauté
+                      </p>
+                    </div>
+
+                    {/* Add New Rule Form */}
+                    <div className="mb-6 p-4 bg-[#ecf8f6] rounded-lg border-2 border-[#226d68]/20">
+                      <h4 className="font-semibold mb-3 text-[#18534f]">Ajouter une nouvelle règle</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-1 block">
+                            Titre de la règle
+                          </label>
+                          <Input
+                            value={newRuleTitle}
+                            onChange={(e) => setNewRuleTitle(e.target.value)}
+                            placeholder="Ex: Respect"
+                            className="border-2 border-[#226d68]/30 focus:border-[#18534f]"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-1 block">
+                            Description
+                          </label>
+                          <Textarea
+                            value={newRuleDescription}
+                            onChange={(e) => setNewRuleDescription(e.target.value)}
+                            placeholder="Décrivez la règle en détail..."
+                            className="border-2 border-[#226d68]/30 focus:border-[#18534f] min-h-[80px]"
+                          />
+                        </div>
+                        <Button
+                          onClick={handleAddRule}
+                          className="w-full bg-[#d6955b] hover:bg-[#c5844a] text-white"
+                          disabled={!newRuleTitle.trim() || !newRuleDescription.trim()}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Ajouter la règle
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Rules List */}
+                    <ScrollArea className="h-[400px] pr-4">
+                      <div className="space-y-3">
+                        {rules.map((rule, index) => (
+                          <Card key={rule.id} className="border-2 border-[#226d68]/20 hover:border-[#226d68] transition-colors">
+                            <CardContent className="p-4">
+                              {editingRuleId === rule.id ? (
+                                <EditRuleForm
+                                  rule={rule}
+                                  onSave={handleSaveRule}
+                                  onCancel={() => setEditingRuleId(null)}
+                                />
+                              ) : (
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#18534f] text-white text-sm font-bold">
+                                        {index + 1}
+                                      </span>
+                                      <h4 className="font-semibold text-gray-900">{rule.title}</h4>
+                                    </div>
+                                    <p className="text-sm text-gray-600 ml-8">{rule.description}</p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleEditRule(rule.id)}
+                                      className="border-2 border-[#226d68] text-[#18534f] hover:bg-[#ecf8f6]"
+                                    >
+                                      <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleDeleteRule(rule.id)}
+                                      className="border-2 border-red-500 text-red-500 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          )}
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="mt-6">
@@ -525,14 +995,20 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                       <Label htmlFor="edit-category" className="text-sm text-gray-700">Catégorie</Label>
                       <Select value={editCategory} onValueChange={setEditCategory}>
                         <SelectTrigger className="h-10 border-2 focus:border-[#226d68]">
-                          <SelectValue />
+                          <SelectValue placeholder="Sélectionner une catégorie" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Tech">Tech</SelectItem>
-                          <SelectItem value="Art">Art</SelectItem>
-                          <SelectItem value="Culture">Culture</SelectItem>
-                          <SelectItem value="Business">Business</SelectItem>
-                          <SelectItem value="Environment">Environnement</SelectItem>
+                        <SelectContent className="bg-white">
+                          <SelectItem value="tech">Tech</SelectItem>
+                          <SelectItem value="health">Santé</SelectItem>
+                          <SelectItem value="education">Éducation</SelectItem>
+                          <SelectItem value="sports">Sports</SelectItem>
+                          <SelectItem value="entertainment">Divertissement</SelectItem>
+                          <SelectItem value="business">Business</SelectItem>
+                          <SelectItem value="arts">Arts</SelectItem>
+                          <SelectItem value="travel">Voyage</SelectItem>
+                          <SelectItem value="food">Cuisine</SelectItem>
+                          <SelectItem value="lifestyle">Style de vie</SelectItem>
+                          <SelectItem value="other">Autre</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -747,6 +1223,59 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
             </div>
           </TabsContent>
         </Tabs>
+      </div>
+    </div>
+  );
+}
+
+// Edit Rule Form Component
+function EditRuleForm({ 
+  rule, 
+  onSave, 
+  onCancel 
+}: { 
+  rule: CommunityRule; 
+  onSave: (id: string, title: string, description: string) => void; 
+  onCancel: () => void;
+}) {
+  const [title, setTitle] = useState(rule.title);
+  const [description, setDescription] = useState(rule.description);
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">Titre</label>
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="border-2 border-[#226d68]/30 focus:border-[#18534f]"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">Description</label>
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="border-2 border-[#226d68]/30 focus:border-[#18534f] min-h-[80px]"
+        />
+      </div>
+      <div className="flex gap-2">
+        <Button
+          onClick={() => onSave(rule.id, title, description)}
+          className="flex-1 bg-[#18534f] hover:bg-[#226d68] text-white"
+          disabled={!title.trim() || !description.trim()}
+        >
+          <Check className="h-4 w-4 mr-1" />
+          Sauvegarder
+        </Button>
+        <Button
+          onClick={onCancel}
+          variant="outline"
+          className="flex-1 border-2"
+        >
+          <X className="h-4 w-4 mr-1" />
+          Annuler
+        </Button>
       </div>
     </div>
   );
