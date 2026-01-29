@@ -7,6 +7,7 @@ export const PATHS = {
   INBOX: "/home/inbox",
   INBOX_ARCHIVED: "/home/inbox/archived",
   NOTIFICATIONS: "/home/notifications",
+  SEARCH: "/home/search",
   PROFILE_ME: "/home/profile/me",
   PROFILE_EDIT: "/home/profile/edit",
   SETTINGS: "/home/settings",

@@ -5,6 +5,7 @@ import Acceptdemande from "../Controllers/Following/Acceptfolow";
 import { refuseFollowRequest } from "../Controllers/Following/Refusedemande";
 import Following from "../Controllers/Following/Folloing";
 import Follower from "../Controllers/Following/Follower";
+import { getFollowRequests } from "../Controllers/Following/FollowRequests";
 import { authMiddleware } from "../Middleware/authMiddlware";
 
 import { blockGuard } from "../Middleware/Block/blockGuardMiddleware";
@@ -17,6 +18,7 @@ FollowRoutes.post("/accept-follow/:demandeId",authMiddleware, blockGuard(), Acce
 FollowRoutes.post("/refuse-follow/:requestId",authMiddleware, blockGuard(), refuseFollowRequest);
 FollowRoutes.get("/following/:userId",authMiddleware, blockGuard(), Following);
 FollowRoutes.get("/followers/:userId",authMiddleware, blockGuard(), Follower);
+FollowRoutes.get("/requests", authMiddleware, blockGuard(), getFollowRequests);
 
 export default FollowRoutes;
 

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../hooks";
 import { logoutUser } from "../../features/auth/authSlice";
@@ -6,11 +6,15 @@ import {
   fetchCurrentUserProfile,
   fetchFollowers,
   fetchFollowing,
+  toggleFollow,
 } from "../../features/user/userSlice";
 import { fetchSavedPosts, fetchMyPosts } from "../../features/posts/postsSlice";
 import { Edit, Settings, Menu, LogOut, Loader2 } from "lucide-react";
 import { Button } from "../../Components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../Components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../Components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "../../Components/ui/avatar";
+import { Card } from "../../Components/ui/card";
 import { PATHS } from "../../routes/paths";
 import MyPostsView from "./MyPostsView";
 import MyRepostsView from "./MyRepostsView";
@@ -23,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "../../Components/ui/dropdown-menu";
 import PostCard from "../../Components/post/PostCard";
+import { toast } from "sonner";
 
 export default function MyProfileView() {
   const dispatch = useAppDispatch();
@@ -38,6 +43,8 @@ export default function MyProfileView() {
 
   // ✅ My real user id (used for followers/following routes)
   const myUserId = currentUser?.id ?? authUser?.id ?? null;
+  const [followersOpen, setFollowersOpen] = useState(false);
+  const [followingOpen, setFollowingOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -53,6 +60,18 @@ export default function MyProfileView() {
       dispatch(fetchFollowing(currentUser.id));
     }
   }, [isAuthenticated, currentUser?.id, dispatch]);
+
+  useEffect(() => {
+    if (followersOpen && currentUser?.id) {
+      dispatch(fetchFollowers(currentUser.id));
+    }
+  }, [dispatch, followersOpen, currentUser?.id]);
+
+  useEffect(() => {
+    if (followingOpen && currentUser?.id) {
+      dispatch(fetchFollowing(currentUser.id));
+    }
+  }, [dispatch, followingOpen, currentUser?.id]);
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -89,6 +108,70 @@ export default function MyProfileView() {
   const avatarUrl = (currentUser?.avatar_url ?? (authUser as any)?.avatar_url ?? null) as string | null;
   const coverImageRaw = (currentUser?.cover_image ?? (authUser as any)?.cover_image ?? null) as string | null;
   const coverImage = makeUrl(coverImageRaw);
+
+  const handleToggleFollow = async (targetUserId: string, isPrivate: boolean) => {
+    try {
+      const result = await dispatch(toggleFollow(targetUserId)).unwrap();
+
+      if (result.followRequestPending || (isPrivate && !result.isFollowing)) {
+        toast.success("Follow request sent");
+      } else if (result.isFollowing) {
+        toast.success("Following user");
+      } else {
+        toast.success("Unfollowed user");
+      }
+    } catch (e: unknown) {
+      toast.error(typeof e === "string" ? e : "Failed to update follow");
+    }
+  };
+
+  const getButtonLabel = (u: (typeof followers)[number]) => {
+    if (u.followRequestPending) return "Requested";
+    if (u.isFollowing) return "Unfollow";
+    return "Follow";
+  };
+
+  const isDisabled = (u: (typeof followers)[number]) => !!u.followRequestPending;
+
+  const renderFollowList = (
+    list: typeof followers,
+    emptyText: string
+  ) => (
+    <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+      {list.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-6">{emptyText}</p>
+      ) : (
+        list.map((person) => {
+          const isMe = myUserId && person.id === myUserId;
+          return (
+            <Card key={person.id} className="p-3">
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage src={person.avatar_url ?? undefined} />
+                  <AvatarFallback>{person.username?.[0]?.toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{person.display_name ?? person.username}</p>
+                  <p className="text-sm text-muted-foreground truncate">@{person.username}</p>
+                </div>
+                {!isMe && (
+                  <Button
+                    size="sm"
+                    variant={person.isFollowing ? "outline" : "default"}
+                    className={!person.isFollowing ? "bg-[#d6955b] hover:bg-[#c58549]" : ""}
+                    disabled={isDisabled(person)}
+                    onClick={() => handleToggleFollow(person.id, !!person.is_private)}
+                  >
+                    {getButtonLabel(person)}
+                  </Button>
+                )}
+              </div>
+            </Card>
+          );
+        })
+      )}
+    </div>
+  );
 
   return (
     <div>
@@ -141,23 +224,43 @@ export default function MyProfileView() {
             <p className="text-sm text-muted-foreground">Posts</p>
           </div>
 
-          <Link
-            to={myUserId ? `/home/profile/${myUserId}/followers` : "#"}
+          <button
+            type="button"
+            onClick={() => myUserId && setFollowersOpen(true)}
             className={myUserId ? "hover:underline" : "cursor-default pointer-events-none"}
           >
             <p className="font-semibold">{followers.length.toLocaleString()}</p>
             <p className="text-sm text-muted-foreground">Followers</p>
-          </Link>
+          </button>
 
-          <Link
-            to={myUserId ? `/home/profile/${myUserId}/following` : "#"}
+          <button
+            type="button"
+            onClick={() => myUserId && setFollowingOpen(true)}
             className={myUserId ? "hover:underline" : "cursor-default pointer-events-none"}
           >
             <p className="font-semibold">{following.length.toLocaleString()}</p>
             <p className="text-sm text-muted-foreground">Following</p>
-          </Link>
+          </button>
         </div>
       </div>
+
+      <Dialog open={followersOpen} onOpenChange={setFollowersOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Followers</DialogTitle>
+          </DialogHeader>
+          {renderFollowList(followers, "No followers yet")}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={followingOpen} onOpenChange={setFollowingOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Following</DialogTitle>
+          </DialogHeader>
+          {renderFollowList(following, "Not following anyone yet")}
+        </DialogContent>
+      </Dialog>
 
       <Tabs defaultValue="posts" className="mt-4">
         <TabsList className="w-full justify-start rounded-none border-b">

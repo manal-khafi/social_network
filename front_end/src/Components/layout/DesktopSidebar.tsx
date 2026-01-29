@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Home, Users, PlusCircle, Mail, User, Settings, LogOut, Heart, Search } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
@@ -10,6 +10,8 @@ import { Badge } from '../ui/badge';
 
 export default function DesktopSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useAppDispatch();
   const { currentUser } = useAppSelector((state) => state.user);
   const { user: authUser } = useAppSelector((state) => state.auth);
@@ -30,6 +32,21 @@ export default function DesktopSidebar() {
 
   const handleLogout = () => {
     dispatch(logoutUser());
+  };
+
+  const isSearchPage = location.pathname.startsWith(PATHS.SEARCH);
+  const query = isSearchPage ? searchParams.get("q") ?? "" : "";
+
+  const handleSearchChange = (value: string) => {
+    if (!isSearchPage) {
+      navigate(`${PATHS.SEARCH}?q=${encodeURIComponent(value)}`);
+      return;
+    }
+    if (!value.trim()) {
+      setSearchParams({});
+      return;
+    }
+    setSearchParams({ q: value });
   };
 
   return (
@@ -78,6 +95,11 @@ export default function DesktopSidebar() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            value={query}
+            onFocus={() => {
+              if (!isSearchPage) navigate(PATHS.SEARCH);
+            }}
+            onChange={(event) => handleSearchChange(event.target.value)}
             placeholder="Search"
             className="h-9 rounded-full pl-9 bg-muted/60 border-none focus-visible:ring-0"
           />
