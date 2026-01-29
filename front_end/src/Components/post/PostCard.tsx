@@ -399,9 +399,6 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   const handleDeletePost = async () => {
-    if (!confirm("Are you sure you want to delete this post? This action cannot be undone."))
-      return;
-
     try {
       await dispatch(deletePost(post.id)).unwrap();
       toast.success("Post deleted successfully");
