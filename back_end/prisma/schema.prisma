@@ -67,6 +67,19 @@ enum ReportStatus {
   ACCEPTED
   REJECTED
 }
+enum CommunityType {
+  tech
+  health
+  education
+  sports
+  entertainment
+  business
+  arts
+  travel
+  food
+  lifestyle
+  other
+}
 
 model User {
   id                   String   @id @default(uuid())
@@ -334,12 +347,14 @@ model MessageStatus {
 }
 
 model Community {
-  id          String   @id @default(uuid())
-  name        String   @unique
+  id          String        @id @default(uuid())
+  name        String        @unique
   description String?
+  avatar_url  String?
   banner_url  String?
-  is_private  Boolean  @default(false)
-  created_at  DateTime @default(now())
+  type        CommunityType @default(other)
+  is_private  Boolean       @default(false)
+  created_at  DateTime      @default(now())
 
   created_by String
   creator    User   @relation("Creator", fields: [created_by], references: [id])
@@ -348,6 +363,7 @@ model Community {
   members      CommunityMember[]
   groups       Group[]
   joinRequests JoinRequest[]
+  rules        CommunityRule[]
 }
 
 model CommunityMember {
@@ -496,4 +512,18 @@ model Report {
   reportedUser User     @relation("UserReportsReceived", fields: [reported_user_id], references: [id], onDelete: Cascade)
   post         Post?    @relation(fields: [post_id], references: [id], onDelete: SetNull)
   comment      Comment? @relation(fields: [comment_id], references: [id], onDelete: SetNull)
+}
+
+model CommunityRule {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  order       Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  community_id String
+  community    Community @relation(fields: [community_id], references: [id], onDelete: Cascade)
+
+  @@index([community_id])
 }

@@ -1,6 +1,3 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -18,6 +15,11 @@ import BlockRoutes from "./Routes/BlockRoute";
 import SaveRoutes from "./Routes/saveRoutes";
 import PrivacySettingsRoutes from "./Routes/privacySEttingsRoutes";
 import twoFactorRouter from "./Routes/TwoFactorAuth";
+import communityRoutes from "./Routes/communityRoutes";
+import { authMiddleware } from "./Middleware/authMiddlware";
+
+import dotenv from "dotenv";
+dotenv.config();
 
 const port = process.env.PORT || 3500;
 const app = express();
@@ -59,6 +61,9 @@ app.use("/api/saves", SaveRoutes);
 app.use("/api/account", AccountRouter);
 app.use("/api/privacy", PrivacySettingsRoutes);
 app.use("/api/auth", twoFactorRouter);
+app.use(express.json());
+
+app.use("/api/communities", authMiddleware, communityRoutes);
 
 app.get("/", (req, res) => {
   res.json({
