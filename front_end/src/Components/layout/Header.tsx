@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Heart, Search } from 'lucide-react';
 import { useAppSelector } from '../../hooks';
 import { Badge } from '../ui/badge';
@@ -7,6 +7,8 @@ import { PATHS } from '../../routes/paths';
 
 export default function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { unreadCount } = useAppSelector((state) => state.notifications);
   
   // Don't show header on certain pages
@@ -15,6 +17,21 @@ export default function Header() {
   );
 
   if (hideHeader) return null;
+
+  const isSearchPage = location.pathname.startsWith(PATHS.SEARCH);
+  const query = isSearchPage ? searchParams.get("q") ?? "" : "";
+
+  const handleSearchChange = (value: string) => {
+    if (!isSearchPage) {
+      navigate(`${PATHS.SEARCH}?q=${encodeURIComponent(value)}`);
+      return;
+    }
+    if (!value.trim()) {
+      setSearchParams({});
+      return;
+    }
+    setSearchParams({ q: value });
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border lg:hidden">
@@ -27,6 +44,11 @@ export default function Header() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
+              value={query}
+              onFocus={() => {
+                if (!isSearchPage) navigate(PATHS.SEARCH);
+              }}
+              onChange={(event) => handleSearchChange(event.target.value)}
               placeholder="Search"
               className="h-9 rounded-full pl-9 bg-muted/60 border-none focus-visible:ring-0"
             />

@@ -18,6 +18,7 @@ import CommunityView from "./Views/community/CommunityView";
 import InboxView from "./Views/inbox/InboxView";
 import ChatView from "./Views/inbox/ChatView";
 import NotificationsView from "./Views/notifications/NotificationsView";
+import SearchView from "./Views/search/SearchView";
 import MyProfileView from "./Views/profile/MyProfileView";
 import MyPostsView from "./Views/profile/MyPostsView";
 import UserProfileView from "./Views/profile/UserProfileView";
@@ -69,6 +70,7 @@ function AppContent() {
         <Route path="/home" element={<MainLayout />}>
           <Route index element={<Navigate to="feed" replace />} />
           <Route path="feed" element={<FeedView />} />
+          <Route path="search" element={<SearchView />} />
           <Route path="create-post" element={<CreatePostView />} />
           <Route path="my-posts" element={<MyPostsView />} />
           <Route path="story/:storyId" element={<StoryViewerView />} />
