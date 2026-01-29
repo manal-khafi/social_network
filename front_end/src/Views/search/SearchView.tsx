@@ -64,35 +64,52 @@ export default function SearchView() {
 
   const handleToggleFollow = async (account: SearchAccount) => {
     try {
-      const result = await dispatch(toggleFollow(account.id)).unwrap();
-      const next = accounts.map((item) =>
-        item.id === account.id
-          ? {
-              ...item,
-              isFollowing: result.isFollowing,
-              followRequestPending: result.followRequestPending,
-            }
-          : item
-      );
-      setAccounts(next);
+      const result: any = await dispatch(toggleFollow(account.id)).unwrap();
 
-      if (result.followRequestPending) {
-        toast.success("Follow request sent");
-      } else if (result.isFollowing) {
-        toast.success("Following user");
-      } else {
-        toast.success("Unfollowed user");
-      }
+      // Support multiple possible backend shapes:
+      const followStatus =
+        result?.followStatus ??
+        result?.data?.followStatus ??
+        result?.status ?? // some backends return "pending/accepted"
+        null;
+
+      const isFollowing =
+        typeof result?.isFollowing === "boolean"
+          ? result.isFollowing
+          : typeof result?.data?.isFollowing === "boolean"
+            ? result.data.isFollowing
+            : followStatus === "accepted";
+
+      const followRequestPending =
+        typeof result?.followRequestPending === "boolean"
+          ? result.followRequestPending
+          : typeof result?.data?.followRequestPending === "boolean"
+            ? result.data.followRequestPending
+            : followStatus === "pending";
+
+      setAccounts((prev) =>
+        prev.map((item) =>
+          item.id === account.id
+            ? { ...item, isFollowing, followRequestPending }
+            : item
+        )
+      );
+
+      if (followRequestPending) toast.success("Follow request sent");
+      else if (isFollowing) toast.success("Following user");
+      else toast.success("Unfollowed user");
     } catch (e: unknown) {
       toast.error(typeof e === "string" ? e : "Failed to update follow");
     }
   };
 
+
   const getButtonLabel = (u: SearchAccount) => {
-    if (u.followRequestPending) return "Requested";
+    if (u.followRequestPending) return "Cancel request";
     if (u.isFollowing) return "Unfollow";
     return "Follow";
   };
+
 
   const renderAccounts = (list: SearchAccount[], emptyText: string) => (
     <div className="space-y-2">
@@ -100,8 +117,15 @@ export default function SearchView() {
         <p className="text-sm text-muted-foreground text-center py-8">{emptyText}</p>
       ) : (
         list.map((account) => (
-          <Card key={account.id} className="p-4">
+          <Card
+              key={account.id}
+              className="p-4 cursor-pointer hover:bg-muted/50 transition"
+              onClick={() =>
+                navigate(`/home/profile/${encodeURIComponent(account.username)}`)
+              }
+            >
             <div className="flex items-center gap-3">
+
               <button
                 type="button"
                 onClick={() => navigate(`/home/profile/${encodeURIComponent(account.username)}`)}
@@ -125,7 +149,7 @@ export default function SearchView() {
                 size="sm"
                 variant={account.isFollowing ? "outline" : "default"}
                 className={!account.isFollowing ? "bg-[#d6955b] hover:bg-[#c58549]" : ""}
-                disabled={account.followRequestPending}
+                disabled={false}
                 onClick={() => handleToggleFollow(account)}
               >
                 {getButtonLabel(account)}
