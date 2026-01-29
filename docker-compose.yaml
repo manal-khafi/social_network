@@ -54,6 +54,7 @@ services:
     command: sh -c "
       echo 'En attente de la base de données...' &&
       sleep 5 &&
+      npx prisma migrate deploy &&
       npx prisma generate &&
       npm run dev"
 

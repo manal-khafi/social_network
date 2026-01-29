@@ -71,6 +71,9 @@ function CommentItem({
   const dispatch = useAppDispatch();
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const profilePath = `/home/profile/${encodeURIComponent(
+    comment.username || comment.userId
+  )}`;
 
   const handleLike = () => {
     dispatch(toggleCommentLike({ postId, commentId: comment.id }));
@@ -97,7 +100,7 @@ function CommentItem({
   return (
     <div className={`${isReply ? 'ml-12' : ''}`}>
       <div className="flex gap-3 py-3">
-        <Link to={`/profile/${comment.userId}`}>
+        <Link to={profilePath}>
           <Avatar className="w-8 h-8">
             <AvatarImage src={comment.avatar} />
             <AvatarFallback>{((comment.username || '?')[0] || '?').toUpperCase()}</AvatarFallback>
@@ -106,7 +109,7 @@ function CommentItem({
 
         <div className="flex-1 min-w-0">
           <div className="bg-muted rounded-2xl px-3 py-2">
-            <Link to={`/profile/${comment.userId}`} className="font-semibold text-sm hover:underline">
+            <Link to={profilePath} className="font-semibold text-sm hover:underline">
               {comment.username}
             </Link>
             <p className="text-sm mt-0.5">{comment.content}</p>
@@ -193,6 +196,7 @@ export default function PostCard({ post }: PostCardProps) {
   const location = useLocation(); // Initialize useLocation
   const { currentUser } = useAppSelector((state) => state.user);
   const authUser = useAppSelector((state) => state.auth.user);
+  const profilePath = `/home/profile/${encodeURIComponent(post.username || post.userId)}`;
 
   const commentsFromState = useAppSelector((state) => state.posts.postComments[post.id]);
   const comments = commentsFromState || [];
@@ -239,7 +243,7 @@ export default function PostCard({ post }: PostCardProps) {
         toast.success(`Blocked @${post.username}`);
         
         // Redirect if currently on the blocked user's profile page
-        if (location.pathname === `/profile/${post.userId}`) {
+        if (location.pathname === profilePath) {
           navigate('/'); // Redirect to home page or feed
         }
       } catch (error) {
@@ -307,12 +311,12 @@ export default function PostCard({ post }: PostCardProps) {
   }, [dispatch, post.id, showComments, post.commentsAllowed]);
 
   return (
-    <Card className="overflow-hidden">
-      <div className="p-4">
+    <Card className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
+      <div className="p-5">
         {/* Post Header */}
         <div className="flex items-start gap-3 mb-3">
-          <Link to={`/profile/${post.userId}`}>
-            <Avatar>
+          <Link to={profilePath}>
+            <Avatar className="h-12 w-12">
               <AvatarImage src={post.avatar} />
               <AvatarFallback>{((post.username || '?')[0] || '?').toUpperCase()}</AvatarFallback>
             </Avatar>
@@ -321,7 +325,7 @@ export default function PostCard({ post }: PostCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Link to={`/profile/${post.userId}`} className="hover:underline">
+                <Link to={profilePath} className="hover:underline">
                   <p className="font-semibold">{post.username}</p>
                 </Link>
                 {post.isEdited && (
@@ -394,7 +398,7 @@ export default function PostCard({ post }: PostCardProps) {
               </DropdownMenu>
             </div>
 
-            <p className="text-sm text-muted-foreground">{formatTime(post?.timestamp)}</p>
+            <p className="text-xs text-muted-foreground">{formatTime(post?.timestamp)}</p>
           </div>
         </div>
 
@@ -407,7 +411,7 @@ export default function PostCard({ post }: PostCardProps) {
         )}
 
         {/* Post Content */}
-        <p className="mb-3 whitespace-pre-wrap">{post.content}</p>
+        <p className="mb-3 whitespace-pre-wrap text-[15px] leading-6">{post.content}</p>
 
         {/* Post Media */}
         {media.length > 0 && (

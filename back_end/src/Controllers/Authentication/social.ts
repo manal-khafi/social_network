@@ -13,14 +13,21 @@ export const socialLogin = async (req: Request, res: Response) => {
     return res.status(400).json({ success: false, message: "idToken required" });
   }
 
+  let decodedToken;
   try {
-    const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
+    decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
     console.log("Firebase ID token verified successfully. UID:", decodedToken.uid); // Log verifyIdToken success
+  } catch (error) {
+    console.error("Firebase token verification failed:", error); // Log verifyIdToken failure
+    return res.status(401).json({ success: false, message: "Invalid Firebase token" });
+  }
 
+  try {
     const email = decodedToken.email;
     const displayName = decodedToken.name || "";
     const avatarUrl = decodedToken.picture || "";
-    const firebaseSignInProvider = decodedToken.firebase.sign_in_provider;
+    const firebaseSignInProvider =
+      decodedToken.firebase?.sign_in_provider || decodedToken.sign_in_provider || "firebase";
 
     if (!email) {
       console.log("Email not found in decoded Firebase token.");
@@ -109,7 +116,15 @@ export const socialLogin = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error("Firebase token verification failed or other error:", error); // Log verifyIdToken failure
-    res.status(401).json({ success: false, message: "Invalid Firebase token" });
+    const prismaError = error as { code?: string };
+    if (prismaError?.code === "P2021") {
+      console.error("Database schema missing required tables:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Database is not initialized. Run Prisma migrations.",
+      });
+    }
+    console.error("Social login failed due to server error:", error);
+    res.status(500).json({ success: false, message: "Social login failed" });
   }
 };

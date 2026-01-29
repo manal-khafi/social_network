@@ -49,6 +49,7 @@ interface PostsState {
   myPosts: Post[];
   myReposts: Post[];
   userPosts: { [userId: string]: Post[] };
+  userReposts: { [userId: string]: Post[] };
   postComments: { [postId: string]: Comment[] };
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   loadMoreStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -64,6 +65,7 @@ const initialState: PostsState = {
   myPosts: [],
   myReposts: [],
   userPosts: {},
+  userReposts: {},
   postComments: {},
   status: 'idle',
   loadMoreStatus: 'idle',
@@ -102,6 +104,30 @@ export const fetchMyArchivedPosts = createAsyncThunk('posts/fetchMyArchivedPosts
   const response = await api.get('/posts/me/archived');
   return response.data.posts as Post[];
 });
+
+export const fetchUserPosts = createAsyncThunk(
+  'posts/fetchUserPosts',
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/posts/user/${userId}`);
+      return { userId, posts: response.data.posts as Post[] };
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch user posts');
+    }
+  }
+);
+
+export const fetchUserReposts = createAsyncThunk(
+  'posts/fetchUserReposts',
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/posts/user/${userId}/reposts`);
+      return { userId, reposts: response.data.reposts as Post[] };
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch user reposts');
+    }
+  }
+);
 export const fetchMorePosts = createAsyncThunk(
   'posts/fetchMorePosts',
   async (offset: number, { rejectWithValue }) => {
@@ -330,6 +356,28 @@ const postsSlice = createSlice({
       .addCase(fetchMyReposts.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message || 'Failed to fetch reposts';
+      })
+      .addCase(fetchUserPosts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchUserPosts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.userPosts[action.payload.userId] = action.payload.posts;
+      })
+      .addCase(fetchUserPosts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = (action.payload as string) || 'Failed to fetch user posts';
+      })
+      .addCase(fetchUserReposts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchUserReposts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.userReposts[action.payload.userId] = action.payload.reposts;
+      })
+      .addCase(fetchUserReposts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = (action.payload as string) || 'Failed to fetch user reposts';
       })
       .addCase(fetchSavedPosts.pending, (state) => {
         state.status = 'loading';

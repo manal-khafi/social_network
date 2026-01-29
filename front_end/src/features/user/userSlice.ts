@@ -21,6 +21,11 @@ export interface UserProfile {
 
   cover_image?: string | null;
   isBlocked?: boolean; 
+  followersCount?: number;
+  followingCount?: number;
+  isFollowing?: boolean;
+  followRequestPending?: boolean;
+  canViewPosts?: boolean;
 }
 
 
@@ -52,6 +57,16 @@ const initialState: UserState = {
   blockedCount: 0,
 };
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error && typeof error === "object" && "response" in error) {
+    const response = (error as { response?: { data?: { message?: string } } }).response;
+    const message = response?.data?.message;
+    if (typeof message === "string") return message;
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+};
+
 export const fetchCurrentUserProfile = createAsyncThunk<
   UserProfile,
   void,
@@ -61,8 +76,21 @@ export const fetchCurrentUserProfile = createAsyncThunk<
     const res = await api.get("/profile/me");
     // backend returns: { success: true, user: {...} }
     return res.data.user as UserProfile;
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to fetch profile");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to fetch profile"));
+  }
+});
+
+export const fetchUserProfile = createAsyncThunk<
+  UserProfile,
+  string,
+  { rejectValue: string }
+>("user/fetchUserProfile", async (username, { rejectWithValue }) => {
+  try {
+    const res = await api.get(`/profile/${encodeURIComponent(username)}`);
+    return res.data as UserProfile;
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to fetch user profile"));
   }
 });
 
@@ -84,8 +112,8 @@ export const saveMyProfile = createAsyncThunk<
   try {
     const res = await api.put("/profile/me", payload);
     return res.data.user as UserProfile;
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to update profile");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to update profile"));
   }
 });
 
@@ -98,8 +126,8 @@ export const updateMyAvatar = createAsyncThunk<
   try {
     const res = await api.put("/profile/me/avatar", payload);
     return res.data.user as UserProfile;
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to update avatar");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to update avatar"));
   }
 });
 
@@ -113,10 +141,8 @@ export const updateCoverImage = createAsyncThunk<
     const cover = res.data?.user?.cover_image;
     if (!cover) return rejectWithValue("Server did not return cover_image");
     return { cover_image: cover as string };
-  } catch (error: any) {
-    return rejectWithValue(
-      error.response?.data?.message || "Failed to update cover image"
-    );
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to update cover image"));
   }
 });
 
@@ -143,21 +169,23 @@ export const togglePrivacy = createAsyncThunk<
     });
 
     return { isPublic: newIsPublic };
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to toggle privacy");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to toggle privacy"));
   }
 });
 
 export const followUser = createAsyncThunk<
-  { userId: string },
+  { userId: string; status: "accepted" | "pending" },
   string,
   { rejectValue: string }
 >("user/followUser", async (userIdToFollow, { rejectWithValue }) => {
   try {
-    await api.post(`/follow/follow/${userIdToFollow}`);
-    return { userId: userIdToFollow };
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to follow user");
+    const res = await api.post(`/follow/follow/${userIdToFollow}`);
+    const statusRaw = String(res.data?.status || "").toLowerCase();
+    const status = statusRaw === "accepted" ? "accepted" : "pending";
+    return { userId: userIdToFollow, status };
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to follow user"));
   }
 });
 
@@ -169,28 +197,33 @@ export const unfollowUser = createAsyncThunk<
   try {
     await api.delete(`/follow/unfollow/${userIdToUnfollow}`);
     return { userId: userIdToUnfollow };
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to unfollow user");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to unfollow user"));
   }
 });
 
 export const toggleFollow = createAsyncThunk<
-  { userId: string; isFollowing: boolean },
+  { userId: string; isFollowing: boolean; followRequestPending: boolean },
   string,
   { state: RootState; rejectValue: string }
 >("user/toggleFollow", async (userId, { getState, dispatch, rejectWithValue }) => {
   try {
-    const currentlyFollowing = !!getState().user.viewedUser?.isFollowing;
+    const viewed = getState().user.viewedUser;
+    if (viewed?.followRequestPending && !viewed.isFollowing) {
+      return rejectWithValue("Follow request pending");
+    }
+    const currentlyFollowing = !!viewed?.isFollowing;
 
     if (currentlyFollowing) {
       await dispatch(unfollowUser(userId)).unwrap();
-      return { userId, isFollowing: false };
+      return { userId, isFollowing: false, followRequestPending: false };
     } else {
-      await dispatch(followUser(userId)).unwrap();
-      return { userId, isFollowing: true };
+      const result = await dispatch(followUser(userId)).unwrap();
+      const accepted = result.status === "accepted";
+      return { userId, isFollowing: accepted, followRequestPending: !accepted };
     }
-  } catch (error: any) {
-    return rejectWithValue(error?.message || "Failed to toggle follow");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to toggle follow"));
   }
 });
 
@@ -202,8 +235,8 @@ export const acceptFollowRequest = createAsyncThunk<
   try {
     await api.post(`/follow/accept-follow/${demandeId}`);
     return { demandeId };
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to accept follow request");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to accept follow request"));
   }
 });
 
@@ -215,8 +248,8 @@ export const denyFollowRequest = createAsyncThunk<
   try {
     await api.post(`/follow/refuse-follow/${requestId}`);
     return { requestId };
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to deny follow request");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to deny follow request"));
   }
 });
 
@@ -227,9 +260,9 @@ export const fetchFollowers = createAsyncThunk<
 >("user/fetchFollowers", async (userId, { rejectWithValue }) => {
   try {
     const res = await api.get(`/follow/followers/${userId}`);
-    return res.data as UserProfile[];
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to fetch followers");
+    return (res.data?.users ?? []) as UserProfile[];
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to fetch followers"));
   }
 });
 
@@ -240,9 +273,9 @@ export const fetchFollowing = createAsyncThunk<
 >("user/fetchFollowing", async (userId, { rejectWithValue }) => {
   try {
     const res = await api.get(`/follow/following/${userId}`);
-    return res.data as UserProfile[];
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to fetch following");
+    return (res.data?.users ?? []) as UserProfile[];
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to fetch following"));
   }
 });
 
@@ -262,9 +295,9 @@ export const blockUser = createAsyncThunk<
     thunkAPI.dispatch(fetchBlockedCount());
 
     return { blockedUserId };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return thunkAPI.rejectWithValue(
-      error.response?.data?.message || "Failed to block user"
+      getErrorMessage(error, "Failed to block user")
     );
   }
 });
@@ -278,8 +311,8 @@ export const unblockUser = createAsyncThunk<
   try {
     await api.delete(`/blocks`, { data: { blockedUserId } });
     return { blockedUserId };
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to unblock user");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to unblock user"));
   }
 });
 
@@ -291,8 +324,8 @@ export const checkBlock = createAsyncThunk<
   try {
     const res = await api.get(`/blocks/check/${targetUserId}`);
     return { targetUserId, isBlocked: !!res.data?.isBlocked };
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to check block");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to check block"));
   }
 });
 
@@ -305,8 +338,8 @@ export const fetchBlockedCount = createAsyncThunk<
     const res = await api.get(`/blocks/count`);
     const count = Number(res.data?.data?.count ?? 0);
     return Number.isFinite(count) ? count : 0;
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to fetch blocked count");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to fetch blocked count"));
   }
 });
 
@@ -321,8 +354,8 @@ export const fetchBlockedUsers = createAsyncThunk<
 
     const res = await api.get(`/blocks`, { params: { page, limit } });
     return (res.data?.data ?? []) as UserProfile[];
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to fetch blocked users");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to fetch blocked users"));
   }
 });
 
@@ -363,6 +396,18 @@ const userSlice = createSlice({
         state.status = "failed";
         state.error = (action.payload as string) || "Failed to fetch profile";
       })
+      .addCase(fetchUserProfile.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.viewedUser = action.payload;
+      })
+      .addCase(fetchUserProfile.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = (action.payload as string) || "Failed to fetch user profile";
+      })
 
       // save profile (backend)
       .addCase(saveMyProfile.fulfilled, (state, action) => {
@@ -397,14 +442,29 @@ const userSlice = createSlice({
 
       // follow
       .addCase(followUser.fulfilled, (state, action) => {
-        if (state.viewedUser?.id === action.payload.userId) state.viewedUser.isFollowing = true;
+        if (state.viewedUser?.id !== action.payload.userId) return;
+        const accepted = action.payload.status === "accepted";
+        state.viewedUser.isFollowing = accepted;
+        state.viewedUser.followRequestPending = !accepted;
+        if (accepted) {
+          state.viewedUser.followersCount = (state.viewedUser.followersCount ?? 0) + 1;
+        }
       })
       .addCase(unfollowUser.fulfilled, (state, action) => {
-        if (state.viewedUser?.id === action.payload.userId) state.viewedUser.isFollowing = false;
+        if (state.viewedUser?.id !== action.payload.userId) return;
+        state.viewedUser.isFollowing = false;
+        state.viewedUser.followRequestPending = false;
+        state.viewedUser.followersCount = Math.max(
+          0,
+          (state.viewedUser.followersCount ?? 0) - 1
+        );
       })
       .addCase(toggleFollow.fulfilled, (state, action) => {
-        const { userId, isFollowing } = action.payload;
-        if (state.viewedUser?.id === userId) state.viewedUser.isFollowing = isFollowing;
+        const { userId, isFollowing, followRequestPending } = action.payload;
+        if (state.viewedUser?.id === userId) {
+          state.viewedUser.isFollowing = isFollowing;
+          state.viewedUser.followRequestPending = followRequestPending;
+        }
       })
 
       // followers/following list
@@ -462,7 +522,7 @@ const userSlice = createSlice({
       // generic error capture
       .addMatcher(
         (action) => action.type.startsWith("user/") && action.type.endsWith("/rejected"),
-        (state, action: any) => {
+        (state, action: { payload?: string; error?: { message?: string } }) => {
           state.error = action.payload || action.error?.message || "Request failed";
         }
       );
@@ -478,8 +538,8 @@ export const updatePrivacySettings = createAsyncThunk<
   try {
     const res = await api.patch("/users/me/privacy", payload);
     return res.data;
-  } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || "Failed to update privacy");
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to update privacy"));
   }
 });
 

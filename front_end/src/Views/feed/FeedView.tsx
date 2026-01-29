@@ -34,10 +34,10 @@ export default function FeedView() {
   }, [dispatch, hasMore, loadMoreStatus, nextOffset, status]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <StoryBar />
       
-      <div className="space-y-4 p-4">
+      <div className="space-y-6 px-4 pb-6">
         {filteredFeed.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}

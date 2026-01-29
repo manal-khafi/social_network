@@ -26,54 +26,36 @@ export const getUserProfile = async (req: Request, res: Response) => {
       }
     }
 
-    // If I'm viewing my own profile, return more info
-    if (viewerId === userProfile.id) {
-      return res.json({
-        id: userProfile.id,
-        username: userProfile.username,
-        display_name: userProfile.display_name,
-        bio: userProfile.bio,
-        avatar_url: userProfile.avatar_url,
+    const [followersCount, followingCount] = await Promise.all([
+      prisma.follow.count({
+        where: { followed_id: userProfile.id, status: "accepted" },
+      }),
+      prisma.follow.count({
+        where: { follower_id: userProfile.id, status: "accepted" },
+      }),
+    ]);
 
-        email: userProfile.email,
-        is_verified: userProfile.is_verified,
-        created_at: userProfile.created_at,
+    const isSelf = viewerId === userProfile.id;
+    let isFollowing = false;
+    let followRequestPending = false;
 
-        adresse: userProfile.adresse ?? null,
-        date_of_birth: userProfile.date_of_birth
-          ? userProfile.date_of_birth.toISOString().slice(0, 10)
-          : null,
-
-        is_private: userProfile.is_private,
-        allow_comments: userProfile.allow_comments,
-        allow_mentions: userProfile.allow_mentions,
-        show_activity_status: userProfile.show_activity_status,
-        cover_image: userProfile.cover_image ?? null,
-      });
-    }
-
-
-    const checkIfFollower = async (vId: string, profileId: string) => {
-      if (!vId) return false;
-      const follow = await prisma.follow.findFirst({
+    if (viewerId && !isSelf) {
+      const followStatus = await prisma.follow.findFirst({
         where: {
-          follower_id: vId,
-          followed_id: profileId,
-          status: "accepted",
+          follower_id: viewerId,
+          followed_id: userProfile.id,
+          status: { in: ["accepted", "pending"] },
         },
+        select: { status: true },
       });
 
-      return !!follow;
-    };
-
-    if (userProfile.is_private) {
-      const isFollower = await checkIfFollower(viewerId!, userProfile.id);
-      if (!isFollower) {
-        return res.status(403).json({ message: "This profile is private" });
-      }
+      if (followStatus?.status === "accepted") isFollowing = true;
+      if (followStatus?.status === "pending") followRequestPending = true;
     }
 
-    return res.json({
+    const canViewPosts = isSelf || !userProfile.is_private || isFollowing;
+
+    const basePayload = {
       id: userProfile.id,
       username: userProfile.username,
       display_name: userProfile.display_name,
@@ -81,7 +63,31 @@ export const getUserProfile = async (req: Request, res: Response) => {
       avatar_url: userProfile.avatar_url,
       is_verified: userProfile.is_verified,
       cover_image: userProfile.cover_image ?? null,
-    });
+      is_private: userProfile.is_private,
+      followersCount,
+      followingCount,
+      isFollowing,
+      followRequestPending,
+      canViewPosts,
+    };
+
+    // If I'm viewing my own profile, return more info
+    if (isSelf) {
+      return res.json({
+        ...basePayload,
+        email: userProfile.email,
+        created_at: userProfile.created_at,
+        adresse: userProfile.adresse ?? null,
+        date_of_birth: userProfile.date_of_birth
+          ? userProfile.date_of_birth.toISOString().slice(0, 10)
+          : null,
+        allow_comments: userProfile.allow_comments,
+        allow_mentions: userProfile.allow_mentions,
+        show_activity_status: userProfile.show_activity_status,
+      });
+    }
+
+    return res.json(basePayload);
 
   } catch (error) {
     console.error("Error fetching user profile:", error);
