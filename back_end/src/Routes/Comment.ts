@@ -1,6 +1,6 @@
 import  Comment  from "../Controllers/Comment/CreateComment";
 import { deleteComment } from "../Controllers/Comment/deleteComment";
-import modifierComment from "../Controllers/Comment/modifierComment";
+import modifierComment from "../Controllers/Comment/ModifierComment";
 import getComment from "../Controllers/Comment/getComment";
 import { authMiddleware } from "../Middleware/authMiddlware";
 import { Router } from "express";

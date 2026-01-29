@@ -49,6 +49,7 @@ export default function CreatePostView() {
       await dispatch(
         createPost({
           content,
+          authorId: authUser.id,
           media_urls: media.length > 0 ? media : undefined,
         })
       ).unwrap();

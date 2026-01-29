@@ -2,15 +2,19 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../hooks";
 import { logoutUser } from "../../features/auth/authSlice";
-import { fetchCurrentUserProfile } from "../../features/user/userSlice";
-import { fetchSavedPosts } from "../../features/posts/postsSlice";
+import {
+  fetchCurrentUserProfile,
+  fetchFollowers,
+  fetchFollowing,
+} from "../../features/user/userSlice";
+import { fetchSavedPosts, fetchMyPosts } from "../../features/posts/postsSlice";
 import { Edit, Settings, Menu, LogOut, Loader2 } from "lucide-react";
 import { Button } from "../../Components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "../../Components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../Components/ui/tabs";
 import { PATHS } from "../../routes/paths";
 import MyPostsView from "./MyPostsView";
 import MyRepostsView from "./MyRepostsView";
+import ProfileHeaderLayout from "../../Components/Profile/ProfileHeaderLayout";
 
 import {
   DropdownMenu,
@@ -25,17 +29,30 @@ export default function MyProfileView() {
   const navigate = useNavigate();
 
   const { user: authUser, isAuthenticated } = useAppSelector((state) => state.auth);
-  const { currentUser, status: profileStatus } = useAppSelector((state) => state.user);
-  const { savedPosts, archivedPosts, status: postsStatus, error: postsError } = useAppSelector((state) => state.posts);
+  const { currentUser, followers, following, status: profileStatus } = useAppSelector(
+    (state) => state.user
+  );
+  const { savedPosts, myPosts, status: postsStatus, error: postsError } = useAppSelector(
+    (state) => state.posts
+  );
+
+  // ✅ My real user id (used for followers/following routes)
+  const myUserId = currentUser?.id ?? authUser?.id ?? null;
 
   useEffect(() => {
-    if (isAuthenticated && !currentUser && profileStatus === "idle") {
-      dispatch(fetchCurrentUserProfile());
-    }
     if (isAuthenticated) {
+      dispatch(fetchCurrentUserProfile());
       dispatch(fetchSavedPosts());
+      dispatch(fetchMyPosts());
     }
-  }, [isAuthenticated, currentUser, profileStatus, dispatch]);
+  }, [isAuthenticated, dispatch]);
+
+  useEffect(() => {
+    if (isAuthenticated && currentUser?.id) {
+      dispatch(fetchFollowers(currentUser.id));
+      dispatch(fetchFollowing(currentUser.id));
+    }
+  }, [isAuthenticated, currentUser?.id, dispatch]);
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -49,7 +66,6 @@ export default function MyProfileView() {
     if (!url) return null;
     return url.startsWith("http") ? url : `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
   };
-
 
   if (profileStatus === "loading" && !user) {
     return (
@@ -71,40 +87,19 @@ export default function MyProfileView() {
   }
 
   const avatarUrl = (currentUser?.avatar_url ?? (authUser as any)?.avatar_url ?? null) as string | null;
-
-  console.log("Avatar URL:", avatarUrl);
-
-
   const coverImageRaw = (currentUser?.cover_image ?? (authUser as any)?.cover_image ?? null) as string | null;
-
   const coverImage = makeUrl(coverImageRaw);
-  console.log("Cover Image RAW:", coverImageRaw);
-  console.log("Cover Image FINAL:", coverImage);
-
 
   return (
     <div>
-      <div className="h-48 bg-muted overflow-hidden">
-        {coverImage ? (
-          <img
-            src={`${coverImage}${coverImage.includes("?") ? "&" : "?"}v=${Date.now()}`}
-            alt="Cover"
-            className="w-full h-full object-cover"
-          />
-        ) : null}
-      </div>
-
-      <div className="p-4">
-        <div className="flex items-end justify-between -mt-16 mb-4">
-          <Avatar className="w-24 h-24 border-4 border-background">
-            <AvatarImage src={avatarUrl ?? undefined} />
-
-            <AvatarFallback className="text-2xl">
-              {(user?.username?.[0] ?? "?").toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-
-          <div className="flex gap-2">
+      <ProfileHeaderLayout
+        coverImage={coverImage}
+        avatarUrl={avatarUrl}
+        displayName={user.display_name ?? user.username}
+        username={user.username}
+        bio={user.bio}
+        actionsSlot={
+          <>
             <Link to={PATHS.PROFILE_EDIT}>
               <Button variant="outline" size="sm">
                 <Edit className="w-4 h-4 mr-2" />
@@ -135,12 +130,33 @@ export default function MyProfileView() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        </div>
+          </>
+        }
+      />
 
-        <h1 className="text-2xl font-bold">{user.display_name ?? user.username}</h1>
-        <p className="text-muted-foreground">@{user.username}</p>
-        {user.bio && <p className="mt-3">{user.bio}</p>}
+      <div className="p-4">
+        <div className="flex justify-around text-center border-t border-b border-border py-3 my-4">
+          <div>
+            <p className="font-semibold">{myPosts.length}</p>
+            <p className="text-sm text-muted-foreground">Posts</p>
+          </div>
+
+          <Link
+            to={myUserId ? `/home/profile/${myUserId}/followers` : "#"}
+            className={myUserId ? "hover:underline" : "cursor-default pointer-events-none"}
+          >
+            <p className="font-semibold">{followers.length.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground">Followers</p>
+          </Link>
+
+          <Link
+            to={myUserId ? `/home/profile/${myUserId}/following` : "#"}
+            className={myUserId ? "hover:underline" : "cursor-default pointer-events-none"}
+          >
+            <p className="font-semibold">{following.length.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground">Following</p>
+          </Link>
+        </div>
       </div>
 
       <Tabs defaultValue="posts" className="mt-4">
@@ -165,9 +181,13 @@ export default function MyProfileView() {
         </TabsContent>
 
         <TabsContent value="saved" className="p-4 space-y-4">
-          {postsStatus === 'loading' && <div className="text-center text-muted-foreground py-8">Loading...</div>}
-          {postsStatus === 'failed' && <div className="text-center text-destructive py-8">{postsError}</div>}
-          {postsStatus === 'succeeded' && savedPosts.length > 0 ? (
+          {postsStatus === "loading" && (
+            <div className="text-center text-muted-foreground py-8">Loading...</div>
+          )}
+          {postsStatus === "failed" && (
+            <div className="text-center text-destructive py-8">{postsError}</div>
+          )}
+          {postsStatus === "succeeded" && savedPosts.length > 0 ? (
             savedPosts.map((post) => <PostCard key={post.id} post={post} />)
           ) : (
             <p className="text-center text-muted-foreground py-8">No saved posts</p>

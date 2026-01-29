@@ -3,6 +3,7 @@ import { authMiddleware } from "../Middleware/authMiddlware";
 import { createPost } from "../Controllers/Posts/CreatePost";
 import { getPosts } from "../Controllers/Posts/GetPosts";
 import { getMyPosts, getMyReposts} from "../Controllers/Posts/GetMyPosts";
+import { getUserPosts, getUserReposts } from "../Controllers/Posts/GetUserPosts";
 import { getMySavedPosts } from "../Controllers/Posts/GetMySavedPosts";
 import { getMyArchivedPosts } from "../Controllers/Posts/GetMyArchivedPosts";
 import { toggleLike } from "../Controllers/like/likeController";
@@ -21,6 +22,8 @@ postsRouter.get("/me", authMiddleware, getMyPosts); // Blocking not applicable t
 postsRouter.get("/me/reposts", authMiddleware, getMyReposts); // Blocking not applicable to own reposts
 postsRouter.get("/me/saved", authMiddleware, getMySavedPosts); // Blocking not applicable to own saved posts
 postsRouter.get("/me/archived", authMiddleware, getMyArchivedPosts); // Blocking not applicable to own archived posts
+postsRouter.get("/user/:userId", authMiddleware, blockGuard(), getUserPosts);
+postsRouter.get("/user/:userId/reposts", authMiddleware, blockGuard(), getUserReposts);
 postsRouter.post("/", authMiddleware, createPost);
 postsRouter.put("/:postId", authMiddleware, updatePost);
 postsRouter.delete("/:postId", authMiddleware, blockGuard(), deletePost);

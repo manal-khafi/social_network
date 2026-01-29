@@ -1,16 +1,19 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, PlusCircle, Mail, User, Settings, LogOut } from 'lucide-react';
+import { Home, Users, PlusCircle, Mail, User, Settings, LogOut, Heart, Search } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { logoutUser } from '../../features/auth/authSlice';
 import { PATHS } from '../../routes/paths';
 import { Skeleton } from '../ui/skeleton';
+import { Input } from '../ui/input';
+import { Badge } from '../ui/badge';
 
 export default function DesktopSidebar() {
   const location = useLocation();
   const dispatch = useAppDispatch();
   const { currentUser } = useAppSelector((state) => state.user);
   const { user: authUser } = useAppSelector((state) => state.auth);
+  const { unreadCount } = useAppSelector((state) => state.notifications);
   const logoUrl = new URL('../../../logo.png', import.meta.url).href;
 
   // Use detailed profile if available, otherwise fallback to basic auth user
@@ -21,6 +24,7 @@ export default function DesktopSidebar() {
     { path: PATHS.COMMUNITY, icon: Users, label: 'Community' },
     { path: PATHS.CREATE_POST, icon: PlusCircle, label: 'Create' },
     { path: PATHS.INBOX, icon: Mail, label: 'Inbox' },
+    { path: PATHS.NOTIFICATIONS, icon: Heart, label: 'Notifications', badge: unreadCount },
     { path: PATHS.PROFILE_ME, icon: User, label: 'Profile' },
   ];
 
@@ -69,6 +73,16 @@ export default function DesktopSidebar() {
         </div>
       )}
 
+      {/* Search Bar */}
+      <div className="hidden p-3 group-hover:block">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search"
+            className="h-9 rounded-full pl-9 bg-muted/60 border-none focus-visible:ring-0"
+          />
+        </div>
+      </div>
 
       {/* Navigation Items */}
       <nav className="flex-1 overflow-y-auto p-3 group-hover:p-4">
@@ -88,7 +102,14 @@ export default function DesktopSidebar() {
                     : 'hover:bg-muted text-foreground'
                 }`}
               >
-                <Icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} />
+                <div className="relative">
+                  <Icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} />
+                  {item.badge > 0 && (
+                     <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">
+                       {item.badge > 9 ? '9+' : item.badge}
+                     </Badge>
+                  )}
+                </div>
                 <span className="hidden font-medium group-hover:inline">{item.label}</span>
               </Link>
             );

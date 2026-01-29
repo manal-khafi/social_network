@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Bell, Search, Menu } from 'lucide-react';
+import { Heart, Search } from 'lucide-react';
 import { useAppSelector } from '../../hooks';
 import { Badge } from '../ui/badge';
+import { Input } from '../ui/input';
 import { PATHS } from '../../routes/paths';
 
 export default function Header() {
@@ -16,24 +17,30 @@ export default function Header() {
   if (hideHeader) return null;
 
   return (
-    <header className="sticky top-0 bg-card border-b border-border z-40">
-      <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-        <div />
-        
-        <div className="flex items-center gap-3">
-          <button className="p-2 hover:bg-muted rounded-full transition-colors">
-            <Search className="w-5 h-5 text-foreground" />
-          </button>
-          
-          <Link to={PATHS.NOTIFICATIONS} className="relative p-2 hover:bg-muted rounded-full transition-colors">
-            <Bell className="w-5 h-5 text-foreground" />
-            {unreadCount > 0 && (
-              <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </Badge>
-            )}
-          </Link>
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border lg:hidden">
+      <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
+        <Link to={PATHS.HOME} className="font-semibold text-lg tracking-tight">
+          Anmouggar
+        </Link>
+
+        <div className="flex-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search"
+              className="h-9 rounded-full pl-9 bg-muted/60 border-none focus-visible:ring-0"
+            />
+          </div>
         </div>
+
+        <Link to={PATHS.NOTIFICATIONS} className="relative p-2 hover:bg-muted rounded-full transition-colors">
+          <Heart className="w-5 h-5 text-foreground" />
+          {unreadCount > 0 && (
+            <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </Badge>
+          )}
+        </Link>
       </div>
     </header>
   );

@@ -1,30 +1,51 @@
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { toggleFollow } from '../../features/user/userSlice';
+import { fetchUserProfile, toggleFollow } from '../../features/user/userSlice';
+import { fetchUserPosts, fetchUserReposts } from '../../features/posts/postsSlice';
 import { MessageCircle, Lock } from 'lucide-react';
 import { Button } from '../../Components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../Components/ui/tabs';
 import { toast } from 'sonner';
 import PostCard from '../../Components/post/PostCard';
+import ProfileHeaderLayout from '../../Components/Profile/ProfileHeaderLayout';
 
 export default function UserProfileView() {
-  const { userId } = useParams();
+  const { userId: username } = useParams();
   const dispatch = useAppDispatch();
-  const { suggestedUsers } = useAppSelector((state) => state.user);
-  const { feed } = useAppSelector((state) => state.posts);
-  
-  const user = suggestedUsers.find(u => u.id === userId);
-  
-  if (!user) return <div className="p-4">User not available</div>;
+  const { viewedUser: user, status } = useAppSelector((state) => state.user);
+  const { userPosts, userReposts } = useAppSelector((state) => state.posts);
+  const authUser = useAppSelector((state) => state.auth.user);
 
-  const userPosts = feed.filter(p => p.userId === userId && !p.originalPost);
-  const userReposts = feed.filter(p => p.userId === userId && p.originalPost);
+  useEffect(() => {
+    if (username) {
+      dispatch(fetchUserProfile(username));
+    }
+  }, [dispatch, username]);
+
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(fetchUserPosts(user.id));
+      dispatch(fetchUserReposts(user.id));
+    }
+  }, [dispatch, user?.id]);
+
+  if (status === 'loading' && !user) {
+    return <div className="p-4">Loading...</div>;
+  }
+
+  if (!user) return <div className="p-4">User not available</div>;
+  
+  const myUserId = authUser?.id;
+  const isMe = myUserId && user.id === myUserId;
+
+  const posts = userPosts[user.id] ?? [];
+  const reposts = userReposts[user.id] ?? [];
 
   const handleFollowClick = () => {
-    dispatch(toggleFollow(userId!));
+    dispatch(toggleFollow(user.id));
     
-    if (!user.isPublic && !user.isFollowing && !user.followRequestPending) {
+    if (user.is_private && !user.isFollowing && !user.followRequestPending) {
       toast.success('Follow request sent');
     } else if (user.followRequestPending) {
       toast.info('Follow request already sent');
@@ -37,53 +58,67 @@ export default function UserProfileView() {
     return 'Follow';
   };
 
-  const canViewPosts = user.isPublic || user.isFollowing;
+  const canViewPosts = !!user.canViewPosts;
+  const followersCount = user.followersCount ?? 0;
+  const followingCount = user.followingCount ?? 0;
+
+  const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:3500").replace(/\/api$/, "");
+  const makeUrl = (url?: string | null) => {
+    if (!url) return null;
+    return url.startsWith("http") ? url : `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+
+  const coverImage = makeUrl(user.cover_image);
 
   return (
     <div>
+      <ProfileHeaderLayout
+        coverImage={coverImage}
+        avatarUrl={user.avatar_url}
+        displayName={user.display_name}
+        username={user.username}
+        bio={user.bio}
+        actionsSlot={
+          isMe ? (
+            <Link to="/home/settings/profile" className="w-full">
+              <Button variant="outline" className="w-full">
+                Edit Profile
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Button
+                onClick={handleFollowClick}
+                variant={user.isFollowing ? 'outline' : 'default'}
+                className={`flex-1 ${user.isFollowing || user.followRequestPending ? '' : 'bg-[#d6955b] hover:bg-[#c58549]'}`}
+                disabled={user.followRequestPending}
+              >
+                {getFollowButtonText()}
+              </Button>
+              <Link to={`/home/inbox/${user.id}`} className="flex-1">
+                <Button variant="outline" className="w-full">
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Message
+                </Button>
+              </Link>
+            </>
+          )
+        }
+      />
+
       <div className="p-4">
-        <div className="flex items-start gap-4 mb-4">
-          <Avatar className="w-20 h-20">
-            <AvatarImage src={user.avatar} />
-            <AvatarFallback className="text-xl">{user.username[0].toUpperCase()}</AvatarFallback>
-          </Avatar>
-          
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold">{user.fullName}</h1>
-              {!user.isPublic && <Lock className="w-4 h-4 text-muted-foreground" />}
-            </div>
-            <p className="text-muted-foreground">@{user.username}</p>
-          </div>
-        </div>
-
-        <p className="mb-4">{user.bio}</p>
-
-        <div className="flex gap-6 mb-4">
+        <div className="flex justify-around text-center border-t border-b border-border py-3 my-4">
           <div>
-            <span className="font-semibold">{user.followersCount.toLocaleString()}</span>{' '}
-            <span className="text-muted-foreground">Followers</span>
+            <p className="font-semibold">{posts.length}</p>
+            <p className="text-sm text-muted-foreground">Posts</p>
           </div>
-          <div>
-            <span className="font-semibold">{user.followingCount.toLocaleString()}</span>{' '}
-            <span className="text-muted-foreground">Following</span>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Button
-            onClick={handleFollowClick}
-            variant={user.isFollowing ? 'outline' : 'default'}
-            className={`flex-1 ${user.isFollowing || user.followRequestPending ? '' : 'bg-[#d6955b] hover:bg-[#c58549]'}`}
-            disabled={user.followRequestPending}
-          >
-            {getFollowButtonText()}
-          </Button>
-          <Link to={`/inbox/${userId}`} className="flex-1">
-            <Button variant="outline" className="w-full">
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Message
-            </Button>
+          <Link to={`/home/profile/${user.id}/followers`} className="hover:underline">
+            <p className="font-semibold">{followersCount.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground">Followers</p>
+          </Link>
+          <Link to={`/home/profile/${user.id}/following`} className="hover:underline">
+            <p className="font-semibold">{followingCount.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground">Following</p>
           </Link>
         </div>
       </div>
@@ -96,8 +131,8 @@ export default function UserProfileView() {
         
         <TabsContent value="posts" className="p-4 space-y-4">
           {canViewPosts ? (
-            userPosts.length > 0 ? (
-              userPosts.map(post => <PostCard key={post.id} post={post} />)
+            posts.length > 0 ? (
+              posts.map(post => <PostCard key={post.id} post={post} />)
             ) : (
               <p className="text-center text-muted-foreground py-8">No posts yet</p>
             )
@@ -114,8 +149,8 @@ export default function UserProfileView() {
         
         <TabsContent value="reposts" className="p-4 space-y-4">
           {canViewPosts ? (
-            userReposts.length > 0 ? (
-              userReposts.map(post => <PostCard key={post.id} post={post} />)
+            reposts.length > 0 ? (
+              reposts.map(post => <PostCard key={post.id} post={post} />)
             ) : (
               <p className="text-center text-muted-foreground py-8">No reposts yet</p>
             )

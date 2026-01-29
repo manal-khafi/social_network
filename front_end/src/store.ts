@@ -1,18 +1,20 @@
-import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './features/auth/authSlice';
-import userReducer from './features/user/userSlice';
-import postsReducer from './features/posts/postsSlice';
-import storiesReducer from './features/stories/storiesSlice';
-import messagesReducer from './features/messages/messagesSlice';
-import notificationsReducer from './features/notifications/notificationsSlice';
-import settingsReducer from './features/settings/settingsSlice';
-import communitiesReducer from './features/communities/communitiesSlice';
-import textSizeReducer from './features/textSize/textSizeSlice';
-import accessibilityReducer from './features/accessibility/accessibilitySlice';
-import layoutDensityReducer from './features/layoutDensity/layoutDensitySlice';
-import twoFactorAuthReducer from './features/twoFactorAuth/twoFactorAuthSlice';
-import type { AccessibilityPersistedState } from './utils/persistAccessibility';
-import type { LayoutDensity } from './utils/persistLayoutDensity';
+import { configureStore } from "@reduxjs/toolkit";
+import authReducer from "./features/auth/authSlice";
+import userReducer from "./features/user/userSlice";
+import postsReducer from "./features/posts/postsSlice";
+import storiesReducer from "./features/stories/storiesSlice";
+import messagesReducer from "./features/messages/messagesSlice";
+import notificationsReducer from "./features/notifications/notificationsSlice";
+import settingsReducer from "./features/settings/settingsSlice";
+import communitiesReducer from "./features/communities/communitiesSlice";
+import textSizeReducer from "./features/textSize/textSizeSlice";
+import accessibilityReducer from "./features/accessibility/accessibilitySlice";
+import layoutDensityReducer from "./features/layoutDensity/layoutDensitySlice";
+import twoFactorAuthReducer from "./features/twoFactorAuth/twoFactorAuthSlice";
+
+import type { AccessibilityPersistedState } from "./utils/persistAccessibility";
+import type { LayoutDensity } from "./utils/persistLayoutDensity";
+import { saveLanguage } from "./utils/persistLanguage"; // ✅ moved up
 
 export const store = configureStore({
   reducer: {
@@ -31,9 +33,8 @@ export const store = configureStore({
   },
 });
 
-// ... (imports)
-import { saveLanguage } from './utils/persistLanguage';
-// ...
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
 
 // --- Persistence Listener ---
 let currentFontSize: number;
@@ -44,9 +45,6 @@ let currentLanguage: string;
 store.subscribe(() => {
   const state = store.getState();
 
-  // ... (existing persistence for font size, accessibility, layout density)
-
-  // Persist language
   const previousLanguage = currentLanguage;
   const newLanguage = state.settings.language;
 
@@ -55,8 +53,3 @@ store.subscribe(() => {
     saveLanguage(newLanguage);
   }
 });
-// ... (rest of the file)
-
-
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;

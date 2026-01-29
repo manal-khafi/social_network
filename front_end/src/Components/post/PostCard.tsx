@@ -50,6 +50,7 @@ import EditPostDialog from "./EditPostDialog";
 import VideoPlayer from "./VideoPlayer";
 import { formatTime } from "../../utils/timeUtils";
 import { isVideoUrl } from "../../utils/mediaUtils";
+import { PATHS } from "../../routes/paths";
 
 interface PostCardProps {
   post: Post;
@@ -85,6 +86,8 @@ function CommentItem({
   const isMyComment = comment.userId === currentUserId;
   const canEdit = isMyComment;
   const canDelete = isMyComment || isPostOwner;
+
+  const profilePath = isMyComment ? PATHS.PROFILE_ME : `/home/profile/${comment.userId}`;
 
   // keep edit text synced if comment updates from store
   useEffect(() => {
@@ -156,7 +159,7 @@ function CommentItem({
   return (
     <div className={isReply ? "ml-12" : ""}>
       <div className="flex gap-3 py-3">
-        <Link to={`/profile/${comment.userId}`}>
+        <Link to={profilePath}>
           <Avatar className="w-8 h-8">
             <AvatarImage src={comment.avatar} />
             <AvatarFallback>
@@ -191,7 +194,7 @@ function CommentItem({
             <>
               <div className="bg-muted rounded-2xl px-3 py-2">
                 <Link
-                  to={`/profile/${comment.userId}`}
+                  to={profilePath}
                   className="font-semibold text-sm hover:underline"
                 >
                   {comment.username}
@@ -311,6 +314,10 @@ export default function PostCard({ post }: PostCardProps) {
 
   const { currentUser } = useAppSelector((state) => state.user);
   const authUser = useAppSelector((state) => state.auth.user);
+  const isOwnPost = authUser?.id === post.userId;
+  const profilePath = isOwnPost
+    ? PATHS.PROFILE_ME
+    : `/home/profile/${encodeURIComponent(post.username || post.userId)}`;
 
   // ✅ simplest + always correct (no need to store postOwnerId in redux)
   const postOwnerId = post.userId;
@@ -325,8 +332,6 @@ export default function PostCard({ post }: PostCardProps) {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-
-  const isOwnPost = authUser?.id === post.userId;
 
   const handleToggleComments = () => {
     if (!post.commentsAllowed) return;
@@ -434,12 +439,12 @@ export default function PostCard({ post }: PostCardProps) {
   }, [dispatch, post.id, showComments, post.commentsAllowed]);
 
   return (
-    <Card className="overflow-hidden">
-      <div className="p-4">
+    <Card className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
+      <div className="p-5">
         {/* Post Header */}
         <div className="flex items-start gap-3 mb-3">
-          <Link to={`/profile/${post.userId}`}>
-            <Avatar>
+          <Link to={profilePath}>
+            <Avatar className="h-12 w-12">
               <AvatarImage src={post.avatar} />
               <AvatarFallback>
                 {((post.username || "?")[0] || "?").toUpperCase()}
@@ -450,7 +455,7 @@ export default function PostCard({ post }: PostCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Link to={`/profile/${post.userId}`} className="hover:underline">
+                <Link to={profilePath} className="hover:underline">
                   <p className="font-semibold">{post.username}</p>
                 </Link>
 
@@ -549,7 +554,7 @@ export default function PostCard({ post }: PostCardProps) {
         )}
 
         {/* Post Content */}
-        <p className="mb-3 whitespace-pre-wrap">{post.content}</p>
+        <p className="mb-3 whitespace-pre-wrap text-[15px] leading-6">{post.content}</p>
 
         {/* Post Media */}
         {media.length > 0 && (

@@ -27,7 +27,6 @@ export default function ChatView() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [message, setMessage] = useState('');
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -137,7 +136,6 @@ export default function ChatView() {
 
   const handleEmojiClick = (emojiData: any) => {
     setMessage(prev => prev + emojiData.emoji);
-    setShowEmojiPicker(false);
   };
 
   const renderMessageStatus = (status: string) => {
@@ -290,6 +288,7 @@ export default function ChatView() {
           <DropdownMenuContent className="w-56">
             <DropdownMenuItem
               onClick={() => {
+                if (!conversationId) return;
                 dispatch(archiveConversation(conversationId));
                 toast.success('Conversation archived');
               }}
@@ -299,6 +298,7 @@ export default function ChatView() {
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
+                if (!conversationId) return;
                 dispatch(deleteConversation(conversationId));
                 toast.success('Conversation deleted');
                 navigate('/inbox');
@@ -318,7 +318,10 @@ export default function ChatView() {
               Block
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to={`/profile/${conversation.userId}`} className="flex items-center">
+              <Link
+                to={`/home/profile/${encodeURIComponent(conversation.username || conversation.userId)}`}
+                className="flex items-center"
+              >
                 <UserCircle className="w-4 h-4 mr-2" />
                 View Profile
               </Link>

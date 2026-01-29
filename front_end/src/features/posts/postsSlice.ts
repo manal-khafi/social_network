@@ -1,6 +1,7 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import api from '../../api/axios';
+import type { RootState } from '../../store';
 
 export interface Comment {
   id: string;
@@ -64,6 +65,7 @@ const initialState: PostsState = {
   myPosts: [],
   myReposts: [],
   userPosts: {},
+  userReposts: {},
   postComments: {},
   status: 'idle',
   loadMoreStatus: 'idle',
@@ -102,6 +104,30 @@ export const fetchMyArchivedPosts = createAsyncThunk('posts/fetchMyArchivedPosts
   const response = await api.get('/posts/me/archived');
   return response.data.posts as Post[];
 });
+
+export const fetchUserPosts = createAsyncThunk(
+  'posts/fetchUserPosts',
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/posts/user/${userId}`);
+      return { userId, posts: response.data.posts as Post[] };
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch user posts');
+    }
+  }
+);
+
+export const fetchUserReposts = createAsyncThunk(
+  'posts/fetchUserReposts',
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/posts/user/${userId}/reposts`);
+      return { userId, reposts: response.data.reposts as Post[] };
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch user reposts');
+    }
+  }
+);
 export const fetchMorePosts = createAsyncThunk(
   'posts/fetchMorePosts',
   async (offset: number, { rejectWithValue }) => {
@@ -123,6 +149,7 @@ export const createPost = createAsyncThunk(
   async (
     payload: {
       content: string;
+      authorId: string;
       media_urls?: string[];
       visibility?: 'public' | 'private' | 'friends';
     }
@@ -357,6 +384,28 @@ const postsSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message || 'Failed to fetch reposts';
       })
+      .addCase(fetchUserPosts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchUserPosts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.userPosts[action.payload.userId] = action.payload.posts;
+      })
+      .addCase(fetchUserPosts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = (action.payload as string) || 'Failed to fetch user posts';
+      })
+      .addCase(fetchUserReposts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchUserReposts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.userReposts[action.payload.userId] = action.payload.reposts;
+      })
+      .addCase(fetchUserReposts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = (action.payload as string) || 'Failed to fetch user reposts';
+      })
       .addCase(fetchSavedPosts.pending, (state) => {
         state.status = 'loading';
       })
@@ -380,7 +429,16 @@ const postsSlice = createSlice({
         state.error = action.error.message || 'Failed to fetch archived posts';
       })
       .addCase(createPost.fulfilled, (state, action) => {
-        state.feed.unshift(action.payload);
+        const newPost = action.payload;
+        const authorId = action.meta.arg.authorId;
+        
+        state.feed.unshift(newPost);
+        state.myPosts.unshift(newPost);
+        if (state.userPosts[authorId]) {
+          state.userPosts[authorId].unshift(newPost);
+        } else {
+          state.userPosts[authorId] = [newPost];
+        }
       })
       .addCase(createPost.rejected, (state, action) => {
         state.error = action.error.message || 'Failed to create post';
@@ -562,13 +620,17 @@ const postsSlice = createSlice({
         }
       })
       .addCase(deletePost.fulfilled, (state, action) => {
-        const deletedId = action.payload; // your thunk returns postId (string)
+        const deletedId = action.payload; 
 
         state.myPosts = state.myPosts.filter((p) => p.id !== deletedId);
         state.myReposts = state.myReposts.filter((p) => p.id !== deletedId);
         state.feed = state.feed.filter((p) => p.id !== deletedId);
         state.savedPosts = state.savedPosts.filter((p) => p.id !== deletedId);
         state.archivedPosts = state.archivedPosts.filter((p) => p.id !== deletedId);
+
+        for (const userId in state.userPosts) {
+          state.userPosts[userId] = state.userPosts[userId].filter(p => p.id !== deletedId);
+        }
 
         if (state.postComments[deletedId]) {
           delete state.postComments[deletedId];
@@ -584,6 +646,14 @@ export const {
   repostPost,
   toggleCommentsAllowed,
   toggleLikesVisible,
-  removePostsByUserId, // Export the new action
+  removePostsByUserId,
 } = postsSlice.actions;
+
+const selectUserPosts = (state: RootState) => state.posts.userPosts;
+
+export const selectPostsCountByUserId = createSelector(
+  [selectUserPosts, (_, userId: string) => userId],
+  (userPosts, userId) => (userPosts[userId] || []).length
+);
+
 export default postsSlice.reducer;
