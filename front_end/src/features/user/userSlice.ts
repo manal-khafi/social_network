@@ -29,6 +29,17 @@ export interface UserProfile {
   canViewPosts?: boolean;
 }
 
+export interface FollowRequest {
+  requestId: string;
+  user: {
+    id: string;
+    username: string;
+    display_name: string;
+    avatar_url: string | null;
+    bio?: string | null;
+  };
+}
+
 interface UserState {
   currentUser: UserProfile | null;
   viewedUser: UserProfile | null;
@@ -39,7 +50,7 @@ interface UserState {
   following: UserProfile[];
   blockedUsers: UserProfile[];
   suggestedUsers: UserProfile[];
-  followRequests: UserProfile[];
+  followRequests: FollowRequest[];
   blockedCount: number;
 }
 
@@ -58,12 +69,15 @@ const initialState: UserState = {
 };
 
 const getErrorMessage = (error: unknown, fallback: string) => {
-  const e = error as any;
+  const e = error as {
+    response?: { data?: { message?: string; error?: string; msg?: string } };
+    message?: string;
+  };
   const msg =
-    e?.response?.data?.message ||
-    e?.response?.data?.error ||
-    e?.response?.data?.msg ||
-    e?.message;
+    e.response?.data?.message ||
+    e.response?.data?.error ||
+    e.response?.data?.msg ||
+    e.message;
 
   return typeof msg === "string" && msg.trim() ? msg : fallback;
 };
@@ -228,9 +242,7 @@ export const toggleFollow = createAsyncThunk<
   try {
     const state = getState();
 
-    const myId =
-      state.user.currentUser?.id ??
-      (state.auth as any)?.user?.id; // fallback if you store auth user here
+    const myId = state.user.currentUser?.id ?? state.auth.user?.id;
 
     if (myId && targetUserId === myId) {
       toast.error("You can't follow yourself");
@@ -246,11 +258,15 @@ export const toggleFollow = createAsyncThunk<
 
     const isFollowing = !!rel?.isFollowing;
     const isPending = !!rel?.followRequestPending && !isFollowing;
+    const isPrivate = !!rel?.is_private;
 
     if (isPending) return rejectWithValue("Follow request is already pending");
 
     if (isFollowing) {
       await dispatch(unfollowUser(targetUserId)).unwrap();
+      if (isPrivate) {
+        dispatch(removePostsByUserId(targetUserId));
+      }
       return { userId: targetUserId, isFollowing: false, followRequestPending: false };
     }
 
@@ -298,6 +314,19 @@ export const fetchFollowers = createAsyncThunk<
     return (res.data?.users ?? []) as UserProfile[];
   } catch (error: unknown) {
     return rejectWithValue(getErrorMessage(error, "Failed to fetch followers"));
+  }
+});
+
+export const fetchFollowRequests = createAsyncThunk<
+  FollowRequest[],
+  void,
+  { rejectValue: string }
+>("user/fetchFollowRequests", async (_, { rejectWithValue }) => {
+  try {
+    const res = await api.get("/follow/requests");
+    return (res.data?.requests ?? []) as FollowRequest[];
+  } catch (error: unknown) {
+    return rejectWithValue(getErrorMessage(error, "Failed to fetch follow requests"));
   }
 });
 
@@ -548,11 +577,18 @@ const userSlice = createSlice({
       })
 
       // follow requests
+  .addCase(fetchFollowRequests.fulfilled, (state, action) => {
+    state.followRequests = action.payload;
+  })
       .addCase(acceptFollowRequest.fulfilled, (state, action) => {
-        state.followRequests = state.followRequests.filter((u) => u.id !== action.payload.demandeId);
+    state.followRequests = state.followRequests.filter(
+      (req) => req.requestId !== action.payload.demandeId
+    );
       })
       .addCase(denyFollowRequest.fulfilled, (state, action) => {
-        state.followRequests = state.followRequests.filter((u) => u.id !== action.payload.requestId);
+    state.followRequests = state.followRequests.filter(
+      (req) => req.requestId !== action.payload.requestId
+    );
       })
 
       // block

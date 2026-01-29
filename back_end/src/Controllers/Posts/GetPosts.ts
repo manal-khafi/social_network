@@ -52,15 +52,36 @@ export const getPosts = async (req: Request, res: Response) => {
       include.reposts = { where: { user_id: userId }, select: { id: true } };
     }
 
-    const posts = await prisma.post.findMany({
-      where: {
-        is_deleted: false,
-        visibility: "public",
-        is_archived: false,
-        user_id: {
-          notIn: blockedIds, // Filter out posts from blocked users
-        },
+    const baseWhere = {
+      is_deleted: false,
+      visibility: "public",
+      is_archived: false,
+      user_id: {
+        notIn: blockedIds, // Filter out posts from blocked users
       },
+    };
+
+    let allowedPrivateIds: string[] = [];
+    if (userId) {
+      const follows = await prisma.follow.findMany({
+        where: { follower_id: userId, status: "accepted" },
+        select: { followed_id: true },
+      });
+      allowedPrivateIds = follows.map((f: { followed_id: string }) => f.followed_id);
+    }
+
+    const privacyFilter = userId
+      ? {
+          OR: [
+            { user: { is_private: false } },
+            { user_id: userId },
+            { user_id: { in: allowedPrivateIds } },
+          ],
+        }
+      : { user: { is_private: false } };
+
+    const posts = await prisma.post.findMany({
+      where: { ...baseWhere, ...privacyFilter },
       include,
       orderBy: { created_at: "desc" },
       skip: offset,
