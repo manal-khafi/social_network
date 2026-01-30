@@ -16,4 +16,5 @@ export const PATHS = {
   SETTINGS_PRIVACY: "/home/settings/privacy",
   SETTINGS_APPEARANCE: "/home/settings/appearance",
   ARCHIVED_POSTS: "/home/archived-posts",
+  PERSONALIZE: "/personalize",
 };
