@@ -76,6 +76,35 @@ const initialState: PostsState = {
 
 const DEFAULT_LIMIT = 5;
 
+// Helper function to update a post in all relevant lists
+const updatePostInAllLists = (state: PostsState, postId: string, updates: Partial<Post>) => {
+  const listsToUpdate: (Post[] | undefined)[] = [
+    state.feed,
+    state.myPosts,
+    state.savedPosts,
+    state.myReposts,
+    state.archivedPosts,
+  ];
+
+  for (const list of listsToUpdate) {
+    if (list) {
+      const post = list.find((p) => p.id === postId);
+      if (post) {
+        Object.assign(post, updates);
+      }
+    }
+  }
+
+  for (const userId in state.userPosts) {
+    const userPostList = state.userPosts[userId];
+    if (userPostList) {
+      const post = userPostList.find((p) => p.id === postId);
+      if (post) {
+        Object.assign(post, updates);
+      }
+    }
+  }
+};
 export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
   const response = await api.get('/posts', { params: { limit: DEFAULT_LIMIT, offset: 0 } });
   return {
@@ -444,38 +473,25 @@ const postsSlice = createSlice({
         state.error = action.error.message || 'Failed to create post';
       })
       .addCase(togglePostLike.fulfilled, (state, action) => {
-        const post = state.feed.find(p => p.id === action.payload.postId);
-        if (post) {
-          post.isLiked = action.payload.liked;
-          if (action.payload.likes !== undefined) {
-            post.likes = action.payload.likes;
-          }
-        }
+        const { postId, liked, likes } = action.payload;
+        updatePostInAllLists(state, postId, { isLiked: liked, likes });
       })
       .addCase(togglePostSave.fulfilled, (state, action) => {
-        const postInFeed = state.feed.find(p => p.id === action.payload.postId);
-        if (postInFeed) {
-          postInFeed.isSaved = action.payload.saved;
-          if (action.payload.saves !== undefined) {
-            postInFeed.saves = action.payload.saves;
-          }
-        }
-        if (action.payload.saved) {
-          if (postInFeed && !state.savedPosts.find(p => p.id === action.payload.postId)) {
-            state.savedPosts.push(postInFeed);
+        const { postId, saved, saves } = action.payload;
+        updatePostInAllLists(state, postId, { isSaved: saved, saves });
+
+        if (saved) {
+          const post = state.feed.find(p => p.id === postId) ?? state.myPosts.find(p => p.id === postId);
+          if (post && !state.savedPosts.some(p => p.id === postId)) {
+            state.savedPosts.unshift(post);
           }
         } else {
-          state.savedPosts = state.savedPosts.filter(p => p.id !== action.payload.postId);
+          state.savedPosts = state.savedPosts.filter(p => p.id !== postId);
         }
       })
       .addCase(togglePostRepost.fulfilled, (state, action) => {
-        const post = state.feed.find(p => p.id === action.payload.postId);
-        if (post) {
-          post.isReposted = action.payload.reposted;
-          if (action.payload.shares !== undefined) {
-            post.shares = action.payload.shares;
-          }
-        }
+        const { postId, reposted, shares } = action.payload;
+        updatePostInAllLists(state, postId, { isReposted: reposted, shares });
       })
       .addCase(archivePost.fulfilled, (state, action) => {
         const postId = action.payload;
