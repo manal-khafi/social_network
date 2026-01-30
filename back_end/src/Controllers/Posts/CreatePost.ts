@@ -43,7 +43,7 @@ export const createPost = async (req: Request, res: Response) => {
         _count: {
           select: {
             likes: true,
-            comments: true,
+            comments: { where: { is_deleted: false } },
             shares: true,
             saves: true,
           },

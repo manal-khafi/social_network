@@ -28,7 +28,15 @@ export const getPosts = async (req: Request, res: Response) => {
 
     const postInclude: any = {
       user: { select: { id: true, username: true, display_name: true, avatar_url: true, allow_comments: true } },
-      _count: { select: { likes: true, comments: true, shares: true, saves: true, reposts: true } },
+      _count: {
+        select: {
+          likes: true,
+          comments: { where: { is_deleted: false } },
+          shares: true,
+          saves: true,
+          reposts: true,
+        },
+      },
     };
 
     if (userId) {

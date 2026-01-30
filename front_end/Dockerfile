@@ -4,9 +4,8 @@ FROM node:24-alpine
 # Set working directory
 WORKDIR /usr/src/app
 
-# Copy package files
+# Copy package files (works whether package-lock.json exists or not)
 COPY package*.json ./
-COPY package-lock.json ./
 
 # Install dependencies
 RUN npm install
@@ -17,5 +16,5 @@ COPY . .
 # Expose port
 EXPOSE 5173
 
-# Start development server
-CMD ["npm", "run", "dev"]
+# Start development server (make it accessible from outside the container)
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173", "--strictPort"]

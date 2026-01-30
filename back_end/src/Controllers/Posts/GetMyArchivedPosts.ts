@@ -25,7 +25,7 @@ export const getMyArchivedPosts = async (req: Request, res: Response) => {
         },
         _count: {
           select: {
-            comments: true,
+            comments: { where: { is_deleted: false } },
             likes: true,
             reposts: true,
             saves: true,

@@ -22,7 +22,7 @@ export const getMyPosts = async (req: Request, res: Response) => {
         },
         _count: {
           select: {
-            comments: true,
+            comments: { where: { is_deleted: false } },
             likes: true,
             reposts: true,
             saves: true,
@@ -118,7 +118,7 @@ export const getMyReposts = async (req: Request, res: Response) => {
             },
             _count: {
               select: {
-                comments: true,
+                comments: { where: { is_deleted: false } },
                 likes: true,
                 reposts: true,
                 saves: true,

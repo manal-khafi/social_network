@@ -27,7 +27,10 @@ export const getMyLikedPosts = async (req: Request, res: Response) => {
               },
             },
             _count: {
-              select: { likes: true, comments: true },
+              select: {
+                likes: true,
+                comments: { where: { is_deleted: false } },
+              },
             },
           },
         },

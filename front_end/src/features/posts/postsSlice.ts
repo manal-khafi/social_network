@@ -247,8 +247,8 @@ export const deleteComment = createAsyncThunk(
   "posts/deleteComment",
   async (payload: { postId: string; commentId: string }, { rejectWithValue }) => {
     try {
-      await api.delete(`/comments/delete-comment/${payload.commentId}`);
-      return payload;
+      const response = await api.delete(`/comments/delete-comment/${payload.commentId}`);
+      return { ...payload, deletedCount: response.data.deletedCount };
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message ?? "Failed to delete comment");
     }
@@ -550,36 +550,23 @@ const postsSlice = createSlice({
         findAndUpdate(postComments.comments);
       })
       .addCase(deleteComment.fulfilled, (state, action) => {
-        const { postId, commentId } = action.payload;
+        const { postId, commentId, deletedCount } = action.payload;
         const bucket = state.postComments[postId];
-        if (!bucket) return;
+        if (bucket) {
+          const removeRecursive = (comments: Comment[], idToRemove: string): Comment[] => {
+            return comments
+              .filter(c => c.id !== idToRemove)
+              .map(c => {
+                if (c.replies) {
+                  return { ...c, replies: removeRecursive(c.replies, idToRemove) };
+                }
+                return c;
+              });
+          };
+          bucket.comments = removeRecursive(bucket.comments, commentId);
+        }
 
-        const removeRecursive = (comments: Comment[]): [Comment[], number] => {
-          let removed = 0;
-
-          const next = comments.filter((c) => {
-            if (c.id === commentId) {
-              const countReplies = (arr?: Comment[]): number =>
-                !arr ? 0 : arr.reduce((acc, r) => acc + 1 + countReplies(r.replies), 0);
-
-              removed = 1 + countReplies(c.replies);
-              return false;
-            }
-            return true;
-          }).map((c) => {
-            if (!c.replies?.length) return c;
-            const [nextReplies, removedInReplies] = removeRecursive(c.replies);
-            removed += removedInReplies;
-            return { ...c, replies: nextReplies };
-          });
-
-          return [next, removed];
-        };
-
-        const [nextComments, removedCount] = removeRecursive(bucket.comments);
-        bucket.comments = nextComments;
-
-        const dec = Math.max(0, removedCount);
+        const dec = Math.max(0, deletedCount);
 
         const decInList = (list: Post[]) => {
           const p = list.find((x) => x.id === postId);
