@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
-import { isBlockedEitherWay } from "../../Service/BlockService";
+import { isBlockedEitherWay } from "../../services/BlockService";
 
 export const toggleRepost = async (req: Request, res: Response) => {
   try {

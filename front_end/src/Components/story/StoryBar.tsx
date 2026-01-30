@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { addStory } from '../../features/stories/storiesSlice';
+import { addStory, fetchStories } from '../../features/stories/storiesSlice';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Button } from '../ui/button';
@@ -16,12 +16,21 @@ export default function StoryBar() {
   const [open, setOpen] = useState(false);
   const [storyImage, setStoryImage] = useState('');
 
-  const handleCreateStory = () => {
+  // Fetch stories on mount
+  useEffect(() => {
+    dispatch(fetchStories());
+  }, [dispatch]);
+
+  const handleCreateStory = async () => {
     if (storyImage.trim()) {
-      dispatch(addStory({ image: storyImage }));
-      toast.success('Story created!');
-      setStoryImage('');
-      setOpen(false);
+      try {
+        await dispatch(addStory({ image: storyImage })).unwrap();
+        toast.success('Story created!');
+        setStoryImage('');
+        setOpen(false);
+      } catch (error) {
+        toast.error('Failed to create story');
+      }
     }
   };
 
@@ -36,21 +45,21 @@ export default function StoryBar() {
   };
 
   return (
-    <div className="border-b border-border bg-background">
-      <div className="px-4 py-5 flex gap-6 overflow-x-auto">
+    <div className="border-b border-border bg-card">
+      <div className="p-4 flex gap-4 overflow-x-auto">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <button className="flex flex-col items-center gap-2 flex-shrink-0">
               <div className="relative">
-                <Avatar className="w-20 h-20 border-2 border-primary">
-                  <AvatarImage src={currentUser?.avatar_url ?? undefined} />
-                  <AvatarFallback>{(currentUser?.username?.[0] ?? '?').toUpperCase()}</AvatarFallback>
+                <Avatar className="w-16 h-16 border-2 border-primary">
+                  <AvatarImage src={currentUser?.avatar} />
+                  <AvatarFallback>{currentUser?.username[0].toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <div className="absolute bottom-0 right-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-background">
-                  <Plus className="w-4 h-4 text-primary-foreground" />
+                <div className="absolute bottom-0 right-0 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-card">
+                  <Plus className="w-3 h-3 text-primary-foreground" />
                 </div>
               </div>
-              <span className="text-sm">Your story</span>
+              <span className="text-xs">Your story</span>
             </button>
           </DialogTrigger>
           <DialogContent>
@@ -97,13 +106,13 @@ export default function StoryBar() {
             to={`/story/${story.id}`}
             className="flex flex-col items-center gap-2 flex-shrink-0"
           >
-            <div className={`p-[3px] rounded-full ${story.isViewed ? 'bg-muted' : 'bg-gradient-to-tr from-primary to-accent'}`}>
-              <Avatar className="w-20 h-20 border-2 border-background">
+            <div className={`p-0.5 rounded-full ${story.isViewed ? 'bg-muted' : 'bg-gradient-to-tr from-primary to-accent'}`}>
+              <Avatar className="w-16 h-16 border-2 border-card">
                 <AvatarImage src={story.avatar} />
                 <AvatarFallback>{story.username[0].toUpperCase()}</AvatarFallback>
               </Avatar>
             </div>
-            <span className="text-sm max-w-[88px] truncate">{story.username}</span>
+            <span className="text-xs max-w-[64px] truncate">{story.username}</span>
           </Link>
         ))}
       </div>

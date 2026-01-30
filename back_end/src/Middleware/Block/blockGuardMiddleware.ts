@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
-import { isBlockedEitherWay } from "../../Service/BlockService";
+import { isBlockedEitherWay } from "../../services/BlockService";
 import prisma from "../../config/prismaClient"; 
 
 type GetTargetIdFn = (req: Request) => string | undefined;

@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { isBlockedEitherWay } from "../../Service/BlockService";
+import { isBlockedEitherWay } from "../../services/BlockService";
 
 export const checkBlockMiddleware: RequestHandler = async (req, res, next) => {
   try {

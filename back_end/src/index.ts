@@ -18,6 +18,7 @@ import PrivacySettingsRoutes from "./Routes/privacySEttingsRoutes";
 import twoFactorRouter from "./Routes/TwoFactorAuth";
 import communityRoutes from "./Routes/communityRoutes";
 import { authMiddleware } from "./Middleware/authMiddlware";
+import storyRoutes from "./Routes/story.routes";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -63,16 +64,20 @@ app.use("/api/saves", SaveRoutes);
 app.use("/api/account", AccountRouter);
 app.use("/api/privacy", PrivacySettingsRoutes);
 app.use("/api/auth", twoFactorRouter);
+app.use('/api/stories', storyRoutes);
 app.use(express.json());
 
 app.use("/api/communities", authMiddleware, communityRoutes);
 
 app.get("/", (req, res) => {
   res.json({
-    message: "Bienvenue sur l'api socielle network",
+    success: true,
+    message: 'Bienvenue sur l\'API Social Network',
+    version: '1.0.0',
   });
 });
 
 app.listen(port, () => {
   console.log(`port connected en http://localhost:${port}`);
 });
+

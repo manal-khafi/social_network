@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { verifyResetToken, resetPassword } from "../../Service/authService";
+import { verifyResetToken, resetPassword } from "../../services/authService";
 
 export const verifyResetTokenController = async (req: Request, res: Response) => {
   const { token } = req.params;

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
-import { isBlockedEitherWay } from "../../Service/BlockService";
+import { isBlockedEitherWay } from "../../services/BlockService";
 
 const BIO_MAX = 160;
 const URL_MAX = 2000;

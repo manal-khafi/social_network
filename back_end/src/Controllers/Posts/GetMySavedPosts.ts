@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
-import { getBlockedUserIds } from "../../Service/BlockService";
+import { getBlockedUserIds } from "../../services/BlockService";
 
 export const getMySavedPosts = async (req: Request, res: Response) => {
   const userId = req.user?.id;

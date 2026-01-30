@@ -29,6 +29,13 @@ enum StoryContentType {
   image
   video
   text
+  link
+}
+
+enum StoryVisibility {
+  public
+  friends
+  close_friends
 }
 
 enum MessageType {
@@ -129,6 +136,10 @@ model User {
   saves                    Save[]
   stories                  Story[]
   storyViews               StoryView[]
+  storyLikes               StoryLike[]
+  storyComments            StoryComment[]
+  closeFriends             CloseFriend[]             @relation("User")
+  closeFriendsOf           CloseFriend[]             @relation("CloseFriend")
   conversationParticipants ConversationParticipant[]
   sentMessages             Message[]                 @relation("Sender")
   messageStatuses          MessageStatus[]
@@ -264,18 +275,25 @@ model Save {
 }
 
 model Story {
-  id             String           @id @default(uuid())
-  content_url    String
-  duration_hours Int              @default(24)
-  is_archived    Boolean          @default(false)
-  content_type   StoryContentType
-  created_at     DateTime         @default(now())
+  id           String           @id @default(uuid())
+  content_url  String
+  content_type StoryContentType
+  visibility   StoryVisibility  @default(public)
+
+  duration_hours Int      @default(24)
+  expires_at     DateTime
+  is_archived    Boolean  @default(false)
+
+  created_at DateTime @default(now())
 
   user_id String
   user    User   @relation(fields: [user_id], references: [id])
 
   // Relations
-  views StoryView[]
+  views    StoryView[]
+  likes    StoryLike[]
+  comments StoryComment[]
+  messages Message[]
 }
 
 model StoryView {
@@ -289,6 +307,46 @@ model StoryView {
   viewer User  @relation(fields: [viewer_id], references: [id])
 
   @@unique([story_id, viewer_id])
+}
+
+model StoryLike {
+  id         String   @id @default(uuid())
+  created_at DateTime @default(now())
+
+  user_id  String
+  story_id String
+
+  user  User  @relation(fields: [user_id], references: [id])
+  story Story @relation(fields: [story_id], references: [id])
+
+  @@unique([user_id, story_id])
+}
+
+model StoryComment {
+  id         String   @id @default(uuid())
+  content    String
+  is_deleted Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user_id  String
+  story_id String
+
+  user  User  @relation(fields: [user_id], references: [id])
+  story Story @relation(fields: [story_id], references: [id])
+}
+
+model CloseFriend {
+  id         String   @id @default(uuid())
+  created_at DateTime @default(now())
+
+  user_id         String
+  close_friend_id String
+
+  user        User @relation("User", fields: [user_id], references: [id])
+  closeFriend User @relation("CloseFriend", fields: [close_friend_id], references: [id])
+
+  @@unique([user_id, close_friend_id])
 }
 
 model Conversation {
@@ -324,9 +382,11 @@ model Message {
 
   conversation_id String
   sender_id       String
+  story_id        String?
 
   conversation Conversation @relation(fields: [conversation_id], references: [id])
   sender       User         @relation("Sender", fields: [sender_id], references: [id])
+  story        Story?       @relation(fields: [story_id], references: [id])
 
   // Relations
   statuses MessageStatus[]

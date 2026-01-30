@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 // Utilisation du chemin relatif pour éviter l'erreur TS2307 (Cannot find module)
-import * as BlockService from "../../Service/BlockService";
+import * as BlockService from "../../services/BlockService";
 
 /**
  * Interface AuthRequest : Définition locale pour résoudre l'erreur sur blockedUserId 

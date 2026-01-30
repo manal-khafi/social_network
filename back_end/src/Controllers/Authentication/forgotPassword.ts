@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { forgotPassword } from "../../Service/authService";
+import { forgotPassword } from "../../services/authService";
 
 export const forgotPasswordController = async (req: Request, res: Response) => {
   console.log("✅ FORGOT PASSWORD ENDPOINT HIT");

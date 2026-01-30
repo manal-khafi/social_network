@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { verifyAccessToken } from "../../util/jwt";
-import { getBlockedUserIds } from "../../Service/BlockService";
+import { getBlockedUserIds } from "../../services/BlockService";
 
 export const searchAccounts = async (req: Request, res: Response) => {
   try {

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
-import { getBlockedUserIds } from "../../Service/BlockService";
+import { getBlockedUserIds } from "../../services/BlockService";
 
 export const getMyLikedPosts = async (req: Request, res: Response) => {
   try {

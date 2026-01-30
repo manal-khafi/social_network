@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
-import { getBlockedUserIds, isBlockedEitherWay } from "../../Service/BlockService";
+import { getBlockedUserIds, isBlockedEitherWay } from "../../services/BlockService";
 
 const canViewUserContent = async (viewerId: string, targetUserId: string) => {
   const targetUser = await prisma.user.findUnique({

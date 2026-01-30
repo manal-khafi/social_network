@@ -5,7 +5,7 @@ import { viewStory, toggleStoryLike } from '../../features/stories/storiesSlice'
 import { X, Heart, Send, Pause, Play } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { Input } from '../../Components/ui/input';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 export default function StoryViewerView() {
   const navigate = useNavigate();
@@ -15,7 +15,6 @@ export default function StoryViewerView() {
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState('');
-  
   const story = stories.find(s => s.id === storyId);
   const currentIndex = stories.findIndex(s => s.id === storyId);
 
@@ -42,7 +41,6 @@ export default function StoryViewerView() {
           return prev + 0.5;
         });
       }, 30);
-      
       return () => clearInterval(interval);
     }
   }, [isPaused, currentIndex, stories, navigate]);
@@ -85,7 +83,7 @@ export default function StoryViewerView() {
         {stories.map((s, idx) => (
           <div key={s.id} className="flex-1 h-0.5 bg-white/30 rounded-full overflow-hidden">
             {idx === currentIndex && (
-              <motion.div 
+              <motion.div
                 className="h-full bg-white"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
@@ -111,7 +109,6 @@ export default function StoryViewerView() {
             <p className="text-xs opacity-80">{story.timestamp}</p>
           </div>
         </div>
-        
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsPaused(!isPaused)}
@@ -132,21 +129,20 @@ export default function StoryViewerView() {
       <div className="relative w-full max-w-md h-full flex items-center justify-center">
         {/* Navigation areas */}
         <div className="absolute inset-0 flex z-10">
-          <button 
+          <button
             onClick={handlePrevious}
             className="w-1/3 h-full"
             disabled={currentIndex === 0}
           />
-          <button 
+          <button
             onClick={() => setIsPaused(!isPaused)}
             className="w-1/3 h-full"
           />
-          <button 
+          <button
             onClick={handleNext}
             className="w-1/3 h-full"
           />
         </div>
-        
         <img
           src={story.image}
           alt="Story"
@@ -168,10 +164,9 @@ export default function StoryViewerView() {
             onClick={handleLike}
             className="p-2 hover:scale-110 transition-transform"
           >
-            <Heart 
-              className={`w-6 h-6 ${
-                story.isLiked ? 'fill-red-500 text-red-500' : 'text-white'
-              }`}
+            <Heart
+              className={`w-6 h-6 ${story.isLiked ? 'fill-red-500 text-red-500' : 'text-white'
+                }`}
             />
           </button>
           <button

@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { verifyAccessToken } from "../../util/jwt";
-import { getBlockedUserIds } from "../../Service/BlockService"; // Added import
+import { getBlockedUserIds } from "../../services/BlockService"; // Added import
 
 export const getPosts = async (req: Request, res: Response) => {
   try {
