@@ -8,6 +8,7 @@ import { Check, Sparkles, Loader } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { fetchMe } from "../../features/auth/authSlice";
 import api from "../../api/axios";
+import { toast } from "sonner";
 
 type Step = "choice" | "profile" | "gender" | "privacy" | "summary";
 
@@ -41,14 +42,12 @@ const PersonalizationWizard: React.FC = () => {
     ("choice" | "profile" | "gender" | "privacy")[]
   >([]);
 
-  // ✅ Guard: if user is not authenticated, don't allow personalization
   useEffect(() => {
     if (!isAuthenticated || !token) {
       navigate("/login");
     }
   }, [isAuthenticated, token, navigate]);
 
-  // ✅ Keep allData.profile.username in sync if authUsername arrives later
   useEffect(() => {
     if (authUsername) {
       setAllData((prev) => ({
@@ -206,7 +205,7 @@ const PersonalizationWizard: React.FC = () => {
         error.response?.data?.message ||
         error.message ||
         "An error occurred.";
-      alert(`Error: ${errorMessage}`);
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

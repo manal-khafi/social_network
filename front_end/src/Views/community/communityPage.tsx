@@ -18,6 +18,7 @@ import { Switch } from "../../Components/Community/communitySwitch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../Components/Community/communitySelect";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../Components/Community/communityDialog";
 import { useAppSelector } from "../../hooks";
+import { toast } from "sonner";
 
 interface CommunityPageProps {
   communityId: string | number;
@@ -270,10 +271,10 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
       setMembers(Array.isArray(membersData) ? membersData : []);
 
       // Show success message
-      alert("Demande acceptée avec succès!");
+      toast.success("Demande acceptée avec succès!");
     } catch (error) {
       console.error("Failed to approve request:", error);
-      alert("Erreur lors de l'approbation de la demande");
+      toast.error("Erreur lors de l'approbation de la demande");
     }
   };
 
@@ -281,24 +282,24 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
     try {
       await rejectJoinRequest(communityId, requestId, userId);
       setJoinRequests(joinRequests.filter(req => req.id !== requestId));
-      alert("Demande rejetée");
+      toast.success("Demande rejetée");
     } catch (error) {
       console.error("Failed to reject request:", error);
-      alert("Erreur lors du rejet de la demande");
+      toast.error("Erreur lors du rejet de la demande");
     }
   };
 
   const handleJoinLeave = async () => {
     try {
       if (!authUserId) {
-        alert("Vous devez être connecté pour effectuer cette action");
+        toast.error("Vous devez être connecté pour effectuer cette action");
         return;
       }
 
       if (isJoined) {
         await leaveCommunity(communityId, authUserId);
         setIsJoined(false);
-        alert("Vous avez quitté la communauté");
+        toast.success("Vous avez quitté la communauté");
 
         const membersRes = await getCommunityMembers(communityId);
         const membersData =
@@ -310,14 +311,14 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
     } catch (error: any) {
       console.error("Failed to join/leave community:", error);
       const msg = error?.response?.data?.message || "Erreur lors de l'opération";
-      alert(msg);
+      toast.error(msg);
     }
   };
 
   const handleSubmitJoinRequest = async () => {
     try {
       if (!authUserId) {
-        alert("Vous devez être connecté pour effectuer cette action");
+        toast.error("Vous devez être connecté pour effectuer cette action");
         return;
       }
 
@@ -325,12 +326,12 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
 
       setShowJoinDialog(false);
       setJoinMessage("");
-      alert("Demande d'adhésion envoyée avec succès!");
+      toast.success("Demande d'adhésion envoyée avec succès!");
     } catch (error: any) {
       console.error("Failed to send join request:", error);
       const msg =
         error?.response?.data?.message || "Erreur lors de l'envoi de la demande";
-      alert(msg);
+      toast.error(msg);
     }
   };
 
@@ -347,10 +348,10 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
         setRules([...rules, newRule]);
         setNewRuleTitle("");
         setNewRuleDescription("");
-        alert("Règle ajoutée avec succès!");
+        toast.success("Règle ajoutée avec succès!");
       } catch (error) {
         console.error("Failed to create rule:", error);
-        alert("Erreur lors de l'ajout de la règle");
+        toast.error("Erreur lors de l'ajout de la règle");
       }
     }
   };
@@ -359,10 +360,10 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
     try {
       await deleteCommunityRule(communityId, ruleId);
       setRules(rules.filter(rule => rule.id !== ruleId));
-      alert("Règle supprimée avec succès!");
+      toast.success("Règle supprimée avec succès!");
     } catch (error) {
       console.error("Failed to delete rule:", error);
-      alert("Erreur lors de la suppression de la règle");
+      toast.error("Erreur lors de la suppression de la règle");
     }
   };
 
@@ -382,10 +383,10 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
         rule.id === ruleId ? updatedRule : rule
       ));
       setEditingRuleId(null);
-      alert("Règle mise à jour avec succès!");
+      toast.success("Règle mise à jour avec succès!");
     } catch (error) {
       console.error("Failed to update rule:", error);
-      alert("Erreur lors de la mise à jour de la règle");
+      toast.error("Erreur lors de la mise à jour de la règle");
     }
   };
 
@@ -444,10 +445,10 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
       setCoverImagePreview("");
       setLogoImagePreview("");
 
-      alert("Communauté mise à jour avec succès!");
+      toast.success("Communauté mise à jour avec succès!");
     } catch (error) {
       console.error("Failed to update community:", error);
-      alert("Erreur lors de la mise à jour de la communauté");
+      toast.error("Erreur lors de la mise à jour de la communauté");
     } finally {
       setIsSaving(false);
     }
