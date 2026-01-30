@@ -39,7 +39,6 @@ export const getPosts = async (req: Request, res: Response) => {
 
     const baseWhere = {
       is_deleted: false,
-      visibility: "public",
       is_archived: false,
       user_id: {
         notIn: blockedIds, // Filter out posts from blocked users
