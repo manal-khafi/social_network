@@ -1,16 +1,11 @@
 import admin from "firebase-admin";
-import path from "path";
-import { readFileSync } from "fs";
 
-// 🔥 chemin absolu (plus fiable dans Docker)
-const serviceAccountPath = path.join(__dirname, "serviceAccountKey.json");
-
-// Lire le fichier JSON
-const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, "utf8"));
+// 🔥 Lire la variable d'environnement
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT as string);
 
 // Initialisation Firebase
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+  credential: admin.credential.cert(serviceAccount),
   storageBucket: "exam9-1.appspot.com", // remplace par ton vrai bucket
 });
 
