@@ -6,6 +6,9 @@ export const toggleSave = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const { postId } = req.params;
+    if (typeof postId !== 'string') {
+        return res.status(400).json({ message: "Invalid post ID" });
+    }
 
     if (!userId) {
       return res.status(401).json({ message: "Non authentifié" });
@@ -30,7 +33,7 @@ export const toggleSave = async (req: Request, res: Response) => {
       
       const updatedPost = await prisma.post.findUnique({
         where: { id: postId },
-        include: { _count: { select: { saves: true } } }
+        select: { _count: { select: { saves: true } } }
       });
       
       return res.json({ saved: false, saves: updatedPost?._count.saves ?? 0 });
@@ -42,7 +45,7 @@ export const toggleSave = async (req: Request, res: Response) => {
 
     const updatedPost = await prisma.post.findUnique({
       where: { id: postId },
-      include: { _count: { select: { saves: true } } }
+      select: { _count: { select: { saves: true } } }
     });
 
     return res.json({ saved: true, saves: updatedPost?._count.saves ?? 0 });

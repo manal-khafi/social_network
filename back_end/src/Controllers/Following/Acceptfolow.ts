@@ -4,6 +4,9 @@ import prisma from "../../config/prismaClient";
 const Acceptdemande = async (req: Request, res: Response) => {
   try {
     const demandeId = req.params.demandeId; // string UUID
+    if (typeof demandeId !== 'string') {
+        return res.status(400).json({ message: "Invalid ID" });
+    }
     const userId = req.user?.id; // string UUID depuis token
 
     if (!userId) {

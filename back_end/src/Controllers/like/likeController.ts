@@ -6,8 +6,16 @@ export const toggleLike = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.id;
         const { postId, commentId } = req.params;
-        const targetPostId = postId ?? null;
-        const targetCommentId = commentId ?? null;
+        
+        const targetPostId = postId || null;
+        const targetCommentId = commentId || null;
+
+        if (targetPostId && typeof targetPostId !== 'string') {
+            return res.status(400).json({ message: "Invalid postId" });
+        }
+        if (targetCommentId && typeof targetCommentId !== 'string') {
+            return res.status(400).json({ message: "Invalid commentId" });
+        }
 
         if (!targetPostId && !targetCommentId) {
             return res.status(400).json({ message: "postId or commentId is required" });
@@ -57,7 +65,7 @@ export const toggleLike = async (req: Request, res: Response) => {
             // Get updated counts
             const post = targetPostId ? await prisma.post.findUnique({
                 where: { id: targetPostId },
-                include: { _count: { select: { likes: true } } }
+                select: { _count: { select: { likes: true } } }
             }) : null;
             
             return res.json({
@@ -79,7 +87,7 @@ export const toggleLike = async (req: Request, res: Response) => {
         // Get updated counts
         const post = targetPostId ? await prisma.post.findUnique({
             where: { id: targetPostId },
-            include: { _count: { select: { likes: true } } }
+            select: { _count: { select: { likes: true } } }
         }) : null;
         
         return res.json({ 

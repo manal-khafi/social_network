@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
+import { Save, Post, User } from "@prisma/client";
 
 // Définition locale pour éviter l'erreur TS2307
 type AuthRequest = Request & {
@@ -10,6 +11,21 @@ type AuthRequest = Request & {
     display_name: string;
   };
 }
+
+type SaveWithPost = Save & {
+    post: Post & {
+        user: {
+            username: string;
+            display_name: string | null;
+            avatar_url: string | null;
+        };
+        _count: {
+            likes: number;
+            comments: number;
+            saves: number;
+        };
+    };
+};
 
 /**
  * Récupérer les posts sauvegardés (Archives)
@@ -56,7 +72,7 @@ export const getArchivedPosts = async (req: AuthRequest, res: Response) => {
     });
 
     // Transformation pour renvoyer une liste propre de posts
-    const posts = archivedSaves.map((save) => ({
+    const posts = archivedSaves.map((save: SaveWithPost) => ({
       ...save.post,
       saved_at: save.saved_at,
       isSaved: true,

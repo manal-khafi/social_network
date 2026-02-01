@@ -11,6 +11,9 @@ export class StoryMessageController {
     if (!req.user) {
       throw new AppError("Utilisateur non authentifié", 401);
     }
+    if (typeof req.params.id !== 'string') {
+        return res.status(400).json({ message: "Invalid ID" });
+    }
 
     const { recipient_id, content } = req.body;
 
@@ -35,6 +38,9 @@ export class StoryMessageController {
   static async getStoryMessages(req: Request, res: Response) {
     if (!req.user) {
       throw new AppError("Utilisateur non authentifié", 401);
+    }
+    if (typeof req.params.id !== 'string') {
+        return res.status(400).json({ message: "Invalid ID" });
     }
 
     const messages = await StoryMessageService.getStoryMessages(

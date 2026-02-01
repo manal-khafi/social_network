@@ -6,6 +6,9 @@ export const toggleRepost = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const { postId } = req.params;
+    if (typeof postId !== 'string') {
+        return res.status(400).json({ message: "Invalid post ID" });
+    }
 
     if (!userId) {
       return res.status(401).json({ message: "Non authentifié" });
@@ -30,7 +33,7 @@ export const toggleRepost = async (req: Request, res: Response) => {
       
       const updatedPost = await prisma.post.findUnique({
         where: { id: postId },
-        include: { _count: { select: { reposts: true, shares: true } } }
+        select: { _count: { select: { reposts: true, shares: true } } }
       });
       
       return res.json({ 
@@ -45,7 +48,7 @@ export const toggleRepost = async (req: Request, res: Response) => {
 
     const updatedPost = await prisma.post.findUnique({
       where: { id: postId },
-      include: { _count: { select: { reposts: true, shares: true } } }
+      select: { _count: { select: { reposts: true, shares: true } } }
     });
 
     return res.json({ 

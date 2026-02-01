@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const BlockController_1 = require("../Controllers/Block/BlockController");
+const authMiddlware_1 = require("../Middleware/authMiddlware");
+const BlockRoutes = (0, express_1.Router)();
+BlockRoutes.use(authMiddlware_1.authMiddleware);
+BlockRoutes.post("/blocks", BlockController_1.blockUser);
+BlockRoutes.delete("/blocks", BlockController_1.unblockUser);
+BlockRoutes.get("/blocks/check/:targetUserId", BlockController_1.checkBlock);
+BlockRoutes.get("/blocks/status/:targetUserId", BlockController_1.getBlockStatus);
+BlockRoutes.get("/blocks/count", BlockController_1.getBlockedCount);
+BlockRoutes.get("/blocks", BlockController_1.getBlockedUsers);
+exports.default = BlockRoutes;

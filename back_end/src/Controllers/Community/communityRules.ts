@@ -6,6 +6,9 @@ const prisma = new PrismaClient();
 // Get all rules for a community
 const getCommunityRules = async (req: Request, res: Response, next: NextFunction) => {
   const { communityId } = req.params;
+  if (typeof communityId !== 'string') {
+    return res.status(400).json({ message: "Invalid community ID" });
+  }
 
   try {
     const rules = await prisma.communityRule.findMany({
@@ -29,6 +32,9 @@ const getCommunityRules = async (req: Request, res: Response, next: NextFunction
 // Create a new rule
 const createCommunityRule = async (req: Request, res: Response, next: NextFunction) => {
   const { communityId } = req.params;
+  if (typeof communityId !== 'string') {
+    return res.status(400).json({ message: "Invalid community ID" });
+  }
   const { title, description, order } = req.body;
 
   try {
@@ -64,6 +70,9 @@ const createCommunityRule = async (req: Request, res: Response, next: NextFuncti
 // Update a rule
 const updateCommunityRule = async (req: Request, res: Response, next: NextFunction) => {
   const { communityId, ruleId } = req.params;
+  if (typeof communityId !== 'string' || typeof ruleId !== 'string') {
+    return res.status(400).json({ message: "Invalid ID" });
+  }
   const { title, description, order } = req.body;
 
   try {
@@ -108,6 +117,9 @@ const updateCommunityRule = async (req: Request, res: Response, next: NextFuncti
 // Delete a rule
 const deleteCommunityRule = async (req: Request, res: Response, next: NextFunction) => {
   const { communityId, ruleId } = req.params;
+  if (typeof communityId !== 'string' || typeof ruleId !== 'string') {
+    return res.status(400).json({ message: "Invalid ID" });
+  }
 
   try {
     const deletedRule = await prisma.communityRule.deleteMany({

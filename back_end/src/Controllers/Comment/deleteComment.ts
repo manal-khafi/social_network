@@ -26,18 +26,19 @@ async function collectDescendants(
 }
 
 export const deleteComment = async (req: Request, res: Response) => {
-  const commentId = req.params.commentId;
+  const { commentId } = req.params;
   const userId = req.user?.id;
+
+  if (typeof commentId !== 'string') {
+    return res.status(400).json({ message: "Invalid comment ID" });
+  }
 
   if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
   try {
     const comment = await prisma.comment.findUnique({
       where: { id: commentId },
-      select: {
-        id: true,
-        user_id: true,
-        post_id: true,
+      include: { // Changed from select to include
         post: { select: { user_id: true } },
       },
     });

@@ -5,6 +5,9 @@ const prisma = new PrismaClient();
 
 const getCommunityMembers = async (req: Request, res: Response, next: NextFunction) => {
   const communityId = req.params.communityId;
+  if (typeof communityId !== 'string') {
+    return res.status(400).json({ message: "Invalid community ID" });
+  }
 
   try {
     const members = await prisma.communityMember.findMany({
@@ -22,6 +25,9 @@ const giveMemberRole = async (req: Request, res: Response, next: NextFunction) =
   const { role } = req.body;
   const communityId = req.params.communityId;
   const userId = req.params.userId;
+  if (typeof communityId !== 'string' || typeof userId !== 'string') {
+    return res.status(400).json({ message: "Invalid ID" });
+  }
 
   try {
     const updatedMember = await prisma.communityMember.updateMany({
@@ -43,6 +49,9 @@ const giveMemberRole = async (req: Request, res: Response, next: NextFunction) =
 const getOneCommunityMember = async (req: Request, res: Response, next: NextFunction) => {
   const communityId = req.params.communityId;
   const userId = req.params.userId;
+  if (typeof communityId !== 'string' || typeof userId !== 'string') {
+    return res.status(400).json({ message: "Invalid ID" });
+  }
 
   try {
     const member = await prisma.communityMember.findFirst({
@@ -62,6 +71,9 @@ const getOneCommunityMember = async (req: Request, res: Response, next: NextFunc
 const DeleteCommunityMember = async (req: Request, res: Response, next: NextFunction) => {
   const communityId = req.params.communityId;
   const userId = req.params.userId;
+  if (typeof communityId !== 'string' || typeof userId !== 'string') {
+    return res.status(400).json({ message: "Invalid ID" });
+  }
 
   try {
     const deletedMember = await prisma.communityMember.deleteMany({
@@ -80,6 +92,9 @@ const DeleteCommunityMember = async (req: Request, res: Response, next: NextFunc
 const checkMembershipStatus = async (req: Request, res: Response, next: NextFunction) => {
   const communityId = req.params.communityId;
   const userId = req.params.userId;
+  if (typeof communityId !== 'string' || typeof userId !== 'string') {
+    return res.status(400).json({ message: "Invalid ID" });
+  }
 
   try {
     const member = await prisma.communityMember.findFirst({

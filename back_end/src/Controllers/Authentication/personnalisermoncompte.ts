@@ -5,6 +5,9 @@ import prisma from "../../config/prismaClient";
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const { id } = req.params; 
+    if (typeof id !== 'string') {
+        return res.status(400).json({ success: false, message: "Invalid user ID." });
+    }
     const { avatar_url, gender, account_name, date_of_birth, bio } = req.body;
 
     const user = await prisma.user.findUnique({ where: { id } });

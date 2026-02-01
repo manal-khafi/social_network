@@ -8,6 +8,9 @@ export const deletePost = async (req: Request, res: Response) => {
     }
 
     const { postId } = req.params;
+    if (typeof postId !== 'string') {
+        return res.status(400).json({ message: "Invalid post ID" });
+    }
 
     // Check if post exists and belongs to user
     const post = await prisma.post.findUnique({

@@ -1,0 +1,62 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.updatePrivacySettings = exports.getPrivacySettings = void 0;
+const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
+const getPrivacySettings = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ message: "Not authenticated" });
+        }
+        const user = await prismaClient_1.default.user.findUnique({
+            where: { id: userId },
+            select: {
+                allow_comments: true,
+                allow_mentions: true,
+                show_activity_status: true,
+            },
+        });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        return res.json(user);
+    }
+    catch (error) {
+        console.error("Get privacy settings error:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+exports.getPrivacySettings = getPrivacySettings;
+const updatePrivacySettings = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ message: "Not authenticated" });
+        }
+        const { allow_comments, allow_mentions, show_activity_status, } = req.body;
+        const updatedUser = await prismaClient_1.default.user.update({
+            where: { id: userId },
+            data: {
+                ...(typeof allow_comments === "boolean" && { allow_comments }),
+                ...(typeof allow_mentions === "boolean" && { allow_mentions }),
+                ...(typeof show_activity_status === "boolean" && {
+                    show_activity_status,
+                }),
+            },
+            select: {
+                allow_comments: true,
+                allow_mentions: true,
+                show_activity_status: true,
+            },
+        });
+        return res.json(updatedUser);
+    }
+    catch (error) {
+        console.error("Update privacy settings error:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+exports.updatePrivacySettings = updatePrivacySettings;

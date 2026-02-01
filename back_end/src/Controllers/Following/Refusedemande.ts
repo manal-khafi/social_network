@@ -4,6 +4,9 @@ import prisma from "../../config/prismaClient";
 export const refuseFollowRequest = async (req: Request, res: Response) => {
   try {
     const { requestId } = req.params; // UUID string
+    if (typeof requestId !== 'string') {
+        return res.status(400).json({ message: "Invalid request ID" });
+    }
 
     const followRequest = await prisma.follow.findUnique({
       where: { id: requestId } // Pas de parseInt ❌

@@ -35,6 +35,9 @@ const canViewUserContent = async (viewerId: string, targetUserId: string) => {
 export const getUserPosts = async (req: Request, res: Response) => {
   const viewerId = req.user?.id;
   const { userId } = req.params;
+  if (typeof userId !== 'string') {
+    return res.status(400).json({ message: "Invalid user ID" });
+  }
 
   if (!viewerId) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -48,7 +51,7 @@ export const getUserPosts = async (req: Request, res: Response) => {
   }
 
   try {
-    const posts = await prisma.post.findMany({
+    const posts: any[] = await prisma.post.findMany({
       where: {
         user_id: userId,
         is_deleted: false,
@@ -129,6 +132,9 @@ export const getUserPosts = async (req: Request, res: Response) => {
 export const getUserReposts = async (req: Request, res: Response) => {
   const viewerId = req.user?.id;
   const { userId } = req.params;
+  if (typeof userId !== 'string') {
+    return res.status(400).json({ message: "Invalid user ID" });
+  }
 
   if (!viewerId) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -144,7 +150,7 @@ export const getUserReposts = async (req: Request, res: Response) => {
   try {
     const blockedIds = await getBlockedUserIds(viewerId);
 
-    const reposts = await prisma.repost.findMany({
+    const reposts: any[] = await prisma.repost.findMany({
       where: {
         user_id: userId,
         originalPost: {

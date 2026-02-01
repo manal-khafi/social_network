@@ -1,0 +1,221 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getUserReposts = exports.getUserPosts = void 0;
+const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
+const BlockService_1 = require("../../services/BlockService");
+const canViewUserContent = async (viewerId, targetUserId) => {
+    const targetUser = await prismaClient_1.default.user.findUnique({
+        where: { id: targetUserId },
+        select: { is_private: true, is_active: true },
+    });
+    if (!targetUser || !targetUser.is_active) {
+        return { allowed: false, reason: "not_found" };
+    }
+    if (await (0, BlockService_1.isBlockedEitherWay)(viewerId, targetUserId)) {
+        return { allowed: false, reason: "blocked" };
+    }
+    if (!targetUser.is_private || viewerId === targetUserId) {
+        return { allowed: true };
+    }
+    const isFollower = await prismaClient_1.default.follow.findFirst({
+        where: {
+            follower_id: viewerId,
+            followed_id: targetUserId,
+            status: "accepted",
+        },
+        select: { id: true },
+    });
+    return { allowed: !!isFollower, reason: "private" };
+};
+const getUserPosts = async (req, res) => {
+    const viewerId = req.user?.id;
+    const { userId } = req.params;
+    if (typeof userId !== 'string') {
+        return res.status(400).json({ message: "Invalid user ID" });
+    }
+    if (!viewerId) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    const permission = await canViewUserContent(viewerId, userId);
+    if (!permission.allowed) {
+        return res.status(permission.reason === "private" ? 403 : 404).json({
+            message: permission.reason === "private" ? "This profile is private" : "User not found",
+        });
+    }
+    try {
+        const posts = await prismaClient_1.default.post.findMany({
+            where: {
+                user_id: userId,
+                is_deleted: false,
+            },
+            orderBy: { created_at: "desc" },
+            include: {
+                user: {
+                    select: { id: true, username: true, avatar_url: true, allow_comments: true },
+                },
+                _count: {
+                    select: {
+                        comments: { where: { is_deleted: false } },
+                        likes: true,
+                        reposts: true,
+                        saves: true,
+                        shares: true,
+                    },
+                },
+                likes: {
+                    where: { user_id: viewerId, comment_id: null },
+                    select: { id: true },
+                    take: 1,
+                },
+                saves: {
+                    where: { user_id: viewerId },
+                    select: { id: true },
+                    take: 1,
+                },
+                reposts: {
+                    where: { user_id: viewerId },
+                    select: { id: true },
+                    take: 1,
+                },
+                shares: {
+                    where: { user_id: viewerId },
+                    select: { id: true },
+                    take: 1,
+                },
+            },
+        });
+        const formatted = posts.map((p) => {
+            const images = Array.isArray(p.media_urls)
+                ? p.media_urls
+                : [];
+            return {
+                id: p.id,
+                userId: p.user_id,
+                username: p.user.username,
+                avatar: p.user.avatar_url ?? undefined,
+                content: p.content ?? "",
+                images,
+                likes: p._count.likes ?? 0,
+                comments: p._count.comments ?? 0,
+                shares: p._count.reposts ?? 0,
+                saves: p._count.saves ?? 0,
+                isLiked: (p.likes?.length ?? 0) > 0,
+                isSaved: (p.saves?.length ?? 0) > 0,
+                isReposted: (p.reposts?.length ?? 0) > 0,
+                sharedCount: p._count.shares ?? 0,
+                isShared: (p.shares?.length ?? 0) > 0,
+                isArchived: false,
+                isEdited: p.updated_at > p.created_at,
+                commentsAllowed: p.user.allow_comments ?? true,
+                likesVisible: true,
+                timestamp: p.created_at.toISOString(),
+            };
+        });
+        return res.status(200).json({ success: true, posts: formatted });
+    }
+    catch (error) {
+        console.error("Error fetching user's posts:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+exports.getUserPosts = getUserPosts;
+const getUserReposts = async (req, res) => {
+    const viewerId = req.user?.id;
+    const { userId } = req.params;
+    if (typeof userId !== 'string') {
+        return res.status(400).json({ message: "Invalid user ID" });
+    }
+    if (!viewerId) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    const permission = await canViewUserContent(viewerId, userId);
+    if (!permission.allowed) {
+        return res.status(permission.reason === "private" ? 403 : 404).json({
+            message: permission.reason === "private" ? "This profile is private" : "User not found",
+        });
+    }
+    try {
+        const blockedIds = await (0, BlockService_1.getBlockedUserIds)(viewerId);
+        const reposts = await prismaClient_1.default.repost.findMany({
+            where: {
+                user_id: userId,
+                originalPost: {
+                    user_id: { notIn: blockedIds },
+                },
+            },
+            orderBy: { created_at: "desc" },
+            include: {
+                originalPost: {
+                    include: {
+                        user: {
+                            select: { id: true, username: true, avatar_url: true, allow_comments: true },
+                        },
+                        _count: {
+                            select: {
+                                comments: { where: { is_deleted: false } },
+                                likes: true,
+                                reposts: true,
+                                saves: true,
+                            },
+                        },
+                        likes: {
+                            where: { user_id: viewerId, comment_id: null },
+                            select: { id: true },
+                            take: 1,
+                        },
+                        saves: {
+                            where: { user_id: viewerId },
+                            select: { id: true },
+                            take: 1,
+                        },
+                        reposts: {
+                            where: { user_id: viewerId },
+                            select: { id: true },
+                            take: 1,
+                        },
+                    },
+                },
+            },
+        });
+        const formatted = reposts.map((r) => {
+            const p = r.originalPost;
+            const images = Array.isArray(p.media_urls)
+                ? p.media_urls
+                : [];
+            return {
+                id: p.id,
+                userId: p.user_id,
+                username: p.user.username,
+                avatar: p.user.avatar_url ?? undefined,
+                content: p.content ?? "",
+                images,
+                likes: p._count.likes ?? 0,
+                comments: p._count.comments ?? 0,
+                shares: p._count.reposts ?? 0,
+                saves: p._count.saves ?? 0,
+                isLiked: (p.likes?.length ?? 0) > 0,
+                isSaved: (p.saves?.length ?? 0) > 0,
+                isReposted: (p.reposts?.length ?? 0) > 0,
+                isArchived: false,
+                isEdited: p.updated_at > p.created_at,
+                commentsAllowed: p.user.allow_comments ?? true,
+                likesVisible: true,
+                timestamp: r.created_at.toISOString(),
+                originalPost: {
+                    id: p.id,
+                    username: p.user.username,
+                    content: p.content ?? "",
+                },
+            };
+        });
+        return res.status(200).json({ success: true, reposts: formatted });
+    }
+    catch (error) {
+        console.error("Error fetching user's reposts:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+exports.getUserReposts = getUserReposts;

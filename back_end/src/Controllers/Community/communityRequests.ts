@@ -5,6 +5,9 @@ const prisma = new PrismaClient();
 
 const communityRequest = async (req: Request, res: Response, next: NextFunction) => {
   const communityId = req.params.communityId;
+  if (typeof communityId !== 'string') {
+    return res.status(400).json({ message: "Invalid community ID" });
+  }
 
   try {
     const requests = await prisma.joinRequest.findMany({
@@ -22,6 +25,9 @@ const createCommunityRequest = async (req: Request, res: Response, next: NextFun
   const { message } = req.body;
   const communityId = req.params.communityId;
   const userIdParam = req.params.userId;
+  if (typeof communityId !== 'string' || typeof userIdParam !== 'string') {
+    return res.status(400).json({ message: "Invalid ID" });
+  }
   try {
     const newRequest = await prisma.joinRequest.create({
       data: {
@@ -43,6 +49,9 @@ const handlerequest = async (req: Request, res: Response, next: NextFunction) =>
   const communityId = req.params.communityId;
   const requestId = req.params.requestId;
   const userId = req.params.userId;
+  if (typeof communityId !== 'string' || typeof requestId !== 'string' || typeof userId !== 'string') {
+    return res.status(400).json({ message: "Invalid ID" });
+  }
 
   try {
     const updatedRequest = await prisma.joinRequest.updateMany({

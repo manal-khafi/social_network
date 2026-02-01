@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { verifyAccessToken } from "../../util/jwt";
+import { Comment, User } from "@prisma/client";
 
 interface CommentNode {
   id: string;
@@ -28,8 +29,19 @@ const buildCommentTree = (
     }));
 };
 
+type CommentWithRelations = Comment & {
+    user: Partial<User>;
+    _count: {
+        likes: number;
+    };
+    likes?: { id: string }[];
+};
+
 export const getComment = async (req: Request, res: Response) => {
-  const postId = req.params.postId;
+  const { postId } = req.params;
+  if (typeof postId !== 'string') {
+    return res.status(400).json({ message: "Invalid post ID" });
+  }
   try {
     const authHeader = req.headers.authorization;
     let userId: string | null = null;
@@ -64,7 +76,7 @@ export const getComment = async (req: Request, res: Response) => {
       include.likes = { where: { user_id: userId }, select: { id: true } };
     }
 
-    const comments = await prisma.comment.findMany({
+    const comments: CommentWithRelations[] = await prisma.comment.findMany({
       where: {
         post_id: postId,
         is_deleted: false
@@ -72,7 +84,7 @@ export const getComment = async (req: Request, res: Response) => {
       orderBy: { created_at: "asc" },
       include,
     });
-    const normalized = comments.map((comment: typeof comments[number]) => ({
+    const normalized = comments.map((comment) => ({
       id: comment.id,
       postId: comment.post_id,
       userId: comment.user_id,
