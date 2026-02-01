@@ -21,4 +21,4 @@ COPY . .
 EXPOSE 3500
 
 # Lancer Prisma Migrate puis le serveur Node
-CMD ["sh", "-c", "npx prisma migrate deploy && node index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node index.ts"]
