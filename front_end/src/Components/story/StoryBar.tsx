@@ -45,8 +45,7 @@ export default function StoryBar() {
   };
 
   return (
-    <div className="border-b border-border bg-card">
-      <div className="p-4 flex gap-4 overflow-x-auto">
+      <div className="flex gap-4 overflow-x-auto">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <button className="flex flex-col items-center gap-2 flex-shrink-0">
@@ -116,6 +115,5 @@ export default function StoryBar() {
           </Link>
         ))}
       </div>
-    </div>
   );
 }
