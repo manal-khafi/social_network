@@ -1,33 +1,27 @@
-import { Response } from "express";
-import { AuthRequest } from "@/types/AuthRequest";
-import * as BlockService from "@/Service/BlockService";
+import { Request, Response } from "express";
+import {
+  blockUser,
+  unblockUser,
+  isBlocked,
+  getBlockStatus,
+  getBlockedUsers,
+  getBlockedCount,
+} from "../../Service/BlockService";
 
-/**
- * Utilitaire : vérifier l'Authentication
- */
-const requireAuth = (userId?: string) => {
-  if (!userId) {
-    throw new Error("Non authentifié");
-  }
-};
-/**
- * POST /api/blocks
- * Bloquer un utilisateur
- */
-export const blockUser = async (req: AuthRequest, res: Response) => {
+/** Bloquer un utilisateur */
+export const blockUserController = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    const { blockedUserId } = req.body;
-    requireAuth(userId);
+    const blockerId = req.user?.id; // ID de l'utilisateur connecté
+    const { blockedId } = req.body;
 
-    if (!blockedUserId) {
-      return res.status(400).json({
+    if (!blockerId) {
+      return res.status(401).json({
         success: false,
-        message: "L'ID de l'utilisateur à bloquer est requis",
+        message: "Utilisateur non authentifié",
       });
     }
 
-    const block = await BlockService.blockUser(userId!, blockedUserId);
+    const block = await blockUser(blockerId, blockedId);
 
     return res.status(201).json({
       success: true,
@@ -37,134 +31,156 @@ export const blockUser = async (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     return res.status(400).json({
       success: false,
-      message: error.message,
+      message: error.message || "Erreur lors du blocage de l'utilisateur",
     });
   }
 };
 
-/**
- * DELETE /api/blocks
- * Débloquer un utilisateur
- */
-export const unblockUser = async (req: AuthRequest, res: Response) => {
+/** Débloquer un utilisateur */
+export const unblockUserController = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    const { blockedUserId } = req.body;
-    requireAuth(userId);
+    const blockerId = req.user?.id;
+    const { blockedId } = req.body;
 
-    if (!blockedUserId) {
-      return res.status(400).json({
+    if (!blockerId) {
+      return res.status(401).json({
         success: false,
-        message: "L'ID de l'utilisateur à débloquer est requis",
+        message: "Utilisateur non authentifié",
       });
     }
 
-    await BlockService.unblockUser(userId!, blockedUserId);
+    const result = await unblockUser(blockerId, blockedId);
 
     return res.status(200).json({
       success: true,
       message: "Utilisateur débloqué avec succès",
+      data: result,
     });
   } catch (error: any) {
     return res.status(400).json({
       success: false,
-      message: error.message,
+      message: error.message || "Erreur lors du déblocage de l'utilisateur",
     });
   }
 };
 
-/**
- * GET /api/blocks/check/:targetUserId
- * Vérifier si un utilisateur est bloqué
- */
-export const checkBlock = async (req: AuthRequest, res: Response) => {
+/** Vérifier si un utilisateur est bloqué */
+export const checkBlockStatusController = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const userId = req.user?.id;
     const { targetUserId } = req.params;
-    requireAuth(userId);
-    const blocked = await BlockService.isBlocked(userId!, targetUserId);
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Utilisateur non authentifié",
+      });
+    }
+
+    const blocked = await isBlocked(userId, targetUserId);
+
     return res.status(200).json({
       success: true,
-      isBlocked: blocked,
+      data: { isBlocked: blocked },
     });
   } catch (error: any) {
-    return res.status(400).json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message:
+        error.message || "Erreur lors de la vérification du statut de blocage",
     });
   }
 };
 
-/**
- * GET /api/blocks/status/:targetUserId
- * Obtenir le statut détaillé du blocage
- */
-export const getBlockStatus = async (req: AuthRequest, res: Response) => {
+/** Obtenir le statut détaillé du blocage */
+export const getBlockStatusController = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const { targetUserId } = req.params;
-    requireAuth(userId);
 
-    const status = await BlockService.getBlockStatus(userId!, targetUserId);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Utilisateur non authentifié",
+      });
+    }
+
+    const status = await getBlockStatus(userId, targetUserId);
 
     return res.status(200).json({
       success: true,
       data: status,
     });
   } catch (error: any) {
-    return res.status(400).json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message:
+        error.message || "Erreur lors de la récupération du statut de blocage",
     });
   }
 };
 
-/**
- * GET /api/blocks
- * Liste des utilisateurs bloqués
- */
-export const getBlockedUsers = async (req: AuthRequest, res: Response) => {
+/** Obtenir la liste des utilisateurs bloqués */
+export const getBlockedUsersController = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const userId = req.user?.id;
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 20;
-    requireAuth(userId);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
 
-    const result = await BlockService.getBlockedUsers(userId!, page, limit);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Utilisateur non authentifié",
+      });
+    }
+
+    const result = await getBlockedUsers(userId, page, limit);
 
     return res.status(200).json({
       success: true,
-      data: result.blockedUsers,
-      pagination: result.pagination,
+      data: result,
     });
   } catch (error: any) {
-    return res.status(400).json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message:
+        error.message ||
+        "Erreur lors de la récupération des utilisateurs bloqués",
     });
   }
 };
 
-/**
- * GET /api/blocks/count
- * Nombre d'utilisateurs bloqués
- */
-export const getBlockedCount = async (req: AuthRequest, res: Response) => {
+/** Obtenir le nombre d'utilisateurs bloqués */
+export const getBlockedCountController = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const userId = req.user?.id;
 
-    requireAuth(userId);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Utilisateur non authentifié",
+      });
+    }
 
-    const count = await BlockService.getBlockedCount(userId!);
+    const count = await getBlockedCount(userId);
 
     return res.status(200).json({
       success: true,
       data: { count },
     });
   } catch (error: any) {
-    return res.status(400).json({
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Erreur lors du comptage des blocages",
     });
   }
 };

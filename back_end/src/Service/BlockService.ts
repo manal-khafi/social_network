@@ -1,9 +1,8 @@
-import { prisma } from "@/config/PrismaBlock";
+import { PrismaClient } from "@prisma/client";
 
-/**
- * Validation commune
- */
+const prisma = new PrismaClient();
 
+/** Validation commune */
 const validateBlockAction = (blockerId: string, blockedId: string) => {
   if (!blockerId || !blockedId) {
     throw new Error("Les identifiants de blocage sont requis");
@@ -13,22 +12,23 @@ const validateBlockAction = (blockerId: string, blockedId: string) => {
     throw new Error("Vous ne pouvez pas vous bloquer vous-même");
   }
 };
-/**
- * Bloquer un utilisateur
- */
+
+/** Bloquer un utilisateur */
 export const blockUser = async (blockerId: string, blockedId: string) => {
   validateBlockAction(blockerId, blockedId);
-  const alredayBlocked = await prisma.block.findFirst({
+  
+  const alreadyBlocked = await prisma.block.findFirst({
     where: {
       blocker_id: blockerId,
       blocked_id: blockedId,
     },
   });
 
-  if (alredayBlocked) {
+  if (alreadyBlocked) {
     throw new Error("Cet utilisateur est déjà bloqué");
   }
-  return prisma.$transaction(async (tx: any) => {
+
+  return prisma.$transaction(async (tx:any) => {
     // 1. Créer le blocage
     const block = await tx.block.create({
       data: {
@@ -45,6 +45,7 @@ export const blockUser = async (blockerId: string, blockedId: string) => {
         },
       },
     });
+
     // 2. Supprimer les follows dans les deux sens
     await tx.follow.deleteMany({
       where: {
@@ -54,37 +55,36 @@ export const blockUser = async (blockerId: string, blockedId: string) => {
         ],
       },
     });
+
     return block;
   });
 };
-/**
- * Débloquer un utilisateur
- */
+
+/** Débloquer un utilisateur */
 export const unblockUser = async (blockerId: string, blockedId: string) => {
   validateBlockAction(blockerId, blockedId);
-  const block = await prisma.block.findUnique({
+
+  const block = await prisma.block.findFirst({
     where: {
-      blocker_id_blocked_id: { // Correct syntax for findUnique on composite unique key
-        blocker_id: blockerId,
-        blocked_id: blockedId,
-      },
+      blocker_id: blockerId,
+      blocked_id: blockedId,
     },
   });
+
   if (!block) {
     throw new Error("Aucun blocage trouvé pour cet utilisateur");
   }
+
   await prisma.block.delete({
     where: {
       id: block.id,
     },
   });
+
   return { success: true };
 };
 
-/**
- * Vérifier si deux utilisateurs sont bloqués (dans un sens ou l'autre)
- */
-
+/** Vérifier si deux utilisateurs sont bloqués (dans un sens ou l'autre) */
 export const isBlocked = async (
   userId: string,
   targetUserId: string
@@ -101,9 +101,7 @@ export const isBlocked = async (
   return block !== null;
 };
 
-/**
- * Obtenir le statut détaillé du blocage
- */
+/** Obtenir le statut détaillé du blocage */
 export const getBlockStatus = async (userId: string, targetUserId: string) => {
   const blocks = await prisma.block.findMany({
     where: {
@@ -116,16 +114,12 @@ export const getBlockStatus = async (userId: string, targetUserId: string) => {
 
   return {
     isBlocked: blocks.length > 0,
-    youBlockedThem: blocks.some((block: any) => block.blocker_id === userId),
-    theyBlockedYou: blocks.some(
-      (block: any) => block.blocker_id === targetUserId
-    ),
+    youBlockedThem: blocks.some((block:any) => block.blocker_id === userId),
+    theyBlockedYou: blocks.some((block:any) => block.blocker_id === targetUserId),
   };
 };
 
-/**
- * Liste des utilisateurs bloqués avec pagination
- */
+/** Liste des utilisateurs bloqués avec pagination */
 export const getBlockedUsers = async (userId: string, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
 
@@ -157,7 +151,7 @@ export const getBlockedUsers = async (userId: string, page = 1, limit = 20) => {
   ]);
 
   return {
-    blockedUsers: blocks.map((block: any) => ({
+    blockedUsers: blocks.map((block:any) => ({
       id: block.blocked.id,
       username: block.blocked.username,
       avatar: block.blocked.avatar_url,
@@ -175,9 +169,7 @@ export const getBlockedUsers = async (userId: string, page = 1, limit = 20) => {
   };
 };
 
-/**
- * Obtenir le nombre d'utilisateurs bloqués
- */
+/** Obtenir le nombre d'utilisateurs bloqués */
 export const getBlockedCount = async (userId: string): Promise<number> => {
   return prisma.block.count({
     where: {

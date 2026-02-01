@@ -91,6 +91,7 @@ model User {
   account_name    String?
   adresse        String?
 
+settings       UserSettings?
   role_id String?
   role    Role?   @relation(fields: [role_id], references: [id])
 
@@ -488,4 +489,53 @@ model Report {
   reportedUser  User  @relation("UserReportsReceived", fields: [reported_user_id], references: [id], onDelete: Cascade)
   post          Post? @relation(fields: [post_id], references: [id], onDelete: SetNull)
   comment       Comment? @relation(fields: [comment_id], references: [id], onDelete: SetNull)
+}
+
+// Ajoutez ce modèle à votre schema.prisma
+
+model UserSettings {
+  id      String @id @default(uuid())
+  user_id String @unique
+
+  // Appearance settings
+  theme           String  @default("system")  // 'light' | 'dark' | 'system'
+  font_size       Int     @default(16)
+  layout_density  String  @default("comfortable")  // 'compact' | 'comfortable' | 'spacious'
+  language        String  @default("en")
+  
+  // Accessibility
+  high_contrast         Boolean @default(false)
+  reduced_motion        Boolean @default(false)
+  screen_reader         Boolean @default(false)
+  larger_touch_targets  Boolean @default(false)
+
+  // Privacy settings (en plus de User.is_private)
+  show_activity_status    Boolean @default(true)
+  allow_story_sharing     Boolean @default(true)
+  who_can_see_posts       String  @default("followers")  // 'everyone' | 'followers' | 'mentioned'
+  who_can_see_stories     String  @default("followers")  // 'everyone' | 'followers' | 'close-friends'
+  tagged_posts_approval   Boolean @default(true)
+  who_can_contact         String  @default("everyone")   // 'everyone' | 'followers' | 'none'
+  comment_filtering       Boolean @default(true)
+  hide_offensive_words    Boolean @default(false)
+
+  // Notification settings
+  notifications_all           Boolean @default(true)
+  notifications_push          Boolean @default(true)
+  notifications_email         Boolean @default(false)
+  notifications_in_app        Boolean @default(true)
+  notifications_likes         Boolean @default(true)
+  notifications_comments      Boolean @default(true)
+  notifications_follows       Boolean @default(true)
+  notifications_mentions      Boolean @default(true)
+  notifications_reposts       Boolean @default(true)
+  notifications_timing        String  @default("always")  // 'always' | 'scheduled' | 'important'
+  notifications_msg_requests  Boolean @default(true)
+  notifications_group_msgs    Boolean @default(true)
+  notifications_video_calls   Boolean @default(true)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }

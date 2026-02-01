@@ -1,120 +1,219 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAppSelector, useAppDispatch } from '../../hooks';
-import { updateProfile, togglePrivacy } from '../../features/user/userSlice';
-import { logout } from '../../features/auth/authSlice';
-import { ArrowLeft, Camera, Mail, Phone, Lock, Shield, LogOut, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
-import { Card } from '../../Components/ui/card';
-import { Input } from '../../Components/ui/input';
-import { Textarea } from '../../Components/ui/textarea';
-import { Button } from '../../Components/ui/button';
-import { Switch } from '../../Components/ui/switch';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
-import { Separator } from '../../Components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../Components/ui/dialog';
-import { toast } from 'sonner';
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAppDispatch } from "../../hooks";
+import { logout } from "../../features/auth/authSlice";
+import {
+  ArrowLeft,
+  Camera,
+  Mail,
+  Phone,
+  Lock,
+  Shield,
+  LogOut,
+  Trash2,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import { Card } from "../../Components/ui/card";
+import { Input } from "../../Components/ui/input";
+import { Textarea } from "../../Components/ui/textarea";
+import { Button } from "../../Components/ui/button";
+import { Switch } from "../../Components/ui/switch";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "../../Components/ui/avatar";
+import { Separator } from "../../Components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "../../Components/ui/dialog";
+import { toast } from "sonner";
+import {
+  getAccount,
+  updateAccount,
+  changePassword,
+  toggleActive,
+  deleteAccount,
+  type AccountSettings,
+} from "../../api/settingsApi";
 
 export default function AccountSettingsView() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { currentUser } = useAppSelector((state) => state.user);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
+  const [accountData, setAccountData] = useState<AccountSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+
   const [formData, setFormData] = useState({
-    fullName: currentUser?.fullName || '',
-    username: currentUser?.username || '',
-    bio: currentUser?.bio || '',
-    website: '',
-    email: currentUser?.email || '',
-    phone: ''
+    display_name: "",
+    username: "",
+    bio: "",
+    email: "",
+    gender: "",
+    date_of_birth: "",
+    account_name: "",
+    adresse: "",
   });
-  
+
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [show2FADialog, setShow2FADialog] = useState(false);
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
+
+  // Password change state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   // Deactivate/Delete form state
-  const [deactivatePassword, setDeactivatePassword] = useState('');
-  const [deactivateReason, setDeactivateReason] = useState('');
-  const [deletePassword, setDeletePassword] = useState('');
-  const [deleteReason, setDeleteReason] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  
+  const [deactivatePassword, setDeactivatePassword] = useState("");
+  const [deactivateReason, setDeactivateReason] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteReason, setDeleteReason] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  // Fetch account data on mount
+  useEffect(() => {
+    const fetchAccountData = async () => {
+      try {
+        const data = await getAccount();
+        setAccountData(data);
+        setFormData({
+          display_name: data.display_name || "",
+          username: data.username || "",
+          bio: data.bio || "",
+          email: data.email || "",
+          gender: data.gender || "",
+          date_of_birth: data.date_of_birth || "",
+          account_name: data.account_name || "",
+          adresse: data.adresse || "",
+        });
+      } catch (error) {
+        toast.error("Failed to load account settings");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAccountData();
+  }, []);
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     setHasUnsavedChanges(true);
   };
-  
-  const handleSave = () => {
-    if (currentUser) {
-      dispatch(updateProfile({
-        fullName: formData.fullName,
-        username: formData.username,
-        bio: formData.bio,
-      }));
+
+  const handleSave = async () => {
+    try {
+      await updateAccount(formData);
       setHasUnsavedChanges(false);
-      toast.success('Profile updated successfully');
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      toast.error("Failed to update profile");
+      console.error(error);
     }
   };
-  
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Simulate image upload
-      toast.success('Profile picture updated');
+      // TODO: Implement actual image upload
+      toast.success("Profile picture updated");
     }
   };
-  
-  const handleDeactivate = () => {
-    // Reset error
-    setPasswordError('');
-    
-    // Validate password (simulated - in real app would check against actual password)
-    if (deactivatePassword !== 'password') { // Mock password check
-      setPasswordError('Incorrect password');
+
+  const handlePasswordChange = async () => {
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error("Passwords do not match");
       return;
     }
-    
+
+    try {
+      await changePassword(
+        passwordForm.currentPassword,
+        passwordForm.newPassword,
+      );
+      toast.success("Password changed successfully");
+      setShowPasswordDialog(false);
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      toast.error("Failed to change password");
+      console.error(error);
+    }
+  };
+
+  const handleDeactivate = async () => {
+    setPasswordError("");
+
     if (!deactivateReason.trim()) {
-      toast.error('Please provide a reason for deactivation');
+      toast.error("Please provide a reason for deactivation");
       return;
     }
-    
-    toast.success('Account deactivated');
-    dispatch(logout());
-    navigate('/login');
+
+    try {
+      await toggleActive();
+      toast.success("Account deactivated");
+      dispatch(logout());
+      navigate("/login");
+    } catch (error) {
+      toast.error("Failed to deactivate account");
+      console.error(error);
+    }
   };
-  
-  const handleDelete = () => {
-    // Reset error
-    setPasswordError('');
-    
-    // Validate password (simulated - in real app would check against actual password)
-    if (deletePassword !== 'password') { // Mock password check
-      setPasswordError('Incorrect password');
-      return;
-    }
-    
+
+  const handleDelete = async () => {
+    setPasswordError("");
+
     if (!deleteReason.trim()) {
-      toast.error('Please provide a reason for deletion');
+      toast.error("Please provide a reason for deletion");
       return;
     }
-    
-    toast.success('Account deleted');
-    dispatch(logout());
-    navigate('/login');
+
+    try {
+      await deleteAccount(deletePassword, deleteReason);
+      toast.success("Account deleted");
+      dispatch(logout());
+      navigate("/login");
+    } catch (error) {
+      toast.error("Failed to delete account");
+      console.error(error);
+    }
   };
-  
-  if (!currentUser) return null;
-  
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!accountData) return null;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-muted rounded-full"
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold">Account Settings</h1>
@@ -137,8 +236,10 @@ export default function AccountSettingsView() {
           <div className="flex items-center gap-4">
             <div className="relative">
               <Avatar className="w-20 h-20">
-                <AvatarImage src={currentUser.avatar} />
-                <AvatarFallback className="text-2xl">{currentUser.username[0].toUpperCase()}</AvatarFallback>
+                <AvatarImage src={accountData.avatar_url ?? undefined} />
+                <AvatarFallback className="text-2xl">
+                  {accountData.username[0]?.toUpperCase() || "?"}
+                </AvatarFallback>
               </Avatar>
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -161,54 +262,75 @@ export default function AccountSettingsView() {
             </div>
           </div>
         </Card>
-        
+
         {/* Basic Information */}
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold">Basic Information</h2>
-          
+
           <div className="space-y-2">
-            <label className="text-sm font-medium">Full Name</label>
+            <label className="text-sm font-medium">Display Name</label>
             <Input
-              value={formData.fullName}
-              onChange={(e) => handleInputChange('fullName', e.target.value)}
-              placeholder="Enter your full name"
+              value={formData.display_name}
+              onChange={(e) =>
+                handleInputChange("display_name", e.target.value)
+              }
+              placeholder="Enter your display name"
             />
           </div>
-          
+
           <div className="space-y-2">
             <label className="text-sm font-medium">Username</label>
             <Input
               value={formData.username}
-              onChange={(e) => handleInputChange('username', e.target.value)}
+              onChange={(e) => handleInputChange("username", e.target.value)}
               placeholder="@username"
             />
           </div>
-          
+
           <div className="space-y-2">
             <label className="text-sm font-medium">Bio</label>
             <Textarea
               value={formData.bio}
-              onChange={(e) => handleInputChange('bio', e.target.value)}
+              onChange={(e) => handleInputChange("bio", e.target.value)}
               placeholder="Tell us about yourself"
               className="min-h-[100px] resize-none"
             />
           </div>
-          
+
           <div className="space-y-2">
-            <label className="text-sm font-medium">Website</label>
+            <label className="text-sm font-medium">Gender</label>
             <Input
-              value={formData.website}
-              onChange={(e) => handleInputChange('website', e.target.value)}
-              placeholder="https://yourwebsite.com"
-              type="url"
+              value={formData.gender}
+              onChange={(e) => handleInputChange("gender", e.target.value)}
+              placeholder="Gender"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Date of Birth</label>
+            <Input
+              type="date"
+              value={formData.date_of_birth}
+              onChange={(e) =>
+                handleInputChange("date_of_birth", e.target.value)
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Address</label>
+            <Input
+              value={formData.adresse}
+              onChange={(e) => handleInputChange("adresse", e.target.value)}
+              placeholder="Your address"
             />
           </div>
         </Card>
-        
+
         {/* Contact Information */}
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold">Contact Information</h2>
-          
+
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -223,33 +345,31 @@ export default function AccountSettingsView() {
                 <span className="text-sm text-green-500">Verified</span>
               </div>
             </div>
-            
+
             <Separator />
-            
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium">{formData.phone || 'Not added'}</p>
+                  <p className="font-medium">Not added</p>
                   <p className="text-sm text-muted-foreground">Phone number</p>
                 </div>
               </div>
-              {!formData.phone && (
-                <Button variant="outline" size="sm">
-                  Add Phone
-                </Button>
-              )}
+              <Button variant="outline" size="sm">
+                Add Phone
+              </Button>
             </div>
           </div>
         </Card>
-        
+
         {/* Security */}
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
             <Shield className="w-5 h-5" />
             Security
           </h2>
-          
+
           <button
             onClick={() => setShowPasswordDialog(true)}
             className="w-full flex items-center justify-between p-3 hover:bg-muted rounded-lg transition-colors"
@@ -258,14 +378,16 @@ export default function AccountSettingsView() {
               <Lock className="w-5 h-5 text-muted-foreground" />
               <div className="text-left">
                 <p className="font-medium">Change Password</p>
-                <p className="text-sm text-muted-foreground">Last changed 3 months ago</p>
+                <p className="text-sm text-muted-foreground">
+                  Update your password
+                </p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
-          
+
           <Separator />
-          
+
           <button
             onClick={() => setShow2FADialog(true)}
             className="w-full flex items-center justify-between p-3 hover:bg-muted rounded-lg transition-colors"
@@ -274,86 +396,30 @@ export default function AccountSettingsView() {
               <Shield className="w-5 h-5 text-muted-foreground" />
               <div className="text-left">
                 <p className="font-medium">Two-Factor Authentication</p>
-                <p className="text-sm text-muted-foreground">Add extra security to your account</p>
+                <p className="text-sm text-muted-foreground">
+                  Add extra security to your account
+                </p>
               </div>
             </div>
           </button>
-          
-          <Separator />
-          
-          <div className="p-3 bg-muted/50 rounded-lg">
-            <p className="text-sm font-medium mb-2">Active Sessions</p>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex justify-between">
-                <span>• Current device (Web Browser)</span>
-                <span>Active now</span>
-              </div>
-              <div className="flex justify-between">
-                <span>• iPhone 13 Pro</span>
-                <span>2 hours ago</span>
-              </div>
-            </div>
-          </div>
         </Card>
-        
-        {/* Privacy Settings */}
-        <Card className="p-6 space-y-4">
-          <h2 className="font-semibold">Privacy Settings</h2>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Private Account</p>
-              <p className="text-sm text-muted-foreground">
-                Only approved followers can see your posts
-              </p>
-            </div>
-            <Switch
-              checked={!currentUser.isPublic}
-              onCheckedChange={() => dispatch(togglePrivacy())}
-            />
-          </div>
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Show Activity Status</p>
-              <p className="text-sm text-muted-foreground">
-                Let others see when you're active
-              </p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Allow Story Sharing</p>
-              <p className="text-sm text-muted-foreground">
-                Let others share your stories
-              </p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-        </Card>
-        
+
         {/* Account Actions */}
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold">Account Actions</h2>
-          
+
           <Button
             variant="outline"
             className="w-full justify-start"
             onClick={() => {
               dispatch(logout());
-              navigate('/login');
+              navigate("/login");
             }}
           >
             <LogOut className="w-4 h-4 mr-2" />
             Logout
           </Button>
-          
+
           <Button
             variant="outline"
             className="w-full justify-start text-orange-500 hover:text-orange-600 hover:bg-orange-50"
@@ -362,7 +428,7 @@ export default function AccountSettingsView() {
             <AlertCircle className="w-4 h-4 mr-2" />
             Deactivate Account
           </Button>
-          
+
           <Button
             variant="destructive"
             className="w-full justify-start"
@@ -373,7 +439,7 @@ export default function AccountSettingsView() {
           </Button>
         </Card>
       </div>
-      
+
       {/* Change Password Dialog */}
       <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
         <DialogContent>
@@ -383,34 +449,66 @@ export default function AccountSettingsView() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Current Password</label>
-              <Input type="password" placeholder="Enter current password" />
+              <Input
+                type="password"
+                placeholder="Enter current password"
+                value={passwordForm.currentPassword}
+                onChange={(e) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    currentPassword: e.target.value,
+                  }))
+                }
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">New Password</label>
-              <Input type="password" placeholder="Enter new password" />
+              <Input
+                type="password"
+                placeholder="Enter new password"
+                value={passwordForm.newPassword}
+                onChange={(e) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    newPassword: e.target.value,
+                  }))
+                }
+              />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Confirm New Password</label>
-              <Input type="password" placeholder="Confirm new password" />
+              <label className="text-sm font-medium">
+                Confirm New Password
+              </label>
+              <Input
+                type="password"
+                placeholder="Confirm new password"
+                value={passwordForm.confirmPassword}
+                onChange={(e) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    confirmPassword: e.target.value,
+                  }))
+                }
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPasswordDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowPasswordDialog(false)}
+            >
               Cancel
             </Button>
             <Button
               className="bg-[#d6955b] hover:bg-[#c58549]"
-              onClick={() => {
-                toast.success('Password changed successfully');
-                setShowPasswordDialog(false);
-              }}
+              onClick={handlePasswordChange}
             >
               Update Password
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* 2FA Dialog */}
       <Dialog open={show2FADialog} onOpenChange={setShow2FADialog}>
         <DialogContent>
@@ -422,7 +520,8 @@ export default function AccountSettingsView() {
           </DialogHeader>
           <div className="py-4 space-y-4">
             <p className="text-sm">
-              Two-factor authentication adds an additional layer of security to your account by requiring more than just a password to log in.
+              Two-factor authentication adds an additional layer of security to
+              your account by requiring more than just a password to log in.
             </p>
             <div className="p-4 bg-muted rounded-lg">
               <p className="text-sm font-medium mb-2">Setup Steps:</p>
@@ -443,16 +542,19 @@ export default function AccountSettingsView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Deactivate Account Dialog */}
-      <Dialog open={showDeactivateDialog} onOpenChange={(open) => {
-        setShowDeactivateDialog(open);
-        if (!open) {
-          setDeactivatePassword('');
-          setDeactivateReason('');
-          setPasswordError('');
-        }
-      }}>
+      <Dialog
+        open={showDeactivateDialog}
+        onOpenChange={(open) => {
+          setShowDeactivateDialog(open);
+          if (!open) {
+            setDeactivatePassword("");
+            setDeactivateReason("");
+            setPasswordError("");
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Deactivate Account</DialogTitle>
@@ -461,9 +563,7 @@ export default function AccountSettingsView() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
-            <p className="text-sm mb-2">
-              When you deactivate your account:
-            </p>
+            <p className="text-sm mb-2">When you deactivate your account:</p>
             <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside mb-4">
               <li>Your profile will be hidden from other users</li>
               <li>Your posts will not be visible</li>
@@ -479,35 +579,26 @@ export default function AccountSettingsView() {
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Confirm Password <span className="text-destructive">*</span></label>
-              <Input
-                type="password"
-                placeholder="Enter your password"
-                value={deactivatePassword}
-                onChange={(e) => {
-                  setDeactivatePassword(e.target.value);
-                  setPasswordError('');
-                }}
-                className={passwordError ? 'border-destructive' : ''}
-              />
-              {passwordError && (
-                <p className="text-xs text-destructive">{passwordError}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Why are you deactivating? <span className="text-destructive">*</span></label>
+              <label className="text-sm font-medium">
+                Why are you deactivating?{" "}
+                <span className="text-destructive">*</span>
+              </label>
               <Textarea
                 placeholder="Please tell us why you're deactivating your account..."
                 value={deactivateReason}
                 onChange={(e) => setDeactivateReason(e.target.value)}
                 className="min-h-[80px] resize-none"
               />
-              <p className="text-xs text-muted-foreground">This helps us improve ANMOUGAR</p>
+              <p className="text-xs text-muted-foreground">
+                This helps us improve ANMOUGAR
+              </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeactivateDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeactivateDialog(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeactivate}>
@@ -516,16 +607,19 @@ export default function AccountSettingsView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Delete Account Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={(open) => {
-        setShowDeleteDialog(open);
-        if (!open) {
-          setDeletePassword('');
-          setDeleteReason('');
-          setPasswordError('');
-        }
-      }}>
+      <Dialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          setShowDeleteDialog(open);
+          if (!open) {
+            setDeletePassword("");
+            setDeleteReason("");
+            setPasswordError("");
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Account</DialogTitle>
@@ -535,15 +629,15 @@ export default function AccountSettingsView() {
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <p className="text-sm font-medium text-destructive mb-1">⚠️ Warning</p>
+              <p className="text-sm font-medium text-destructive mb-1">
+                ⚠️ Warning
+              </p>
               <p className="text-sm text-muted-foreground">
                 This action is permanent and cannot be reversed
               </p>
             </div>
 
-            <p className="text-sm mb-2">
-              When you delete your account:
-            </p>
+            <p className="text-sm mb-2">When you delete your account:</p>
             <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside mb-4">
               <li>All your data will be permanently deleted</li>
               <li>Your posts, messages, and media will be removed</li>
@@ -559,16 +653,18 @@ export default function AccountSettingsView() {
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Confirm Password <span className="text-destructive">*</span></label>
+              <label className="text-sm font-medium">
+                Confirm Password <span className="text-destructive">*</span>
+              </label>
               <Input
                 type="password"
                 placeholder="Enter your password"
                 value={deletePassword}
                 onChange={(e) => {
                   setDeletePassword(e.target.value);
-                  setPasswordError('');
+                  setPasswordError("");
                 }}
-                className={passwordError ? 'border-destructive' : ''}
+                className={passwordError ? "border-destructive" : ""}
               />
               {passwordError && (
                 <p className="text-xs text-destructive">{passwordError}</p>
@@ -576,18 +672,26 @@ export default function AccountSettingsView() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Why are you deleting? <span className="text-destructive">*</span></label>
+              <label className="text-sm font-medium">
+                Why are you deleting?{" "}
+                <span className="text-destructive">*</span>
+              </label>
               <Textarea
                 placeholder="Please tell us why you're deleting your account..."
                 value={deleteReason}
                 onChange={(e) => setDeleteReason(e.target.value)}
                 className="min-h-[80px] resize-none"
               />
-              <p className="text-xs text-muted-foreground">Your feedback is important to us</p>
+              <p className="text-xs text-muted-foreground">
+                Your feedback is important to us
+              </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
@@ -602,8 +706,18 @@ export default function AccountSettingsView() {
 
 function ChevronRight({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 5l7 7-7 7"
+      />
     </svg>
   );
 }

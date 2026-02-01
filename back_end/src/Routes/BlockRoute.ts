@@ -1,40 +1,28 @@
 import { Router } from "express";
-import {
-  blockUser,
-  unblockUser,
-  checkBlock,
-  getBlockStatus,
-  getBlockedCount,
-  getBlockedUsers,
-} from "../Controllers/Block/BlockController";
+import { blockUserController, unblockUserController, checkBlockStatusController, getBlockStatusController, getBlockedUsersController, getBlockedCountController,} from "../Controllers/Block/BlockController";
 import { authMiddleware } from "../Middleware/authMiddlware";
-import { checkBlockMiddleware } from "../Middleware/Block/CheckBlockMiddleware";
 
 const router = Router();
 
-// Toutes les routes nécessitent une Authentication
+// Toutes les routes nécessitent une authentification
 router.use(authMiddleware);
 
-// POST /api/blocks - Bloquer un utilisateur
-router.post("/blocks", blockUser, checkBlockMiddleware);
+// Bloquer un utilisateur
+router.post("/block", blockUserController);
 
-// DELETE /api/blocks - Débloquer un utilisateur
-router.delete("/blocks", unblockUser, checkBlockMiddleware);
+// Débloquer un utilisateur
+router.post("/unblock", unblockUserController);
 
-// GET /api/blocks/check/:targetUserId - Vérifier si bloqué (simple)
-router.get("/blocks/check/:targetUserId", checkBlock, checkBlockMiddleware);
+// Vérifier si un utilisateur est bloqué
+router.get("/check/:targetUserId", checkBlockStatusController);
 
-// GET /api/blocks/status/:targetUserId - Statut détaillé du blocage
-router.get(
-  "/blocks/status/:targetUserId",
-  getBlockStatus,
-  checkBlockMiddleware
-);
+// Obtenir le statut détaillé du blocage
+router.get("/status/:targetUserId", getBlockStatusController);
 
-// GET /api/blocks/count - Nombre d'utilisateurs bloqués
-router.get("/blocks/count", getBlockedCount, checkBlockMiddleware);
+// Obtenir la liste des utilisateurs bloqués (avec pagination)
+router.get("/blocked-users", getBlockedUsersController);
 
-// GET /api/blocks - Liste des utilisateurs bloqués (doit être en dernier)
-router.get("/blocks", getBlockedUsers, checkBlockMiddleware);
+// Obtenir le nombre d'utilisateurs bloqués
+router.get("/blocked-count", getBlockedCountController);
 
 export default router;

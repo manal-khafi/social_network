@@ -1,45 +1,170 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAppSelector, useAppDispatch } from '../../hooks';
-import { unblockUser } from '../../features/user/userSlice';
-import { ArrowLeft, Lock, Eye, MessageCircle, UserX, Download, Clock, Trash2 } from 'lucide-react';
-import { Card } from '../../Components/ui/card';
-import { Button } from '../../Components/ui/button';
-import { Switch } from '../../Components/ui/switch';
-import { Separator } from '../../Components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '../../Components/ui/radio-group';
-import { Label } from '../../Components/ui/label';
-import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../Components/ui/dialog';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  Lock,
+  Eye,
+  MessageCircle,
+  UserX,
+  Download,
+  Clock,
+  Trash2,
+} from "lucide-react";
+import { Card } from "../../Components/ui/card";
+import { Button } from "../../Components/ui/button";
+import { Switch } from "../../Components/ui/switch";
+import { Separator } from "../../Components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "../../Components/ui/radio-group";
+import { Label } from "../../Components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../../Components/ui/dialog";
+import { toast } from "sonner";
+import {
+  getPrivacySettings,
+  updatePrivacySettings,
+  togglePrivate,
+  type PrivacySettings,
+} from "../../api/settingsApi";
 
 export default function PrivacyView() {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const { blockedUsers } = useAppSelector((state) => state.user);
+  const [loading, setLoading] = useState(true);
+  const [privacy, setPrivacy] = useState<PrivacySettings | null>(null);
   const [showDataDialog, setShowDataDialog] = useState(false);
 
-  const handleUnblock = (userId: string, username: string) => {
-    dispatch(unblockUser(userId));
-    toast.success(`Unblocked @${username}`);
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await getPrivacySettings();
+        setPrivacy(data);
+      } catch (error) {
+        toast.error("Failed to load privacy settings");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  const updateSettings = async (updates: Partial<PrivacySettings>) => {
+    try {
+      const updated = await updatePrivacySettings(updates);
+      setPrivacy(updated);
+      toast.success("Privacy settings updated");
+    } catch (error) {
+      toast.error("Failed to update privacy settings");
+      console.error(error);
+    }
+  };
+
+  const handleTogglePrivate = async () => {
+    try {
+      await togglePrivate();
+      if (privacy) {
+        setPrivacy({ ...privacy, is_private: !privacy.is_private });
+        toast.success(
+          privacy.is_private
+            ? "Account is now public"
+            : "Account is now private",
+        );
+      }
+    } catch (error) {
+      toast.error("Failed to toggle privacy");
+      console.error(error);
+    }
   };
 
   const handleDownloadData = () => {
-    toast.success('Preparing your data download...');
+    toast.success("Preparing your data download...");
     setShowDataDialog(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!privacy) return null;
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center gap-3 z-10">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 hover:bg-muted rounded-full"
+        >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="text-xl font-bold">Privacy & Safety</h1>
       </div>
 
       <div className="p-4 space-y-4 max-w-2xl mx-auto pb-24">
+        {/* Account Privacy */}
+        <Card className="p-6 space-y-4">
+          <h2 className="font-semibold flex items-center gap-2">
+            <Lock className="w-5 h-5" />
+            Account Privacy
+          </h2>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Private Account</p>
+              <p className="text-sm text-muted-foreground">
+                Only approved followers can see your posts
+              </p>
+            </div>
+            <Switch
+              checked={privacy.is_private}
+              onCheckedChange={handleTogglePrivate}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Show Activity Status</p>
+              <p className="text-sm text-muted-foreground">
+                Let others see when you're active
+              </p>
+            </div>
+            <Switch
+              checked={privacy.showActivityStatus}
+              onCheckedChange={(checked) =>
+                updateSettings({ showActivityStatus: checked })
+              }
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Allow Story Sharing</p>
+              <p className="text-sm text-muted-foreground">
+                Let others share your stories
+              </p>
+            </div>
+            <Switch
+              checked={privacy.allowStorySharing}
+              onCheckedChange={(checked) =>
+                updateSettings({ allowStorySharing: checked })
+              }
+            />
+          </div>
+        </Card>
+
         {/* Content Visibility */}
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
@@ -49,12 +174,22 @@ export default function PrivacyView() {
 
           <div className="space-y-3">
             <p className="text-sm font-medium">Who can see your posts</p>
-            <RadioGroup defaultValue="followers">
+            <RadioGroup
+              value={privacy.whoCanSeeYourPosts}
+              onValueChange={(value) =>
+                updateSettings({
+                  whoCanSeeYourPosts:
+                    value as PrivacySettings["whoCanSeeYourPosts"],
+                })
+              }
+            >
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="everyone" id="everyone" />
                 <Label htmlFor="everyone" className="flex-1 cursor-pointer">
                   <p className="font-medium">Everyone</p>
-                  <p className="text-sm text-muted-foreground">Anyone on ANMOUGAR</p>
+                  <p className="text-sm text-muted-foreground">
+                    Anyone on ANMOUGAR
+                  </p>
                 </Label>
               </div>
 
@@ -62,7 +197,9 @@ export default function PrivacyView() {
                 <RadioGroupItem value="followers" id="followers" />
                 <Label htmlFor="followers" className="flex-1 cursor-pointer">
                   <p className="font-medium">Followers</p>
-                  <p className="text-sm text-muted-foreground">Only people who follow you</p>
+                  <p className="text-sm text-muted-foreground">
+                    Only people who follow you
+                  </p>
                 </Label>
               </div>
 
@@ -70,7 +207,9 @@ export default function PrivacyView() {
                 <RadioGroupItem value="mentioned" id="mentioned" />
                 <Label htmlFor="mentioned" className="flex-1 cursor-pointer">
                   <p className="font-medium">Mentioned Only</p>
-                  <p className="text-sm text-muted-foreground">Only people you mention</p>
+                  <p className="text-sm text-muted-foreground">
+                    Only people you mention
+                  </p>
                 </Label>
               </div>
             </RadioGroup>
@@ -80,24 +219,41 @@ export default function PrivacyView() {
 
           <div className="space-y-3">
             <p className="text-sm font-medium">Who can see your stories</p>
-            <RadioGroup defaultValue="followers">
+            <RadioGroup
+              value={privacy.whoCanSeeYourStories}
+              onValueChange={(value) =>
+                updateSettings({
+                  whoCanSeeYourStories:
+                    value as PrivacySettings["whoCanSeeYourStories"],
+                })
+              }
+            >
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="everyone" id="stories-everyone" />
-                <Label htmlFor="stories-everyone" className="flex-1 cursor-pointer">
+                <Label
+                  htmlFor="stories-everyone"
+                  className="flex-1 cursor-pointer"
+                >
                   <p className="font-medium">Everyone</p>
                 </Label>
               </div>
 
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="followers" id="stories-followers" />
-                <Label htmlFor="stories-followers" className="flex-1 cursor-pointer">
+                <Label
+                  htmlFor="stories-followers"
+                  className="flex-1 cursor-pointer"
+                >
                   <p className="font-medium">Followers</p>
                 </Label>
               </div>
 
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="close-friends" id="close-friends" />
-                <Label htmlFor="close-friends" className="flex-1 cursor-pointer">
+                <Label
+                  htmlFor="close-friends"
+                  className="flex-1 cursor-pointer"
+                >
                   <p className="font-medium">Close Friends</p>
                 </Label>
               </div>
@@ -109,9 +265,16 @@ export default function PrivacyView() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Tagged Posts Approval</p>
-              <p className="text-sm text-muted-foreground">Approve posts you're tagged in</p>
+              <p className="text-sm text-muted-foreground">
+                Approve posts you're tagged in
+              </p>
             </div>
-            <Switch defaultChecked />
+            <Switch
+              checked={privacy.taggedPostsApproval}
+              onCheckedChange={(checked) =>
+                updateSettings({ taggedPostsApproval: checked })
+              }
+            />
           </div>
         </Card>
 
@@ -124,17 +287,30 @@ export default function PrivacyView() {
 
           <div className="space-y-3">
             <p className="text-sm font-medium">Who can contact you</p>
-            <RadioGroup defaultValue="everyone">
+            <RadioGroup
+              value={privacy.whoCanContact}
+              onValueChange={(value) =>
+                updateSettings({
+                  whoCanContact: value as PrivacySettings["whoCanContact"],
+                })
+              }
+            >
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="everyone" id="contact-everyone" />
-                <Label htmlFor="contact-everyone" className="flex-1 cursor-pointer">
+                <Label
+                  htmlFor="contact-everyone"
+                  className="flex-1 cursor-pointer"
+                >
                   <p className="font-medium">Everyone</p>
                 </Label>
               </div>
 
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="followers" id="contact-followers" />
-                <Label htmlFor="contact-followers" className="flex-1 cursor-pointer">
+                <Label
+                  htmlFor="contact-followers"
+                  className="flex-1 cursor-pointer"
+                >
                   <p className="font-medium">People I Follow</p>
                 </Label>
               </div>
@@ -153,9 +329,16 @@ export default function PrivacyView() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Comment Filtering</p>
-              <p className="text-sm text-muted-foreground">Hide potentially offensive comments</p>
+              <p className="text-sm text-muted-foreground">
+                Hide potentially offensive comments
+              </p>
             </div>
-            <Switch defaultChecked />
+            <Switch
+              checked={privacy.commentFiltering}
+              onCheckedChange={(checked) =>
+                updateSettings({ commentFiltering: checked })
+              }
+            />
           </div>
 
           <Separator />
@@ -163,9 +346,16 @@ export default function PrivacyView() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Hide Offensive Words</p>
-              <p className="text-sm text-muted-foreground">Automatically filter comments</p>
+              <p className="text-sm text-muted-foreground">
+                Automatically filter comments
+              </p>
             </div>
-            <Switch />
+            <Switch
+              checked={privacy.hideOffensiveWords}
+              onCheckedChange={(checked) =>
+                updateSettings({ hideOffensiveWords: checked })
+              }
+            />
           </div>
         </Card>
 
@@ -174,40 +364,17 @@ export default function PrivacyView() {
           <h2 className="font-semibold flex items-center gap-2">
             <UserX className="w-5 h-5" />
             Blocked & Muted Accounts
-            {blockedUsers.length > 0 && (
-              <span className="ml-auto text-sm text-muted-foreground">
-                {blockedUsers.length}
-              </span>
-            )}
           </h2>
 
-          {blockedUsers.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No blocked accounts</p>
-          ) : (
-            <div className="space-y-3">
-              {blockedUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-3 hover:bg-muted rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={user.avatar} />
-                      <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{user.fullName}</p>
-                      <p className="text-sm text-muted-foreground">@{user.username}</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleUnblock(user.id, user.username)}
-                  >
-                    Unblock
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
+          <button
+            className="w-full text-left p-3 hover:bg-muted rounded-lg transition-colors"
+            onClick={() => navigate("/settings/blocked-contacts")}
+          >
+            <p className="font-medium">Blocked Accounts</p>
+            <p className="text-sm text-muted-foreground">
+              Manage blocked users
+            </p>
+          </button>
 
           <Separator />
 
@@ -232,7 +399,9 @@ export default function PrivacyView() {
               <Download className="w-5 h-5 text-muted-foreground" />
               <div className="text-left">
                 <p className="font-medium">Download Your Data</p>
-                <p className="text-sm text-muted-foreground">Request a copy of your information</p>
+                <p className="text-sm text-muted-foreground">
+                  Request a copy of your information
+                </p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -245,7 +414,9 @@ export default function PrivacyView() {
               <Clock className="w-5 h-5 text-muted-foreground" />
               <div className="text-left">
                 <p className="font-medium">Search History</p>
-                <p className="text-sm text-muted-foreground">View and clear your search history</p>
+                <p className="text-sm text-muted-foreground">
+                  View and clear your search history
+                </p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -258,7 +429,9 @@ export default function PrivacyView() {
               <Trash2 className="w-5 h-5 text-muted-foreground" />
               <div className="text-left">
                 <p className="font-medium">Clear Cache</p>
-                <p className="text-sm text-muted-foreground">Free up storage space</p>
+                <p className="text-sm text-muted-foreground">
+                  Free up storage space
+                </p>
               </div>
             </div>
             <Button variant="outline" size="sm">
@@ -307,8 +480,18 @@ export default function PrivacyView() {
 
 function ChevronRight({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 5l7 7-7 7"
+      />
     </svg>
   );
 }

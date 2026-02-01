@@ -4,6 +4,7 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import path from "path";
+
 import AuthenticationRoutes from "./Routes/Authentication";
 import commentRouter from "./Routes/Comment";
 import FollowRoutes from "./Routes/Following";
@@ -11,6 +12,8 @@ import SignaleRouter from "./Routes/Signale";
 import ComptRouter from "./Routes/Comproutes";
 import ProfileRouter from "./Routes/Profile";
 import postsRouter from "./Routes/Posts";
+import settingsRouter from "./Routes/SettingsRoute";
+import BlockRoutes from "./Routes/BlockRoute";
 import { initializeEmailService } from "./config/EmailConfig";
 
 const port = process.env.PORT || 3500;
@@ -21,23 +24,25 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
   : ["http://localhost:5173"];
 
-app.use(cors({
-  origin: allowedOrigins,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Accept"
-  ],
-  credentials: true,
-  optionsSuccessStatus: 200
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+    ],
+    credentials: true,
+    optionsSuccessStatus: 200,
+  }),
+);
 
 app.use(express.json({ limit: bodyLimit }));
 app.use(express.urlencoded({ extended: true, limit: bodyLimit }));
 
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 initializeEmailService();
 app.use("/api/authentication", AuthenticationRoutes);
@@ -47,7 +52,8 @@ app.use("/api/reports", SignaleRouter);
 app.use("/api/Compte", ComptRouter);
 app.use("/api/profile", ProfileRouter);
 app.use("/api/posts", postsRouter);
-
+app.use("/api/settings", settingsRouter);
+app.use("/api/block", BlockRoutes);
 app.get("/", (req, res) => {
   res.json({
     message: "Bienvenue sur l'api socielle network",

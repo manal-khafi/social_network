@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:17
@@ -36,9 +34,21 @@ services:
       SMTP_PORT: 587
       SMTP_USER: imanemharach@gmail.com
       SMTP_PASS: "qrhiyehjndrvqzld"
-      RESET_PASSWORD_EXPIRES_IN: 15m
+      # Auth tokens (access + refresh)
+      AUTH_SECRET: ariqerhtuzerj
+      AUTH_SECRET_EXPIRES_IN: 15m
+      AUTH_REFRESH_SECRET: ariqerhtuzerj_refresh
+      AUTH_REFRESH_SECRET_EXPIRES_IN: 24h
+
+      # Reset password token (used by both jwt.ts and authService)
+      RESET_SECRET: your_super_secret_key
+      RESET_EXPIRES_IN: 15m
       RESET_PASSWORD_SECRET: your_super_secret_key
-      JWT_SECRET: ariqerhtuzerj
+      RESET_PASSWORD_EXPIRES_IN: 15m
+
+      # Email verification token
+      EMAIL_VERIFY_SECRET: email_verify_super_secret
+      EMAIL_VERIFY_EXPIRES_IN: 24h
       NODE_ENV: development
     networks:
       - app_network
@@ -49,8 +59,8 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
-    extra_hosts:  
-    - "smtp.gmail.com:142.250.102.108"
+    extra_hosts:
+      - "smtp.gmail.com:142.250.102.108"
     command: sh -c "
       echo 'En attente de la base de données...' &&
       sleep 5 &&
@@ -69,7 +79,7 @@ services:
       - app_network
     volumes:
       - ./front_end:/usr/src/app
-      - /usr/src/app/node_modules  
+      - /usr/src/app/node_modules
     environment:
       - VITE_API_URL=http://localhost:3500
 

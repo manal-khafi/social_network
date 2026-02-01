@@ -67,7 +67,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       return next();
     }
 
-    // ✅ Normal path: access token exists
+    //  Normal path: access token exists
     const token = authHeader!.split(" ")[1];
 
     try {
