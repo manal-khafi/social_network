@@ -30,27 +30,25 @@ services:
         condition: service_healthy
     ports:
       - "3500:3500"
+
+    # ✅ IMPORTANT: load all secrets (Firebase + SMTP + JWT...) from .env
+    env_file:
+      - ./back_end/.env
+
     environment:
-      DATABASE_URL: postgresql://postgres:root@db:5432/socielle_network?schema=public
-      SMTP_HOST: smtp.gmail.com
-      SMTP_PORT: 587
-      SMTP_USER: imanemharach@gmail.com
-      SMTP_PASS: "qrhiyehjndrvqzld"
-      RESET_PASSWORD_EXPIRES_IN: 15m
-      RESET_PASSWORD_SECRET: your_super_secret_key
-      JWT_SECRET: ariqerhtuzerj
+      # ✅ keep only non-secret overrides here (optional)
       NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:root@db:5432/socielle_network?schema=public
+      FIREBASE_SERVICE_ACCOUNT_PATH: /usr/src/app/src/config/serviceAccountKey.json
+      FIREBASE_STORAGE_BUCKET: anmougar-34ca5.firebasestorage.app
+
     networks:
       - app_network
     volumes:
       - ./back_end:/usr/src/app
       - backend_node_modules:/usr/src/app/node_modules
+      - ./back_end/serviceAccountKey.json:/usr/src/app/serviceAccountKey.json:ro
 
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    extra_hosts:  
-    - "smtp.gmail.com:142.250.102.108"
     command: sh -c "
       echo 'En attente de la base de données...' &&
       sleep 5 &&
@@ -70,7 +68,7 @@ services:
       - app_network
     volumes:
       - ./front_end:/usr/src/app
-      - /usr/src/app/node_modules  
+      - /usr/src/app/node_modules
     environment:
       - VITE_API_URL=http://localhost:3500
 

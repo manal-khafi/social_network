@@ -12,12 +12,12 @@ import { getStorage } from "firebase/storage"; // ✅ ADD THIS
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCKB3zKrAUvWBJ3E83tLlLw5vGvfrOqX1E",
-  authDomain: "exam9-1.firebaseapp.com",
-  projectId: "exam9-1",
-  storageBucket: "exam9-1.appspot.com",
-  messagingSenderId: "479705895775",
-  appId: "1:479705895775:web:49446745724018e8cd5cea",
+  apiKey: "AIzaSyAq6Vo7gz1fY4Mf2EblG03hR3j5JrQzw94",
+  authDomain: "anmougar-34ca5.firebaseapp.com",
+  projectId: "anmougar-34ca5",
+  storageBucket: "anmougar-34ca5.firebasestorage.app",
+  messagingSenderId: "92379338595",
+  appId: "1:92379338595:web:e1bbb2691489a5aa23a556",
 };
 
 // Initialize Firebase

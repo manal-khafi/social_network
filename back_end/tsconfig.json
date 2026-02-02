@@ -5,22 +5,29 @@
       "@/*": ["*"]
     },
     "typeRoots": ["./node_modules/@types", "./src/types"],
-    "target": "ES2020",
-    "lib": ["ES2020"],
-    "module": "ESNext",
+
+    "target": "ES2022",
+    "lib": ["ES2022"],
+
+    "module": "CommonJS",
     "moduleResolution": "Node",
+
     "outDir": "./dist",
     "rootDir": "./src",
+
     "strict": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
+
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+
     "types": ["node"]
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }

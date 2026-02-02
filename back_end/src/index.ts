@@ -27,29 +27,45 @@ const port = process.env.PORT || 3500;
 const app = express();
 const bodyLimit = process.env.BODY_LIMIT || "100mb";
 
+// ✅ Allow localhost in dev + vercel in prod
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["https://socialnetworkes.vercel.app"];
+  ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim())
+  : [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "https://socialnetworkes.vercel.app",
+    ];
 
-app.use(cors({
-  origin: allowedOrigins,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Accept"
-  ],
-  credentials: true,
-  optionsSuccessStatus: 200
-}));
+// ✅ CORS (important: before routes)
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow requests with no origin (Postman, curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked: ${origin}`));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+    optionsSuccessStatus: 200,
+  })
+);
+
+// ✅ Preflight for all routes
+app.options("*", cors());
 
 app.use(express.json({ limit: bodyLimit }));
 app.use(express.urlencoded({ extended: true, limit: bodyLimit }));
 
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 initializeEmailService();
+
+// Routes
 app.use("/api/authentication", AuthenticationRoutes);
 app.use("/api/comments", commentRouter);
 app.use("/api/follow", FollowRoutes);
@@ -64,20 +80,18 @@ app.use("/api/saves", SaveRoutes);
 app.use("/api/account", AccountRouter);
 app.use("/api/privacy", PrivacySettingsRoutes);
 app.use("/api/auth", twoFactorRouter);
-app.use('/api/stories', storyRoutes);
-app.use(express.json());
+app.use("/api/stories", storyRoutes);
 
 app.use("/api/communities", authMiddleware, communityRoutes);
 
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: 'Bienvenue sur l\'API Social Network',
-    version: '1.0.0',
+    message: "Bienvenue sur l'API Social Network",
+    version: "1.0.0",
   });
 });
 
 app.listen(port, () => {
   console.log(`port connected en http://localhost:${port}`);
 });
-
