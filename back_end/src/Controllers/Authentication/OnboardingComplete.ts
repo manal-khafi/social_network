@@ -17,13 +17,7 @@ export const OnboardingComplete = async (req: Request, res: Response) => {
 
         return res.status(200).json({
             success: true,
-            user: {
-                id: updatedUser.id,
-                email: updatedUser.email,
-                username: updatedUser.username,
-                role: updatedUser.role_id,
-                onboarding_done: updatedUser.onboarding_done,
-            },
+            user: updatedUser,
         });
     } catch (error) {
         console.error("Onboarding complete error:", error);

@@ -65,7 +65,7 @@ export const Login = async (req: Request, res: Response) => {
       });
     }
     const permissions =
-      user.role?.rolePermissions.map((rp: { permission: { code: string } }) => rp.permission.code) || [];
+      user.role?.rolePermissions.map((rp) => rp.permission.name) || [];
     
     const tokenPayload = {
       id: user.id,
@@ -74,6 +74,7 @@ export const Login = async (req: Request, res: Response) => {
       avatar_url: user.avatar_url ?? null,
       role: user.role?.name,
       permissions,
+      onboarding_done: user.onboarding_done
     };
 
     const token = generateAccessToken(tokenPayload);
@@ -85,8 +86,8 @@ export const Login = async (req: Request, res: Response) => {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', 
-      sameSite: 'lax', // Changed from 'strict' to 'lax'
-      maxAge: 24 * 60 * 60 * 1000 
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
     await prisma.user.update({

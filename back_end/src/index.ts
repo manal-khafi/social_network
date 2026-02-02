@@ -19,6 +19,7 @@ import twoFactorRouter from "./Routes/TwoFactorAuth";
 import communityRoutes from "./Routes/communityRoutes";
 import InboxRoutes from "./Routes/Inbox";
 import NotificationsRoutes from "./Routes/Notifications";
+import storyRoutes from "./Routes/story.routes";
 import { authMiddleware } from "./Middleware/authMiddlware";
 import { createHttpServer, initSocketServer } from "./sockets/socketServer";
 

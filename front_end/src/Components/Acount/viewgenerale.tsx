@@ -134,7 +134,7 @@ const PersonalizationWizard: React.FC = () => {
   const handleSkipToHome = async () => {
     try {
       await api.patch("/authentication/onboarding/complete");
-      dispatch(fetchMe());
+      await dispatch(fetchMe());
       navigate("/home");
     } catch (error) {
       console.error("Failed to mark onboarding as complete", error);
@@ -189,7 +189,7 @@ const PersonalizationWizard: React.FC = () => {
       console.log("JSON response:", result);
 
       await api.patch("/authentication/onboarding/complete");
-      dispatch(fetchMe());
+      await dispatch(fetchMe());
 
       localStorage.removeItem("setupWizardData");
 

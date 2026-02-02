@@ -10,11 +10,13 @@ import { Me } from "../Controllers/Authentication/Me";
 import { authLimiter, registerLimiter } from "../Middleware/rateLimiter";
 import { authMiddleware } from "../Middleware/authMiddlware";
 import { OnboardingComplete } from "../Controllers/Authentication/OnboardingComplete";
+import { refreshToken } from "../Controllers/Authentication/RefreshToken";
 
 const AuthenticationRoutes = Router();
 
 AuthenticationRoutes.post("/login", authLimiter, Login);
 AuthenticationRoutes.post("/logout", Logout);
+AuthenticationRoutes.post("/refresh-token", refreshToken);
 AuthenticationRoutes.get("/me", authMiddleware, Me);
 AuthenticationRoutes.patch("/onboarding/complete", authMiddleware, OnboardingComplete);
 AuthenticationRoutes.post("/", registerLimiter, Register);

@@ -125,7 +125,21 @@ export const deleteAccount = async (req: Request, res: Response) => {
     if (!ok) {
       return res.status(401).json({ success: false, message: "Incorrect password" });
     }
-    await prisma.user.delete({ where: { id: userId } });
+
+    // ✅ IMPORTANT: delete rows that reference the user first (prevents FK constraint errors)
+    await prisma.$transaction([
+      prisma.follow.deleteMany({
+        where: {
+          OR: [{ follower_id: userId }, { followed_id: userId }],
+        },
+      }),
+
+      // If you have other tables referencing User, add them here too (likes, comments, posts, etc.)
+
+      prisma.user.delete({
+        where: { id: userId },
+      }),
+    ]);
 
     return res.status(200).json({ success: true, message: "Account deleted" });
   } catch (error) {

@@ -90,6 +90,7 @@ enum ReportStatus {
   ACCEPTED
   REJECTED
 }
+
 enum CommunityType {
   tech
   health
@@ -126,10 +127,10 @@ model User {
   allow_mentions       Boolean  @default(true)
   show_activity_status Boolean  @default(true)
 
-  two_factor_enabled       Boolean  @default(false)
-  two_factor_secret        String?
-  two_factor_temp_secret   String?
-  two_factor_confirmed_at  DateTime?
+  two_factor_enabled      Boolean   @default(false)
+  two_factor_secret       String?
+  two_factor_temp_secret  String?
+  two_factor_confirmed_at DateTime?
 
   gender        String?
   date_of_birth DateTime?
@@ -170,11 +171,11 @@ model User {
   reportsReceived          Report[]                  @relation("UserReportsReceived")
 
   // Notifications authored by this user (sender)
-  sentNotifications        Notification[]            @relation("NotificationSender")
+  sentNotifications Notification[] @relation("NotificationSender")
 
   // Direct (1:1) conversations: canonical pair fields live on Conversation
-  directConversationsAsA   Conversation[]            @relation("DirectUserA")
-  directConversationsAsB   Conversation[]            @relation("DirectUserB")
+  directConversationsAsA Conversation[] @relation("DirectUserA")
+  directConversationsAsB Conversation[] @relation("DirectUserB")
 }
 
 model Follow {
@@ -185,8 +186,8 @@ model Follow {
   follower_id String
   followed_id String
 
-  follower User @relation("Follower", fields: [follower_id], references: [id])
-  followed User @relation("Followed", fields: [followed_id], references: [id])
+  follower User @relation("Follower", fields: [follower_id], references: [id], onDelete: Cascade)
+  followed User @relation("Followed", fields: [followed_id], references: [id], onDelete: Cascade)
 
   @@unique([follower_id, followed_id])
 }
@@ -215,7 +216,7 @@ model Post {
   updated_at  DateTime       @updatedAt
 
   user_id String
-  user    User   @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   // Relations
   reports  Report[]
@@ -237,8 +238,8 @@ model Comment {
   post_id           String
   parent_comment_id String?
 
-  user          User     @relation(fields: [user_id], references: [id])
-  post          Post     @relation(fields: [post_id], references: [id])
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post          Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
   parentComment Comment? @relation("CommentReplies", fields: [parent_comment_id], references: [id])
 
   // Relations
@@ -255,9 +256,9 @@ model Like {
   post_id    String?
   comment_id String?
 
-  user    User     @relation(fields: [user_id], references: [id])
-  post    Post?    @relation(fields: [post_id], references: [id])
-  comment Comment? @relation(fields: [comment_id], references: [id])
+  user    User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post    Post?    @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  comment Comment? @relation(fields: [comment_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, post_id, comment_id])
 }
@@ -270,8 +271,8 @@ model Share {
   user_id String
   post_id String
 
-  user User @relation(fields: [user_id], references: [id])
-  post Post @relation(fields: [post_id], references: [id])
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
 }
 
 model Repost {
@@ -282,8 +283,8 @@ model Repost {
   user_id          String
   original_post_id String
 
-  user         User @relation(fields: [user_id], references: [id])
-  originalPost Post @relation(fields: [original_post_id], references: [id])
+  user         User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  originalPost Post @relation(fields: [original_post_id], references: [id], onDelete: Cascade)
 }
 
 model Save {
@@ -293,8 +294,8 @@ model Save {
   user_id String
   post_id String
 
-  user User @relation(fields: [user_id], references: [id])
-  post Post @relation(fields: [post_id], references: [id])
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, post_id])
 }
@@ -312,7 +313,7 @@ model Story {
   created_at DateTime @default(now())
 
   user_id String
-  user    User   @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   // Relations
   views    StoryView[]
@@ -328,8 +329,8 @@ model StoryView {
   story_id  String
   viewer_id String
 
-  story  Story @relation(fields: [story_id], references: [id])
-  viewer User  @relation(fields: [viewer_id], references: [id])
+  story  Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
+  viewer User  @relation(fields: [viewer_id], references: [id], onDelete: Cascade)
 
   @@unique([story_id, viewer_id])
 }
@@ -341,7 +342,7 @@ model StoryLike {
   user_id  String
   story_id String
 
-  user  User  @relation(fields: [user_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   story Story @relation(fields: [story_id], references: [id])
 
   @@unique([user_id, story_id])
@@ -357,8 +358,8 @@ model StoryComment {
   user_id  String
   story_id String
 
-  user  User  @relation(fields: [user_id], references: [id])
-  story Story @relation(fields: [story_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  story Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
 }
 
 model CloseFriend {
@@ -368,8 +369,8 @@ model CloseFriend {
   user_id         String
   close_friend_id String
 
-  user        User @relation("User", fields: [user_id], references: [id])
-  closeFriend User @relation("CloseFriend", fields: [close_friend_id], references: [id])
+  user        User @relation("User", fields: [user_id], references: [id], onDelete: Cascade)
+  closeFriend User @relation("CloseFriend", fields: [close_friend_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, close_friend_id])
 }
@@ -385,8 +386,8 @@ model Conversation {
   direct_user_a_id String?
   direct_user_b_id String?
 
-  direct_user_a User? @relation("DirectUserA", fields: [direct_user_a_id], references: [id])
-  direct_user_b User? @relation("DirectUserB", fields: [direct_user_b_id], references: [id])
+  direct_user_a User? @relation("DirectUserA", fields: [direct_user_a_id], references: [id], onDelete: Cascade)
+  direct_user_b User? @relation("DirectUserB", fields: [direct_user_b_id], references: [id], onDelete: Cascade)
 
   // Relations
   messages     Message[]
@@ -402,8 +403,8 @@ model ConversationParticipant {
   user_id         String
 
   // Soft-delete per user (delete conversation for me)
-  is_deleted  Boolean   @default(false)
-  deleted_at  DateTime?
+  is_deleted Boolean   @default(false)
+  deleted_at DateTime?
 
   is_archived  Boolean   @default(false)
   archived_at  DateTime?
@@ -411,7 +412,7 @@ model ConversationParticipant {
   muted        Boolean   @default(false)
 
   conversation Conversation @relation(fields: [conversation_id], references: [id])
-  user         User         @relation(fields: [user_id], references: [id])
+  user         User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([conversation_id, user_id])
   @@index([user_id])
@@ -419,15 +420,15 @@ model ConversationParticipant {
 }
 
 model Message {
-  id           String      @id @default(uuid())
-  content      String?
-  is_edited    Boolean     @default(false)
-  is_deleted   Boolean     @default(false)
-  deleted_for_all Boolean  @default(false)
-  message_type MessageType @default(text)
-  payload      Json?
-  created_at   DateTime    @default(now())
-  updated_at   DateTime    @updatedAt
+  id              String      @id @default(uuid())
+  content         String?
+  is_edited       Boolean     @default(false)
+  is_deleted      Boolean     @default(false)
+  deleted_for_all Boolean     @default(false)
+  message_type    MessageType @default(text)
+  payload         Json?
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
 
   conversation_id String
   sender_id       String
@@ -448,14 +449,14 @@ model MessageStatus {
   status     MessageStatusEnum @default(sent)
 
   // Hide message for a single user (delete message for me)
-  is_hidden Boolean  @default(false)
+  is_hidden Boolean   @default(false)
   hidden_at DateTime?
 
   message_id String
   user_id    String
 
-  message Message @relation(fields: [message_id], references: [id])
-  user    User    @relation(fields: [user_id], references: [id])
+  message Message @relation(fields: [message_id], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([message_id, user_id])
   @@index([user_id])
@@ -463,21 +464,21 @@ model MessageStatus {
 }
 
 model CallLog {
-  id         String     @id @default(uuid())
-  call_type  CallType
-  status     CallStatus @default(ringing)
+  id        String     @id @default(uuid())
+  call_type CallType
+  status    CallStatus @default(ringing)
 
-  created_at DateTime   @default(now())
+  created_at  DateTime  @default(now())
   answered_at DateTime?
-  ended_at   DateTime?
+  ended_at    DateTime?
 
-  caller_id String
-  callee_id String
+  caller_id       String
+  callee_id       String
   conversation_id String?
 
-  caller User @relation("CallCaller", fields: [caller_id], references: [id])
-  callee User @relation("CallCallee", fields: [callee_id], references: [id])
-  conversation Conversation? @relation(fields: [conversation_id], references: [id])
+  caller       User          @relation("CallCaller", fields: [caller_id], references: [id], onDelete: Cascade)
+  callee       User          @relation("CallCallee", fields: [callee_id], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
 
   @@index([caller_id])
   @@index([callee_id])
@@ -495,7 +496,7 @@ model Community {
   created_at  DateTime      @default(now())
 
   created_by String
-  creator    User   @relation("Creator", fields: [created_by], references: [id])
+  creator    User   @relation("Creator", fields: [created_by], references: [id], onDelete: Cascade)
 
   // Relations
   members      CommunityMember[]
@@ -513,8 +514,8 @@ model CommunityMember {
   user_id      String
   role_id      String?
 
-  community Community @relation(fields: [community_id], references: [id])
-  user      User      @relation(fields: [user_id], references: [id])
+  community Community @relation(fields: [community_id], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   role      Role?     @relation(fields: [role_id], references: [id])
 
   @@unique([community_id, user_id])
@@ -545,8 +546,8 @@ model GroupMember {
   user_id  String
   role_id  String?
 
-  group Group @relation(fields: [group_id], references: [id])
-  user  User  @relation(fields: [user_id], references: [id])
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   role  Role? @relation(fields: [role_id], references: [id])
 
   @@unique([group_id, user_id])
@@ -563,9 +564,9 @@ model JoinRequest {
   community_id String?
   group_id     String?
 
-  user      User       @relation(fields: [user_id], references: [id])
-  community Community? @relation(fields: [community_id], references: [id])
-  group     Group?     @relation(fields: [group_id], references: [id])
+  user      User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  community Community? @relation(fields: [community_id], references: [id], onDelete: Cascade)
+  group     Group?     @relation(fields: [group_id], references: [id], onDelete: Cascade)
 }
 
 model Role {
@@ -618,25 +619,25 @@ model TypeNotification {
 }
 
 model Notification {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   source_id   String?
   source_type String?
   title       String
   message     String
-  is_read     Boolean  @default(false)
+  is_read     Boolean   @default(false)
   read_at     DateTime?
   metadata    Json?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @default(now()) @updatedAt
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @default(now()) @updatedAt
 
   user_id              String
   type_notification_id String
 
-  sender_id            String?
+  sender_id String?
 
-  user             User             @relation(fields: [user_id], references: [id])
+  user             User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
   typeNotification TypeNotification @relation(fields: [type_notification_id], references: [id])
-  sender           User?            @relation("NotificationSender", fields: [sender_id], references: [id])
+  sender           User?            @relation("NotificationSender", fields: [sender_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, is_read, created_at])
   @@index([sender_id])

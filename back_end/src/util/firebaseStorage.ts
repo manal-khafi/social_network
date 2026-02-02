@@ -2,6 +2,9 @@ import crypto from "crypto";
 import { bucket } from "../config/fireBase";
 
 export const createFirebaseDownloadUrl = (objectPath: string, token: string) => {
+  if (!bucket) {
+    throw new Error("Firebase Storage is not configured.");
+  }
   const encodedPath = encodeURIComponent(objectPath);
   return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media&token=${token}`;
 };
@@ -12,6 +15,9 @@ export const uploadBufferToFirebaseStorage = async (args: {
   contentType?: string;
   cacheControl?: string;
 }) => {
+  if (!bucket) {
+    throw new Error("Firebase Storage is not configured.");
+  }
   const token =
     typeof (crypto as any).randomUUID === "function"
       ? (crypto as any).randomUUID()
