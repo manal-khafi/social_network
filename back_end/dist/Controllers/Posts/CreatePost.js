@@ -5,6 +5,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createPost = void 0;
 const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
+const notificationService_1 = require("../../../src/Service/notificationService");
+const notificationRealtime_1 = require("../../../src/Service/notificationRealtime");
+const extractMentions = (text) => {
+    const out = new Set();
+    const re = /@([a-zA-Z0-9_]{2,30})/g;
+    let m;
+    while ((m = re.exec(text))) {
+        out.add(m[1]);
+    }
+    return Array.from(out);
+};
 const createPost = async (req, res) => {
     try {
         if (!req.user?.id) {
@@ -43,7 +54,7 @@ const createPost = async (req, res) => {
                 _count: {
                     select: {
                         likes: true,
-                        comments: { where: { is_deleted: false } },
+                        comments: true,
                         shares: true,
                         saves: true,
                     },
@@ -70,6 +81,41 @@ const createPost = async (req, res) => {
             commentsAllowed: true,
             likesVisible: true,
         };
+        // Mentions inside post content
+        try {
+            const mentions = extractMentions(content);
+            if (mentions.length) {
+                const sender = post.user;
+                const senderName = sender.display_name || sender.username || "Someone";
+                const mentionedUsers = await prismaClient_1.default.user.findMany({
+                    where: { username: { in: mentions } },
+                    select: { id: true },
+                });
+                for (const u of mentionedUsers) {
+                    if (u.id === req.user.id)
+                        continue;
+                    const notif = await (0, notificationService_1.createNotification)({
+                        userId: u.id,
+                        code: "POST_MENTION",
+                        title: "Mention",
+                        message: `${senderName} mentioned you in a post`,
+                        senderId: req.user.id,
+                        sourceId: post.id,
+                        sourceType: "post",
+                        metadata: { postId: post.id },
+                    });
+                    await (0, notificationRealtime_1.emitNotificationNew)({
+                        receiverId: u.id,
+                        kind: "mention",
+                        notification: notif,
+                        extra: { postId: post.id },
+                    });
+                }
+            }
+        }
+        catch {
+            // ignore
+        }
         return res
             .status(201)
             .json({ message: "Post created successfully", post: normalizedPost });

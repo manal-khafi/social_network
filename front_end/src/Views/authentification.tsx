@@ -4,7 +4,6 @@ import { AnimatePresence } from "framer-motion";
 import { LoginScreen } from "../Components/Authentication/auth/LoginScreen.tsx";
 import { RegisterScreen } from "../Components/Authentication/auth/RegisterScreen.tsx";
 import { ForgotPasswordScreen } from "../Components/Authentication/auth/ForgotPasswordScreen.tsx";
-import { ResetPasswordScreen } from "../Components/Authentication/auth/resetPassword.tsx";
 import { LeftSide } from "../Components/Authentication/auth/LeftSide.tsx";
 
 type Screen = "login" | "register" | "forgotPassword";
@@ -44,12 +43,6 @@ export default function AuthView() {
           {currentScreen === "forgotPassword" && (
             <ForgotPasswordScreen
               key="forgotPassword"
-              onSwitchToLogin={() => setCurrentScreen("login")}
-            />
-          )}
-          {currentScreen === "resetPassword" && (
-            <ResetPasswordScreen
-              key="resetPassword"
               onSwitchToLogin={() => setCurrentScreen("login")}
             />
           )}

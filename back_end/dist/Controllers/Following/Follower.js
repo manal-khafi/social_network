@@ -17,7 +17,16 @@ const Follower = async (req, res) => {
                 status: "accepted",
             },
             include: {
-                follower: true,
+                follower: {
+                    select: {
+                        id: true,
+                        username: true,
+                        display_name: true,
+                        avatar_url: true,
+                        is_private: true,
+                        cover_image: true,
+                    },
+                },
             },
             orderBy: { created_at: "desc" },
         });
@@ -27,7 +36,7 @@ const Follower = async (req, res) => {
                 status: "accepted",
             },
         });
-        const followerIds = followers.map((f) => f.follower.id).filter((id) => id !== undefined);
+        const followerIds = followers.map((f) => f.follower.id);
         let viewerFollowingIds = new Set();
         if (viewerId && followerIds.length > 0) {
             const viewerFollows = await prismaClient_1.default.follow.findMany({

@@ -1,180 +1,125 @@
-import prisma from '../util/prisma';
+import prisma from "../config/prismaClient";
 
-export class NotificationService {
-  /**
-   * Crée une notification pour une vue de story
-   */
-  static async createStoryViewNotification(
-    storyOwnerId: string,
-    viewerId: string,
-    storyId: string
-  ) {
-    // Récupérer ou créer le type de notification pour les vues de stories
-    let typeNotification = await prisma.typeNotification.findUnique({
-      where: { code: 'story_view' },
-    });
+export type NotificationCode =
+  // Posts
+  | "POST_LIKED"
+  | "POST_COMMENTED"
+  | "COMMENT_REPLIED"
+  | "POST_REPOSTED"
+  | "POST_MENTION"
+  | "COMMENT_MENTION"
+  | "FOLLOWED_USER_POSTED"
 
-    if (!typeNotification) {
-      typeNotification = await prisma.typeNotification.create({
-        data: {
-          code: 'story_view',
-          name: 'Vue de story',
-          description: 'Quelqu\'un a vu votre story',
-        },
-      });
-    }
+  // Social
+  | "FOLLOW_REQUEST"
+  | "FOLLOW_ACCEPTED"
+  | "FOLLOW_REJECTED"
+  | "USER_FOLLOWED"
 
-    const viewer = await prisma.user.findUnique({
-      where: { id: viewerId },
-      select: { username: true, display_name: true },
-    });
+  | "INBOX_MESSAGE_NEW"
+  | "INBOX_MESSAGE_EDITED"
+  | "INBOX_MESSAGE_DELETED"
+  | "CALL_INCOMING"
+  | "CALL_ACCEPTED"
+  | "CALL_REJECTED"
+  | "CALL_ENDED"
 
-    await prisma.notification.create({
-      data: {
-        user_id: storyOwnerId,
-        type_notification_id: typeNotification.id,
-        source_id: storyId,
-        source_type: 'story',
-        title: 'Nouvelle vue sur votre story',
-        message: `${viewer?.display_name || viewer?.username || 'Quelqu\'un'} a vu votre story`,
-        metadata: {
-          viewer_id: viewerId,
-          story_id: storyId,
-        },
-      },
-    });
-  }
+  // System
+  | "SYSTEM_WELCOME"
+  | "SYSTEM_ALERT";
 
-  /**
-   * Crée une notification pour un like sur une story
-   */
-  static async createStoryLikeNotification(
-    storyOwnerId: string,
-    likerId: string,
-    storyId: string
-  ) {
-    let typeNotification = await prisma.typeNotification.findUnique({
-      where: { code: 'story_like' },
-    });
+const ensureTypeNotification = async (code: NotificationCode) => {
+  const existing = await prisma.typeNotification.findUnique({ where: { code } });
+  if (existing) return existing;
 
-    if (!typeNotification) {
-      typeNotification = await prisma.typeNotification.create({
-        data: {
-          code: 'story_like',
-          name: 'Like sur story',
-          description: 'Quelqu\'un a aimé votre story',
-        },
-      });
-    }
+  const nameMap: Record<NotificationCode, string> = {
+    POST_LIKED: "Post liked",
+    POST_COMMENTED: "New comment",
+    COMMENT_REPLIED: "New reply",
+    POST_REPOSTED: "Post reposted",
+    POST_MENTION: "Mention",
+    COMMENT_MENTION: "Mention",
+    FOLLOWED_USER_POSTED: "New post",
 
-    const liker = await prisma.user.findUnique({
-      where: { id: likerId },
-      select: { username: true, display_name: true },
-    });
+    FOLLOW_REQUEST: "Follow request",
+    FOLLOW_ACCEPTED: "Follow request accepted",
+    FOLLOW_REJECTED: "Follow request rejected",
+    USER_FOLLOWED: "New follower",
 
-    await prisma.notification.create({
-      data: {
-        user_id: storyOwnerId,
-        type_notification_id: typeNotification.id,
-        source_id: storyId,
-        source_type: 'story',
-        title: 'Nouveau like sur votre story',
-        message: `${liker?.display_name || liker?.username || 'Quelqu\'un'} a aimé votre story`,
-        metadata: {
-          liker_id: likerId,
-          story_id: storyId,
-        },
-      },
-    });
-  }
+    INBOX_MESSAGE_NEW: "New message",
+    INBOX_MESSAGE_EDITED: "Message edited",
+    INBOX_MESSAGE_DELETED: "Message deleted",
+    CALL_INCOMING: "Incoming call",
+    CALL_ACCEPTED: "Call accepted",
+    CALL_REJECTED: "Call rejected",
+    CALL_ENDED: "Call ended",
 
-  /**
-   * Crée une notification pour un commentaire sur une story
-   */
-  static async createStoryCommentNotification(
-    storyOwnerId: string,
-    commenterId: string,
-    storyId: string,
-    commentId: string
-  ) {
-    let typeNotification = await prisma.typeNotification.findUnique({
-      where: { code: 'story_comment' },
-    });
+    SYSTEM_WELCOME: "Welcome",
+    SYSTEM_ALERT: "System alert",
+  };
 
-    if (!typeNotification) {
-      typeNotification = await prisma.typeNotification.create({
-        data: {
-          code: 'story_comment',
-          name: 'Commentaire sur story',
-          description: 'Quelqu\'un a commenté votre story',
-        },
-      });
-    }
+  return prisma.typeNotification.create({
+    data: {
+      code,
+      name: nameMap[code],
+    },
+  });
+};
 
-    const commenter = await prisma.user.findUnique({
-      where: { id: commenterId },
-      select: { username: true, display_name: true },
-    });
+export const createNotification = async (args: {
+  userId: string; // receiver
+  code: NotificationCode;
+  title: string;
+  message: string;
+  senderId?: string;
+  sourceId?: string;
+  sourceType?: string;
+  metadata?: any;
+}) => {
+  const type = await ensureTypeNotification(args.code);
 
-    await prisma.notification.create({
-      data: {
-        user_id: storyOwnerId,
-        type_notification_id: typeNotification.id,
-        source_id: storyId,
-        source_type: 'story',
-        title: 'Nouveau commentaire sur votre story',
-        message: `${commenter?.display_name || commenter?.username || 'Quelqu\'un'} a commenté votre story`,
-        metadata: {
-          commenter_id: commenterId,
-          story_id: storyId,
-          comment_id: commentId,
-        },
-      },
-    });
-  }
+  return prisma.notification.create({
+    data: {
+      user_id: args.userId,
+      type_notification_id: type.id,
+      title: args.title,
+      message: args.message,
+      source_id: args.sourceId ?? null,
+      source_type: args.sourceType ?? null,
+      metadata: args.metadata ?? null,
+      sender_id: args.senderId ?? null,
+    },
+    include: {
+      typeNotification: { select: { code: true, name: true } },
+      sender: { select: { id: true, username: true, display_name: true, avatar_url: true } },
+    },
+  });
+};
 
-  /**
-   * Crée une notification pour un message privé lié à une story
-   */
-  static async createStoryMessageNotification(
-    storyOwnerId: string,
-    senderId: string,
-    storyId: string,
-    messageId: string
-  ) {
-    let typeNotification = await prisma.typeNotification.findUnique({
-      where: { code: 'story_message' },
-    });
+export const getUnreadNotificationCount = async (userId: string) => {
+  return prisma.notification.count({ where: { user_id: userId, is_read: false } });
+};
 
-    if (!typeNotification) {
-      typeNotification = await prisma.typeNotification.create({
-        data: {
-          code: 'story_message',
-          name: 'Message sur story',
-          description: 'Quelqu\'un vous a envoyé un message en réponse à votre story',
-        },
-      });
-    }
+export const markNotificationRead = async (args: { userId: string; notificationId: string }) => {
+  const existing = await prisma.notification.findFirst({
+    where: { id: args.notificationId, user_id: args.userId },
+    select: { id: true, is_read: true },
+  });
+  if (!existing) return { ok: false as const, notFound: true as const };
+  if (existing.is_read) return { ok: true as const, alreadyRead: true as const };
 
-    const sender = await prisma.user.findUnique({
-      where: { id: senderId },
-      select: { username: true, display_name: true },
-    });
+  await prisma.notification.update({
+    where: { id: args.notificationId },
+    data: { is_read: true, read_at: new Date() },
+  });
 
-    await prisma.notification.create({
-      data: {
-        user_id: storyOwnerId,
-        type_notification_id: typeNotification.id,
-        source_id: storyId,
-        source_type: 'story',
-        title: 'Nouveau message sur votre story',
-        message: `${sender?.display_name || sender?.username || 'Quelqu\'un'} vous a envoyé un message`,
-        metadata: {
-          sender_id: senderId,
-          story_id: storyId,
-          message_id: messageId,
-        },
-      },
-    });
-  }
-}
+  return { ok: true as const };
+};
+
+export const markAllNotificationsRead = async (args: { userId: string }) => {
+  await prisma.notification.updateMany({
+    where: { user_id: args.userId, is_read: false },
+    data: { is_read: true, read_at: new Date() },
+  });
+  return { ok: true as const };
+};

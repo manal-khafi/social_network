@@ -38,6 +38,7 @@ export interface Post {
   likesVisible: boolean;
   originalPost?: {
     id: string;
+    userId?: string;
     username: string;
     content: string;
   };
@@ -50,6 +51,7 @@ interface PostsState {
   myPosts: Post[];
   myReposts: Post[];
   userPosts: { [userId: string]: Post[] };
+  userReposts: { [userId: string]: Post[] };
   postComments: { [postId: string]: { comments: Comment[]; postOwnerId: string } };
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   loadMoreStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -369,7 +371,7 @@ const postsSlice = createSlice({
       // This is a simple approach; a more granular approach would filter comments within posts
       for (const postId in state.postComments) {
         // Check if any comment in this post's comments belongs to the user being blocked
-        if (state.postComments[postId].some(comment => comment.userId === userIdToRemove)) {
+        if (state.postComments[postId].comments.some((comment: Comment) => comment.userId === userIdToRemove)) {
           delete state.postComments[postId];
         }
       }

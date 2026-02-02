@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
-import { isBlockedEitherWay } from "../../services/BlockService";
+import { isBlockedEitherWay } from "../../Service/BlockService";
+import { createNotification } from "../../Service/notificationService";
+import { emitNotificationNew } from "../../Service/notificationRealtime";
 
 export const toggleRepost = async (req: Request, res: Response) => {
   try {
@@ -45,6 +47,30 @@ export const toggleRepost = async (req: Request, res: Response) => {
     await prisma.repost.create({
       data: { user_id: userId, original_post_id: postId },
     });
+
+    // Notify post owner
+    if (post.user_id && post.user_id !== userId) {
+      try {
+        const notif = await createNotification({
+          userId: post.user_id,
+          code: "POST_REPOSTED",
+          title: "Post reposted",
+          message: "reposted your post",
+          senderId: userId,
+          sourceId: postId,
+          sourceType: "post",
+          metadata: { postId },
+        });
+        await emitNotificationNew({
+          receiverId: post.user_id,
+          kind: "repost",
+          notification: notif,
+          extra: { postId },
+        });
+      } catch {
+        // ignore
+      }
+    }
 
     const updatedPost = await prisma.post.findUnique({
       where: { id: postId },

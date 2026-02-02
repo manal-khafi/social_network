@@ -4,12 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
+const notificationService_1 = require("../../../src/Service/notificationService");
+const notificationRealtime_1 = require("../../../src/Service/notificationRealtime");
 const Acceptdemande = async (req, res) => {
     try {
         const demandeId = req.params.demandeId; // string UUID
-        if (typeof demandeId !== 'string') {
-            return res.status(400).json({ message: "Invalid ID" });
-        }
         const userId = req.user?.id; // string UUID depuis token
         if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
@@ -33,6 +32,31 @@ const Acceptdemande = async (req, res) => {
             where: { id: demandeId },
             data: { status: "accepted" }
         });
+        // Notify the follower that their request was accepted
+        try {
+            const receiverId = followRequest.follower_id;
+            if (receiverId && receiverId !== userId) {
+                const notif = await (0, notificationService_1.createNotification)({
+                    userId: receiverId,
+                    code: "FOLLOW_ACCEPTED",
+                    title: "Follow request accepted",
+                    message: "accepted your follow request",
+                    senderId: userId,
+                    sourceId: userId,
+                    sourceType: "user",
+                    metadata: { followedId: userId },
+                });
+                await (0, notificationRealtime_1.emitNotificationNew)({
+                    receiverId,
+                    kind: "follow",
+                    notification: notif,
+                    extra: { followedId: userId },
+                });
+            }
+        }
+        catch {
+            // ignore
+        }
         res.status(200).json({ message: "Follow request accepted" });
     }
     catch (error) {

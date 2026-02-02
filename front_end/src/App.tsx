@@ -16,6 +16,7 @@ import CreatePostView from "./Views/post/CreatePostView";
 import StoryViewerView from "./Views/story/StoryViewerView";
 import InboxView from "./Views/inbox/InboxView";
 import ChatView from "./Views/inbox/ChatView";
+import ArchivedChatsView from "./Views/inbox/ArchivedChatsView";
 import NotificationsView from "./Views/notifications/NotificationsView";
 import SearchView from "./Views/search/SearchView";
 import MyProfileView from "./Views/profile/MyProfileView";
@@ -68,7 +69,7 @@ function AppContent() {
       <Route path="/" element={<AuthView />} />
       <Route
         path="/forgot-password"
-        element={<ForgotPasswordScreen onBack={() => {}} />}
+        element={<ForgotPasswordScreen onSwitchToLogin={() => navigate("/")} />}
       />
       <Route path="/reset-password" element={<ResetPasswordScreen />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
@@ -91,10 +92,7 @@ function AppContent() {
           <Route
             path="community/list"
             element={
-              <CommunityList
-                onSelectCommunity={(id) => navigate(`/home/community/${id}`)}
-                onCreateClick={() => navigate(`/home/community/create`)}
-              />
+              <CommunityList />
             }
           />
 
@@ -105,15 +103,11 @@ function AppContent() {
 
           <Route
             path="community/create"
-            element={
-              <CreateCommunity
-                onBack={() => navigate(-1)}
-                onSubmit={(data) => console.log(data)}
-              />
-            }
+            element={<CreateCommunity />}
           />
 
           <Route path="inbox" element={<InboxView />} />
+          <Route path="inbox/archived" element={<ArchivedChatsView />} />
           <Route path="inbox/:conversationId" element={<ChatView />} />
           <Route path="notifications" element={<NotificationsView />} />
 

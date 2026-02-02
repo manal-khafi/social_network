@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import prisma from '../../config/prismaClient';
-import { isBlockedEitherWay } from '../../services/BlockService';
+import { isBlockedEitherWay } from '../../Service/BlockService';
+import { createNotification } from '../../Service/notificationService';
+import { emitNotificationNew } from '../../Service/notificationRealtime';
 
 export const toggleLike = async (req: Request, res: Response) => {
     try {
@@ -76,13 +78,33 @@ export const toggleLike = async (req: Request, res: Response) => {
         }
 
         //like
-        await prisma.like.create({
+        const createdLike = await prisma.like.create({
             data: {
                 user_id: userId!,
                 post_id: targetPostId,
                 comment_id: targetCommentId,
             },
         });
+
+        // Realtime notification (posts only)
+        if (targetPostId && targetOwnerId && targetOwnerId !== userId) {
+            const notif = await createNotification({
+                userId: targetOwnerId,
+                code: 'POST_LIKED',
+                title: 'Post liked',
+                message: 'liked your post',
+                senderId: userId,
+                sourceId: targetPostId,
+                sourceType: 'post',
+                metadata: { postId: targetPostId, likeId: createdLike.id },
+            });
+            await emitNotificationNew({
+                receiverId: targetOwnerId,
+                kind: 'like',
+                notification: notif,
+                extra: { postId: targetPostId },
+            });
+        }
         
         // Get updated counts
         const post = targetPostId ? await prisma.post.findUnique({

@@ -43,6 +43,22 @@ enum MessageType {
   image
   video
   file
+  sticker
+  audio
+  location
+}
+
+enum CallType {
+  audio
+  video
+}
+
+enum CallStatus {
+  ringing
+  accepted
+  rejected
+  missed
+  ended
 }
 
 enum MessageStatusEnum {
@@ -148,8 +164,17 @@ model User {
   groupMembers             GroupMember[]
   joinRequests             JoinRequest[]
   notifications            Notification[]
+  callsMade                CallLog[]                 @relation("CallCaller")
+  callsReceived            CallLog[]                 @relation("CallCallee")
   reportsMade              Report[]                  @relation("UserReportsMade")
   reportsReceived          Report[]                  @relation("UserReportsReceived")
+
+  // Notifications authored by this user (sender)
+  sentNotifications        Notification[]            @relation("NotificationSender")
+
+  // Direct (1:1) conversations: canonical pair fields live on Conversation
+  directConversationsAsA   Conversation[]            @relation("DirectUserA")
+  directConversationsAsB   Conversation[]            @relation("DirectUserB")
 }
 
 model Follow {
@@ -355,9 +380,20 @@ model Conversation {
   is_group   Boolean  @default(false)
   created_at DateTime @default(now())
 
+  // Direct conversations: canonical user pair (A,B) where A < B.
+  // Group conversations keep these NULL.
+  direct_user_a_id String?
+  direct_user_b_id String?
+
+  direct_user_a User? @relation("DirectUserA", fields: [direct_user_a_id], references: [id])
+  direct_user_b User? @relation("DirectUserB", fields: [direct_user_b_id], references: [id])
+
   // Relations
   messages     Message[]
   participants ConversationParticipant[]
+  callLogs     CallLog[]
+
+  @@unique([direct_user_a_id, direct_user_b_id])
 }
 
 model ConversationParticipant {
@@ -365,10 +401,21 @@ model ConversationParticipant {
   conversation_id String
   user_id         String
 
+  // Soft-delete per user (delete conversation for me)
+  is_deleted  Boolean   @default(false)
+  deleted_at  DateTime?
+
+  is_archived  Boolean   @default(false)
+  archived_at  DateTime?
+  last_read_at DateTime?
+  muted        Boolean   @default(false)
+
   conversation Conversation @relation(fields: [conversation_id], references: [id])
   user         User         @relation(fields: [user_id], references: [id])
 
   @@unique([conversation_id, user_id])
+  @@index([user_id])
+  @@index([conversation_id])
 }
 
 model Message {
@@ -376,7 +423,9 @@ model Message {
   content      String?
   is_edited    Boolean     @default(false)
   is_deleted   Boolean     @default(false)
+  deleted_for_all Boolean  @default(false)
   message_type MessageType @default(text)
+  payload      Json?
   created_at   DateTime    @default(now())
   updated_at   DateTime    @updatedAt
 
@@ -394,8 +443,13 @@ model Message {
 
 model MessageStatus {
   id         String            @id @default(uuid())
-  updated_at DateTime          @default(now())
+  created_at DateTime          @default(now())
+  updated_at DateTime          @updatedAt
   status     MessageStatusEnum @default(sent)
+
+  // Hide message for a single user (delete message for me)
+  is_hidden Boolean  @default(false)
+  hidden_at DateTime?
 
   message_id String
   user_id    String
@@ -404,6 +458,30 @@ model MessageStatus {
   user    User    @relation(fields: [user_id], references: [id])
 
   @@unique([message_id, user_id])
+  @@index([user_id])
+  @@index([message_id])
+}
+
+model CallLog {
+  id         String     @id @default(uuid())
+  call_type  CallType
+  status     CallStatus @default(ringing)
+
+  created_at DateTime   @default(now())
+  answered_at DateTime?
+  ended_at   DateTime?
+
+  caller_id String
+  callee_id String
+  conversation_id String?
+
+  caller User @relation("CallCaller", fields: [caller_id], references: [id])
+  callee User @relation("CallCallee", fields: [callee_id], references: [id])
+  conversation Conversation? @relation(fields: [conversation_id], references: [id])
+
+  @@index([caller_id])
+  @@index([callee_id])
+  @@index([conversation_id])
 }
 
 model Community {
@@ -546,14 +624,22 @@ model Notification {
   title       String
   message     String
   is_read     Boolean  @default(false)
+  read_at     DateTime?
   metadata    Json?
   created_at  DateTime @default(now())
+  updated_at  DateTime @default(now()) @updatedAt
 
   user_id              String
   type_notification_id String
 
+  sender_id            String?
+
   user             User             @relation(fields: [user_id], references: [id])
   typeNotification TypeNotification @relation(fields: [type_notification_id], references: [id])
+  sender           User?            @relation("NotificationSender", fields: [sender_id], references: [id])
+
+  @@index([user_id, is_read, created_at])
+  @@index([sender_id])
 }
 
 model Report {

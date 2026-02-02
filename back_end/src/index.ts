@@ -17,8 +17,10 @@ import SaveRoutes from "./Routes/saveRoutes";
 import PrivacySettingsRoutes from "./Routes/privacySEttingsRoutes";
 import twoFactorRouter from "./Routes/TwoFactorAuth";
 import communityRoutes from "./Routes/communityRoutes";
+import InboxRoutes from "./Routes/Inbox";
+import NotificationsRoutes from "./Routes/Notifications";
 import { authMiddleware } from "./Middleware/authMiddlware";
-import storyRoutes from "./Routes/story.routes";
+import { createHttpServer, initSocketServer } from "./sockets/socketServer";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -83,6 +85,8 @@ app.use("/api/auth", twoFactorRouter);
 app.use("/api/stories", storyRoutes);
 
 app.use("/api/communities", authMiddleware, communityRoutes);
+app.use("/api/inbox", InboxRoutes);
+app.use("/api/notifications", NotificationsRoutes);
 
 app.get("/", (req, res) => {
   res.json({
@@ -92,6 +96,9 @@ app.get("/", (req, res) => {
   });
 });
 
-app.listen(port, () => {
+const httpServer = createHttpServer(app);
+initSocketServer(httpServer, allowedOrigins);
+
+httpServer.listen(port, () => {
   console.log(`port connected en http://localhost:${port}`);
 });

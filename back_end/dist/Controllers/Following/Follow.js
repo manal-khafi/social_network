@@ -4,13 +4,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
-const BlockService_1 = require("../../services/BlockService");
+const BlockService_1 = require("../../../src/Service/BlockService");
+const notificationService_1 = require("../../../src/Service/notificationService");
+const notificationRealtime_1 = require("../../../src/Service/notificationRealtime");
 const Follow = async (req, res) => {
     try {
         const userIdToFollow = req.params.userIdToFollow; // déjà string
-        if (typeof userIdToFollow !== 'string') {
-            return res.status(400).json({ message: "Invalid user ID" });
-        }
         const userId = req.user?.id; // Auth user (string UUID)
         // 1️⃣ Vérifier que l’utilisateur est authentifié
         if (!userId) {
@@ -51,6 +50,25 @@ const Follow = async (req, res) => {
                     status: "pending"
                 }
             });
+            // notify followed user about follow request
+            if (userIdToFollow !== userId) {
+                const notif = await (0, notificationService_1.createNotification)({
+                    userId: userIdToFollow,
+                    code: "FOLLOW_REQUEST",
+                    title: "Follow request",
+                    message: "sent you a follow request",
+                    senderId: userId,
+                    sourceId: userId,
+                    sourceType: "user",
+                    metadata: { followerId: userId },
+                });
+                await (0, notificationRealtime_1.emitNotificationNew)({
+                    receiverId: userIdToFollow,
+                    kind: "follow",
+                    notification: notif,
+                    extra: { followerId: userId },
+                });
+            }
             return res.status(201).json({ message: "Follow request sent", status: "PENDING" });
         }
         // 6️⃣ Sinon follow direct → accepted
@@ -61,6 +79,25 @@ const Follow = async (req, res) => {
                 status: "accepted"
             }
         });
+        // notify followed user about new follower
+        if (userIdToFollow !== userId) {
+            const notif = await (0, notificationService_1.createNotification)({
+                userId: userIdToFollow,
+                code: "USER_FOLLOWED",
+                title: "New follower",
+                message: "started following you",
+                senderId: userId,
+                sourceId: userId,
+                sourceType: "user",
+                metadata: { followerId: userId },
+            });
+            await (0, notificationRealtime_1.emitNotificationNew)({
+                receiverId: userIdToFollow,
+                kind: "follow",
+                notification: notif,
+                extra: { followerId: userId },
+            });
+        }
         return res.status(201).json({ message: "Successfully followed the user", status: "ACCEPTED" });
     }
     catch (error) {

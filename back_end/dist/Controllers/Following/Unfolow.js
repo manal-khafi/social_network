@@ -4,13 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
-const BlockService_1 = require("../../services/BlockService");
+const BlockService_1 = require("../../../src/Service/BlockService");
 const Unfollow = async (req, res) => {
     try {
         const userIdToUnfollow = req.params.userIdToUnfollow;
-        if (typeof userIdToUnfollow !== 'string') {
-            return res.status(400).json({ message: "Invalid user ID" });
-        }
         const userId = req.user?.id;
         if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });

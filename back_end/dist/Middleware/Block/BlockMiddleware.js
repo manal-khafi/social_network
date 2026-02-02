@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkBlockMiddleware = void 0;
-const BlockService_1 = require("../../services/BlockService");
+const BlockService_1 = require("../../../src/Service/BlockService");
 const checkBlockMiddleware = async (req, res, next) => {
     try {
         const userId = req.user?.id;

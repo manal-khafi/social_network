@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.searchAccounts = void 0;
 const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
 const jwt_1 = require("../../util/jwt");
-const BlockService_1 = require("../../services/BlockService");
+const BlockService_1 = require("../../../src/Service/BlockService");
 const searchAccounts = async (req, res) => {
     try {
         const rawQuery = String(req.query.q ?? "").trim();

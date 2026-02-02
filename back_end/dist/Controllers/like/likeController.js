@@ -5,7 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.toggleLike = void 0;
 const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
-const BlockService_1 = require("../../services/BlockService");
+const BlockService_1 = require("../../../src/Service/BlockService");
+const notificationService_1 = require("../../../src/Service/notificationService");
+const notificationRealtime_1 = require("../../../src/Service/notificationRealtime");
 const toggleLike = async (req, res) => {
     try {
         const userId = req.user?.id;
@@ -72,17 +74,36 @@ const toggleLike = async (req, res) => {
             });
         }
         //like
-        await prismaClient_1.default.like.create({
+        const createdLike = await prismaClient_1.default.like.create({
             data: {
                 user_id: userId,
                 post_id: targetPostId,
                 comment_id: targetCommentId,
             },
         });
+        // Realtime notification (posts only)
+        if (targetPostId && targetOwnerId && targetOwnerId !== userId) {
+            const notif = await (0, notificationService_1.createNotification)({
+                userId: targetOwnerId,
+                code: 'POST_LIKED',
+                title: 'Post liked',
+                message: 'liked your post',
+                senderId: userId,
+                sourceId: targetPostId,
+                sourceType: 'post',
+                metadata: { postId: targetPostId, likeId: createdLike.id },
+            });
+            await (0, notificationRealtime_1.emitNotificationNew)({
+                receiverId: targetOwnerId,
+                kind: 'like',
+                notification: notif,
+                extra: { postId: targetPostId },
+            });
+        }
         // Get updated counts
         const post = targetPostId ? await prismaClient_1.default.post.findUnique({
             where: { id: targetPostId },
-            select: { _count: { select: { likes: true } } }
+            include: { _count: { select: { likes: true } } }
         }) : null;
         return res.json({
             liked: true,

@@ -5,7 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.toggleRepost = void 0;
 const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
-const BlockService_1 = require("../../services/BlockService");
+const BlockService_1 = require("../../../src/Service/BlockService");
+const notificationService_1 = require("../../../src/Service/notificationService");
+const notificationRealtime_1 = require("../../../src/Service/notificationRealtime");
 const toggleRepost = async (req, res) => {
     try {
         const userId = req.user?.id;
@@ -41,9 +43,33 @@ const toggleRepost = async (req, res) => {
         await prismaClient_1.default.repost.create({
             data: { user_id: userId, original_post_id: postId },
         });
+        // Notify post owner
+        if (post.user_id && post.user_id !== userId) {
+            try {
+                const notif = await (0, notificationService_1.createNotification)({
+                    userId: post.user_id,
+                    code: "POST_REPOSTED",
+                    title: "Post reposted",
+                    message: "reposted your post",
+                    senderId: userId,
+                    sourceId: postId,
+                    sourceType: "post",
+                    metadata: { postId },
+                });
+                await (0, notificationRealtime_1.emitNotificationNew)({
+                    receiverId: post.user_id,
+                    kind: "repost",
+                    notification: notif,
+                    extra: { postId },
+                });
+            }
+            catch {
+                // ignore
+            }
+        }
         const updatedPost = await prismaClient_1.default.post.findUnique({
             where: { id: postId },
-            select: { _count: { select: { reposts: true, shares: true } } }
+            include: { _count: { select: { reposts: true, shares: true } } }
         });
         return res.json({
             reposted: true,

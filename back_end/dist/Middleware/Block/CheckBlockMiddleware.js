@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkBlockMiddleware = void 0;
-const BlockService_1 = require("../../services/BlockService");
+const BlockService_1 = require("../../../src/Service/BlockService");
 /**
  * Middleware pour vérifier les blocages avant d'autoriser une action
  * Utiliser sur les routes où le blocage doit empêcher l'interaction

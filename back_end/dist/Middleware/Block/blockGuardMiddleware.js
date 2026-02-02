@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.blockGuard = void 0;
-const BlockService_1 = require("../../services/BlockService");
+const BlockService_1 = require("../../../src/Service/BlockService");
 const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
 const blockGuard = (options) => {
     return async (req, res, next) => {

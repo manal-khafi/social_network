@@ -1,21 +1,20 @@
-import React, { ButtonHTMLAttributes } from "react";
-import { motion } from "framer-motion";
+import type { ReactNode } from "react";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { Loader } from "./Loader";
 
-
-interface AuthButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+type AuthButtonProps = Omit<HTMLMotionProps<"button">, "children"> & {
   variant?: "primary" | "secondary";
   isLoading?: boolean;
-  children: React.ReactNode;
-}
+  children: ReactNode;
+};
 
-export const AuthButton: React.FC<AuthButtonProps> = ({
+export const AuthButton = ({
   variant = "primary",
   isLoading = false,
   children,
   disabled,
   ...props
-}) => {
+}: AuthButtonProps) => {
   const isPrimary = variant === "primary";
   
   return (

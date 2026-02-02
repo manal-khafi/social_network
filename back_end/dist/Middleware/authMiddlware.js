@@ -10,6 +10,7 @@ const authMiddleware = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
         const hasBearer = authHeader?.startsWith("Bearer ");
+        // ✅ If no access token, try refresh token instead of failing immediately
         if (!hasBearer) {
             const refreshToken = req.cookies?.refreshToken || req.headers["x-refresh-token"];
             if (!refreshToken) {

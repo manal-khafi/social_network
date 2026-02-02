@@ -41,6 +41,14 @@ export default function MyProfileView() {
     (state) => state.posts
   );
 
+  const user = currentUser ?? authUser;
+  const displayName =
+    user && typeof user === "object" && "display_name" in user
+      ? (user as any).display_name
+      : user?.username;
+  const bio =
+    user && typeof user === "object" && "bio" in user ? (user as any).bio : undefined;
+
   // ✅ My real user id (used for followers/following routes)
   const myUserId = currentUser?.id ?? authUser?.id ?? null;
   const [followersOpen, setFollowersOpen] = useState(false);
@@ -78,7 +86,6 @@ export default function MyProfileView() {
     navigate(PATHS.AUTH);
   };
 
-  const user = currentUser ?? authUser;
   const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:3500").replace(/\/api$/, "");
 
   const makeUrl = (url?: string | null) => {
@@ -178,9 +185,9 @@ export default function MyProfileView() {
       <ProfileHeaderLayout
         coverImage={coverImage}
         avatarUrl={avatarUrl}
-        displayName={user.display_name ?? user.username}
-        username={user.username}
-        bio={user.bio}
+        displayName={displayName ?? user?.username ?? ""}
+        username={user?.username ?? ""}
+        bio={bio}
         actionsSlot={
           <>
             <Link to={PATHS.PROFILE_EDIT}>

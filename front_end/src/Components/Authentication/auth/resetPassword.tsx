@@ -7,6 +7,8 @@ import { AuthButton } from "./AuthButton";
 import { ArrowLeft, CircleCheck, Shield } from "lucide-react";
 import { toast } from "sonner";
 
+type PasswordStrength = "weak" | "medium" | "strong";
+
 export const ResetPasswordScreen: React.FC = () => {
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(window.location.search);
@@ -18,9 +20,9 @@ export const ResetPasswordScreen: React.FC = () => {
   const [errors, setErrors] = useState({ password: "", confirmPassword: "" });
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>("weak");
 
-  const handleNavigate = () => {
-    navigate('/');
-  };
+  const handleNavigate = React.useCallback(() => {
+    navigate("/");
+  }, [navigate]);
 
   // Verify token on mount
   useEffect(() => {

@@ -5,12 +5,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.refuseFollowRequest = void 0;
 const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
+const notificationService_1 = require("../../../src/Service/notificationService");
+const notificationRealtime_1 = require("../../../src/Service/notificationRealtime");
 const refuseFollowRequest = async (req, res) => {
     try {
         const { requestId } = req.params; // UUID string
-        if (typeof requestId !== 'string') {
-            return res.status(400).json({ message: "Invalid request ID" });
-        }
         const followRequest = await prismaClient_1.default.follow.findUnique({
             where: { id: requestId } // Pas de parseInt ❌
         });
@@ -28,6 +27,32 @@ const refuseFollowRequest = async (req, res) => {
             where: { id: requestId },
             data: { status: "rejected" }
         });
+        // Notify the follower that their request was rejected
+        try {
+            const receiverId = followRequest.follower_id;
+            const senderId = followRequest.followed_id;
+            if (receiverId && senderId && receiverId !== senderId) {
+                const notif = await (0, notificationService_1.createNotification)({
+                    userId: receiverId,
+                    code: "FOLLOW_REJECTED",
+                    title: "Follow request rejected",
+                    message: "rejected your follow request",
+                    senderId,
+                    sourceId: senderId,
+                    sourceType: "user",
+                    metadata: { followedId: senderId },
+                });
+                await (0, notificationRealtime_1.emitNotificationNew)({
+                    receiverId,
+                    kind: "follow",
+                    notification: notif,
+                    extra: { followedId: senderId },
+                });
+            }
+        }
+        catch {
+            // ignore
+        }
         return res.status(200).json({ message: "Follow request refused", status: "REJECTED" });
     }
     catch (error) {

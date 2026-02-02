@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateCoverImage = exports.updateMyAvatar = exports.updateCurrentUserProfile = exports.getCurrentUserProfile = exports.getUserProfile = void 0;
 const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
-const BlockService_1 = require("../../services/BlockService");
+const BlockService_1 = require("../../../src/Service/BlockService");
 const BIO_MAX = 160;
 const URL_MAX = 2000;
 const getUserProfile = async (req, res) => {

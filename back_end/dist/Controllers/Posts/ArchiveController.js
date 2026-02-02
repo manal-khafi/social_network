@@ -7,9 +7,6 @@ exports.unarchivePost = exports.archivePost = void 0;
 const prismaClient_1 = __importDefault(require("../../config/prismaClient"));
 const archivePost = async (req, res) => {
     const { postId } = req.params;
-    if (typeof postId !== 'string') {
-        return res.status(400).json({ message: "Invalid post ID" });
-    }
     const userId = req.user?.id;
     if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });

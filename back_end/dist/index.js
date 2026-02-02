@@ -22,8 +22,10 @@ const saveRoutes_1 = __importDefault(require("./Routes/saveRoutes"));
 const privacySEttingsRoutes_1 = __importDefault(require("./Routes/privacySEttingsRoutes"));
 const TwoFactorAuth_1 = __importDefault(require("./Routes/TwoFactorAuth"));
 const communityRoutes_1 = __importDefault(require("./Routes/communityRoutes"));
+const Inbox_1 = __importDefault(require("./Routes/Inbox"));
+const Notifications_1 = __importDefault(require("./Routes/Notifications"));
 const authMiddlware_1 = require("./Middleware/authMiddlware");
-const story_routes_1 = __importDefault(require("./Routes/story.routes"));
+const socketServer_1 = require("./sockets/socketServer");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const port = process.env.PORT || 3500;
@@ -73,5 +75,18 @@ app.get("/", (req, res) => {
     });
 });
 app.listen(port, () => {
+app.use(express_1.default.json());
+app.use("/api/communities", authMiddlware_1.authMiddleware, communityRoutes_1.default);
+app.use("/api/inbox", Inbox_1.default);
+app.use("/api/notifications", Notifications_1.default);
+app.get("/", (req, res) => {
+    res.json({
+        message: "Bienvenue sur l'api socielle network",
+    });
+});
+const httpServer = (0, socketServer_1.createHttpServer)(app);
+(0, socketServer_1.initSocketServer)(httpServer, allowedOrigins);
+httpServer.listen(port, () => {
     console.log(`port connected en http://localhost:${port}`);
 });
+

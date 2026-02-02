@@ -1,15 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Users, PlusCircle, Mail, User } from 'lucide-react';
 import { PATHS } from '../../routes/paths';
+import { useAppSelector } from '../../hooks';
+import { Badge } from '../ui/badge';
 
 export default function BottomNav() {
   const location = useLocation();
+  const inboxUnreadTotal = useAppSelector((state) => state.messages.unreadTotal);
 
   const navItems = [
     { path: PATHS.FEED, icon: Home, label: 'Home' },
     { path: PATHS.COMMUNITY, icon: Users, label: 'Community' },
     { path: PATHS.CREATE_POST, icon: PlusCircle, label: 'Create' },
-    { path: PATHS.INBOX, icon: Mail, label: 'Inbox' },
+    { path: PATHS.INBOX, icon: Mail, label: 'Inbox', badge: inboxUnreadTotal },
     { path: PATHS.PROFILE_ME, icon: User, label: 'Profile' },
   ];
 
@@ -21,6 +24,7 @@ export default function BottomNav() {
             const Icon = item.icon;
             const isActive = location.pathname === item.path || 
                            (item.path !== '/' && location.pathname.startsWith(item.path));
+            const badge = Number((item as any).badge ?? 0);
             
             return (
               <Link
@@ -32,7 +36,14 @@ export default function BottomNav() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} />
+                <div className="relative">
+                  <Icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} />
+                  {badge > 0 && (
+                    <Badge className="absolute -top-1 -right-2 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">
+                      {badge > 9 ? '9+' : badge}
+                    </Badge>
+                  )}
+                </div>
                 <span className="text-xs">{item.label}</span>
               </Link>
             );
