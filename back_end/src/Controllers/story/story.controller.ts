@@ -26,7 +26,7 @@ export class StoryController {
   static async getStoryById(req: Request, res: Response) {
     if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
 
-    const story = await StoryService.getStoryById(req.params.id, req.user.id);
+    const story = await StoryService.getStoryById((req.params.id as string), req.user.id);
 
     return res.status(200).json({ success: true, data: story });
   }
@@ -34,7 +34,7 @@ export class StoryController {
   static async getUserStories(req: Request, res: Response) {
     if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
 
-    const stories = await StoryService.getUserStories(req.params.userId, req.user.id);
+    const stories = await StoryService.getUserStories((req.params.userId as string), req.user.id);
 
     return res.status(200).json({ success: true, data: stories });
   }
@@ -42,7 +42,7 @@ export class StoryController {
   static async deleteStory(req: Request, res: Response) {
     if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
 
-    const result = await StoryService.deleteStory(req.params.id, req.user.id);
+    const result = await StoryService.deleteStory((req.params.id as string), req.user.id);
 
     return res.status(200).json({ success: true, ...result });
   }

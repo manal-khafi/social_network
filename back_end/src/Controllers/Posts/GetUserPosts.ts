@@ -34,7 +34,7 @@ const canViewUserContent = async (viewerId: string, targetUserId: string) => {
 
 export const getUserPosts = async (req: Request, res: Response) => {
   const viewerId = req.user?.id;
-  const { userId } = req.params;
+  const { userId } = req.params as { [key: string]: string };
 
   if (!viewerId) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -128,7 +128,7 @@ export const getUserPosts = async (req: Request, res: Response) => {
 
 export const getUserReposts = async (req: Request, res: Response) => {
   const viewerId = req.user?.id;
-  const { userId } = req.params;
+  const { userId } = req.params as { [key: string]: string };
 
   if (!viewerId) {
     return res.status(401).json({ message: "Unauthorized" });

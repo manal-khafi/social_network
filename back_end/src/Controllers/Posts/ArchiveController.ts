@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 
 export const archivePost = async (req: Request, res: Response) => {
-  const { postId } = req.params;
+  const { postId } = req.params as { [key: string]: string };
   const userId = req.user?.id;
 
   if (!userId) {
@@ -30,7 +30,7 @@ export const archivePost = async (req: Request, res: Response) => {
 };
 
 export const unarchivePost = async (req: Request, res: Response) => {
-  const { postId } = req.params;
+  const { postId } = req.params as { [key: string]: string };
   const userId = req.user?.id;
 
   if (!userId) {

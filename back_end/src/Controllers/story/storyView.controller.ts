@@ -6,7 +6,7 @@ export class StoryViewController {
   static async viewStory(req: Request, res: Response) {
     if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
 
-    const view = await StoryViewService.viewStory(req.params.id, req.user.id);
+    const view = await StoryViewService.viewStory((req.params.id as string), req.user.id);
 
     return res.status(200).json({
       success: true,
@@ -18,7 +18,7 @@ export class StoryViewController {
   static async getStoryViews(req: Request, res: Response) {
     if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
 
-    const views = await StoryViewService.getStoryViews(req.params.id, req.user.id);
+    const views = await StoryViewService.getStoryViews((req.params.id as string), req.user.id);
 
     return res.status(200).json({
       success: true,

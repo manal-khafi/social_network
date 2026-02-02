@@ -5,7 +5,7 @@ import { isBlockedEitherWay } from "../../services/BlockService";
 export const toggleSave = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    const { postId } = req.params;
+    const { postId } = req.params as { [key: string]: string };
 
     if (!userId) {
       return res.status(401).json({ message: "Non authentifié" });

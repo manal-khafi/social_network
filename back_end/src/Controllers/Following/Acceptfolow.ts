@@ -3,7 +3,7 @@ import prisma from "../../config/prismaClient";
 
 const Acceptdemande = async (req: Request, res: Response) => {
   try {
-    const demandeId = req.params.demandeId; // string UUID
+    const demandeId = (req.params.demandeId as string); // string UUID
     const userId = req.user?.id; // string UUID depuis token
 
     if (!userId) {

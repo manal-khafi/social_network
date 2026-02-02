@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const communityRequest = async (req: Request, res: Response, next: NextFunction) => {
-  const communityId = req.params.communityId;
+  const communityId = (req.params.communityId as string);
 
   try {
     const requests = await prisma.joinRequest.findMany({
@@ -20,8 +20,8 @@ const communityRequest = async (req: Request, res: Response, next: NextFunction)
 
 const createCommunityRequest = async (req: Request, res: Response, next: NextFunction) => {
   const { message } = req.body;
-  const communityId = req.params.communityId;
-  const userIdParam = req.params.userId;
+  const communityId = (req.params.communityId as string);
+  const userIdParam = (req.params.userId as string);
   try {
     const newRequest = await prisma.joinRequest.create({
       data: {
@@ -40,9 +40,9 @@ const createCommunityRequest = async (req: Request, res: Response, next: NextFun
 
 const handlerequest = async (req: Request, res: Response, next: NextFunction) => {
   const { status } = req.body;
-  const communityId = req.params.communityId;
-  const requestId = req.params.requestId;
-  const userId = req.params.userId;
+  const communityId = (req.params.communityId as string);
+  const requestId = (req.params.requestId as string);
+  const userId = (req.params.userId as string);
 
   try {
     const updatedRequest = await prisma.joinRequest.updateMany({

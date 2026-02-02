@@ -110,7 +110,7 @@ const getAllCommunities = async (req: Request, res: Response, next: NextFunction
 
 const getCommunityById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { id } = req.params;
+        const { id } = req.params as { [key: string]: string };
         const community = await prisma.community.findUnique({
             where: { id: id },
             include: {
@@ -141,7 +141,7 @@ const getCommunityById = async (req: Request, res: Response, next: NextFunction)
 
 const modifyCommunity = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { id } = req.params;
+        const { id } = req.params as { [key: string]: string };
         const { name, description, bio, banner_url, avatar_url, is_private, type } = req.body;
         
         // Build update object with only provided fields
@@ -182,7 +182,7 @@ const modifyCommunity = async (req: Request, res: Response, next: NextFunction) 
 
 const deleteCommunity = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { id } = req.params;
+        const { id } = req.params as { [key: string]: string };
         await prisma.community.delete({
             where: { id: id },
         });

@@ -4,7 +4,7 @@ import prisma from "../../config/prismaClient";
 
 export const updateProfile = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params as { [key: string]: string }; 
     const { avatar_url, gender, account_name, date_of_birth, bio } = req.body;
 
     const user = await prisma.user.findUnique({ where: { id } });

@@ -8,7 +8,7 @@ const URL_MAX = 2000;
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
     const viewerId = req.user?.id;
-    const { username } = req.params;
+    const { username } = req.params as { [key: string]: string };
 
     const userProfile = await prisma.user.findUnique({
       where: { username },

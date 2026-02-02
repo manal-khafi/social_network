@@ -14,7 +14,7 @@ type FollowWithFollower = {
 type FollowedIdOnly = { followed_id: string };
 
 const Follower = async (req: Request, res: Response) => {
-  const userId = req.params.userId;
+  const userId = (req.params.userId as string);
   const viewerId = req.user?.id;
 
   try {

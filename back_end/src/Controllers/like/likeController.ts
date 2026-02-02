@@ -5,9 +5,9 @@ import { isBlockedEitherWay } from '../../services/BlockService';
 export const toggleLike = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.id;
-        const { postId, commentId } = req.params;
-        const targetPostId = postId ?? null;
-        const targetCommentId = commentId ?? null;
+        const { postId, commentId } = req.params as { [key: string]: string } as { postId?: string; commentId?: string };
+        const targetPostId = postId || null;
+        const targetCommentId = commentId || null;
 
         if (!targetPostId && !targetCommentId) {
             return res.status(400).json({ message: "postId or commentId is required" });
@@ -58,12 +58,12 @@ export const toggleLike = async (req: Request, res: Response) => {
             const post = targetPostId ? await prisma.post.findUnique({
                 where: { id: targetPostId },
                 include: { _count: { select: { likes: true } } }
-            }) : null;
+            }) : null as any;
             
             return res.json({
                 liked: false,
                 message: 'Post unliked',
-                likes: post?._count.likes ?? 0
+                likes: post?._count?.likes ?? 0
             });
         }
 
@@ -80,12 +80,12 @@ export const toggleLike = async (req: Request, res: Response) => {
         const post = targetPostId ? await prisma.post.findUnique({
             where: { id: targetPostId },
             include: { _count: { select: { likes: true } } }
-        }) : null;
+        }) : null as any;
         
         return res.json({ 
             liked: true,
             message: 'Post liked',
-            likes: post?._count.likes ?? 0
+            likes: post?._count?.likes ?? 0
         });
     } catch (error) {
         res.status(500).json({ message: "something went wrong" });

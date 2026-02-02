@@ -15,7 +15,7 @@ export class StoryCommentController {
     const { content } = req.body;
 
     const comment = await StoryCommentService.commentStory(
-      req.params.id,
+      (req.params.id as string),
       req.user.id,
       content
     );
@@ -32,7 +32,7 @@ export class StoryCommentController {
    * GET /stories/:id/comments
    */
   static async getStoryComments(req: Request, res: Response) {
-    const comments = await StoryCommentService.getStoryComments(req.params.id);
+    const comments = await StoryCommentService.getStoryComments((req.params.id as string));
 
     return res.status(200).json({
       success: true,
@@ -50,7 +50,7 @@ export class StoryCommentController {
     }
 
     const result = await StoryCommentService.deleteComment(
-      req.params.commentId,
+      (req.params.commentId as string),
       req.user.id
     );
 

@@ -3,6 +3,32 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
+  // ---- Cleanup ----
+  console.log("Cleaning up database...");
+  await prisma.notification.deleteMany();
+  await prisma.typeNotification.deleteMany();
+  await prisma.messageStatus.deleteMany();
+  await prisma.message.deleteMany();
+  await prisma.conversationParticipant.deleteMany();
+  await prisma.conversation.deleteMany();
+  await prisma.storyView.deleteMany();
+  await prisma.storyLike.deleteMany();
+  await prisma.storyComment.deleteMany();
+  await prisma.story.deleteMany();
+  await prisma.save.deleteMany();
+  await prisma.repost.deleteMany();
+  await prisma.share.deleteMany();
+  await prisma.like.deleteMany();
+  await prisma.comment.deleteMany();
+  await prisma.post.deleteMany();
+  await prisma.block.deleteMany();
+  await prisma.follow.deleteMany();
+  await prisma.communityRule.deleteMany();
+  await prisma.communityMember.deleteMany();
+  await prisma.community.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.role.deleteMany();
+
   // ---- Roles ----
   await prisma.role.createMany({
     data: [
@@ -148,12 +174,15 @@ async function main() {
   });
 
   // ---- Stories ----
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
   await prisma.story.createMany({
     data: [
-      { id: "st1", content_url: "url1", content_type: "image", user_id: "u1" },
-      { id: "st2", content_url: "url2", content_type: "video", user_id: "u2" },
-      { id: "st3", content_url: "url3", content_type: "text", user_id: "u3" },
-      { id: "st4", content_url: "url4", content_type: "image", user_id: "u4" },
+      { id: "st1", content_url: "url1", content_type: "image", user_id: "u1", expires_at: tomorrow },
+      { id: "st2", content_url: "url2", content_type: "video", user_id: "u2", expires_at: tomorrow },
+      { id: "st3", content_url: "url3", content_type: "text", user_id: "u3", expires_at: tomorrow },
+      { id: "st4", content_url: "url4", content_type: "image", user_id: "u4", expires_at: tomorrow },
     ],
   });
 

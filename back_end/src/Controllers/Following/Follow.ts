@@ -4,7 +4,7 @@ import { isBlockedEitherWay } from "../../services/BlockService";
 
 const Follow = async (req: Request, res: Response) => {
   try {
-    const userIdToFollow = req.params.userIdToFollow; // déjà string
+    const userIdToFollow = (req.params.userIdToFollow as string) as string;
     const userId = req.user?.id; // Auth user (string UUID)
 
     // 1️⃣ Vérifier que l’utilisateur est authentifié

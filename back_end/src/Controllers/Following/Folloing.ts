@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 
 const Following = async (req: Request, res: Response) => {
-  const userId = req.params.userId;
+  const userId = (req.params.userId as string);
   const viewerId = req.user?.id;
 
   try {

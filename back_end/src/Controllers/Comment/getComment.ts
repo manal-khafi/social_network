@@ -29,7 +29,7 @@ const buildCommentTree = (
 };
 
 export const getComment = async (req: Request, res: Response) => {
-  const postId = req.params.postId;
+  const postId = (req.params.postId as string) as string;
   try {
     const authHeader = req.headers.authorization;
     let userId: string | null = null;
@@ -46,7 +46,7 @@ export const getComment = async (req: Request, res: Response) => {
     const post = await prisma.post.findUnique({
       where: { id: postId },
       select: { user_id: true }
-    });
+    }) as any;
 
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
@@ -71,8 +71,8 @@ export const getComment = async (req: Request, res: Response) => {
       },
       orderBy: { created_at: "asc" },
       include,
-    });
-    const normalized = comments.map((comment: typeof comments[number]) => ({
+    }) as any[];
+    const normalized = comments.map((comment: any) => ({
       id: comment.id,
       postId: comment.post_id,
       userId: comment.user_id,

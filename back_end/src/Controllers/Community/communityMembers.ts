@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const getCommunityMembers = async (req: Request, res: Response, next: NextFunction) => {
-  const communityId = req.params.communityId;
+  const communityId = (req.params.communityId as string);
 
   try {
     const members = await prisma.communityMember.findMany({
@@ -20,8 +20,8 @@ const getCommunityMembers = async (req: Request, res: Response, next: NextFuncti
 
 const giveMemberRole = async (req: Request, res: Response, next: NextFunction) => {
   const { role } = req.body;
-  const communityId = req.params.communityId;
-  const userId = req.params.userId;
+  const communityId = (req.params.communityId as string);
+  const userId = (req.params.userId as string);
 
   try {
     const updatedMember = await prisma.communityMember.updateMany({
@@ -41,8 +41,8 @@ const giveMemberRole = async (req: Request, res: Response, next: NextFunction) =
 }
 
 const getOneCommunityMember = async (req: Request, res: Response, next: NextFunction) => {
-  const communityId = req.params.communityId;
-  const userId = req.params.userId;
+  const communityId = (req.params.communityId as string);
+  const userId = (req.params.userId as string);
 
   try {
     const member = await prisma.communityMember.findFirst({
@@ -60,8 +60,8 @@ const getOneCommunityMember = async (req: Request, res: Response, next: NextFunc
 }
 
 const DeleteCommunityMember = async (req: Request, res: Response, next: NextFunction) => {
-  const communityId = req.params.communityId;
-  const userId = req.params.userId;
+  const communityId = (req.params.communityId as string);
+  const userId = (req.params.userId as string);
 
   try {
     const deletedMember = await prisma.communityMember.deleteMany({
@@ -78,8 +78,8 @@ const DeleteCommunityMember = async (req: Request, res: Response, next: NextFunc
 }
 
 const checkMembershipStatus = async (req: Request, res: Response, next: NextFunction) => {
-  const communityId = req.params.communityId;
-  const userId = req.params.userId;
+  const communityId = (req.params.communityId as string);
+  const userId = (req.params.userId as string);
 
   try {
     const member = await prisma.communityMember.findFirst({

@@ -12,7 +12,7 @@ export class StoryLikeController {
       throw new AppError("Utilisateur non authentifié", 401);
     }
 
-    const like = await StoryLikeService.likeStory(req.params.id, req.user.id);
+    const like = await StoryLikeService.likeStory((req.params.id as string), req.user.id);
 
     return res.status(201).json({
       success: true,
@@ -30,7 +30,7 @@ export class StoryLikeController {
       throw new AppError("Utilisateur non authentifié", 401);
     }
 
-    const result = await StoryLikeService.unlikeStory(req.params.id, req.user.id);
+    const result = await StoryLikeService.unlikeStory((req.params.id as string), req.user.id);
 
     return res.status(200).json({
       success: true,
@@ -43,7 +43,7 @@ export class StoryLikeController {
    * GET /stories/:id/likes
    */
   static async getStoryLikes(req: Request, res: Response) {
-    const likes = await StoryLikeService.getStoryLikes(req.params.id);
+    const likes = await StoryLikeService.getStoryLikes((req.params.id as string));
 
     return res.status(200).json({
       success: true,

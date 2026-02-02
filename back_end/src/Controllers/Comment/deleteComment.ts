@@ -26,7 +26,7 @@ async function collectDescendants(
 }
 
 export const deleteComment = async (req: Request, res: Response) => {
-  const commentId = req.params.commentId;
+  const commentId = (req.params.commentId as string) as string;
   const userId = req.user?.id;
 
   if (!userId) return res.status(401).json({ message: "Unauthorized" });
@@ -40,14 +40,14 @@ export const deleteComment = async (req: Request, res: Response) => {
         post_id: true,
         post: { select: { user_id: true } },
       },
-    });
+    }) as any;
 
     if (!comment) {
       return res.status(404).json({ message: "Comment not found" });
     }
 
     const isCommentOwner = comment.user_id === userId;
-    const isPostOwner = comment.post.user_id === userId;
+    const isPostOwner = comment.post?.user_id === userId;
 
     if (!isCommentOwner && !isPostOwner) {
       return res

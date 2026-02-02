@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 
 export const modifierComment = async (req: Request, res: Response) => {
     try {
-        const { commentId } = req.params;
+        const commentId = (req.params.commentId as string) as string;
         const { content } = req.body;
         const userId = req.user?.id;
 
