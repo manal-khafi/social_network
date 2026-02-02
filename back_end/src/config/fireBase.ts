@@ -1,19 +1,38 @@
+
 import admin from "firebase-admin";
-import path from "path";
-import { readFileSync } from "fs";
+import fs from "fs";
 
-// 🔥 chemin absolu (plus fiable dans Docker)
-const serviceAccountPath = path.join(__dirname, "serviceAccountKey.json");
+const bucketName = process.env.FIREBASE_STORAGE_BUCKET;
+if (!bucketName) throw new Error("FIREBASE_STORAGE_BUCKET is missing");
 
-// Lire le fichier JSON
-const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, "utf8"));
+const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
 
-// Initialisation Firebase
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-  storageBucket: "exam9-1.appspot.com", // remplace par ton vrai bucket
-});
+let serviceAccount: any;
 
-const bucket = admin.storage().bucket();
+if (serviceAccountPath) {
+  serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+} else {
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT is missing");
+  serviceAccount = JSON.parse(raw);
+}
 
-export { admin, bucket };
+// ✅ CRITICAL: normalize private_key to valid PEM
+if (typeof serviceAccount.private_key === "string") {
+  serviceAccount.private_key = serviceAccount.private_key
+    .replace(/\\n/g, "\n") // convert literal \n to real newlines
+    .replace(/\r/g, "")    // remove CR if present
+    .trim() + "\n";        // ensure ends with newline
+} else {
+  throw new Error("serviceAccount.private_key missing or not a string");
+}
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: bucketName,
+  });
+}
+
+export const bucket = admin.storage().bucket();
+export { admin };
