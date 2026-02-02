@@ -1,36 +1,36 @@
-import dotenv from "dotenv";
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 
 dotenv.config();
 
-let Transporter: nodemailer.Transporter | null = null;
+let transporter: nodemailer.Transporter | null = null;
 
 export const initializeEmailService = async () => {
-  if (Transporter) return Transporter;
+  if (transporter) return transporter;
 
-  Transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,          // ✅ from env
+    port: Number(process.env.SMTP_PORT),  // ✅ from env
     secure: false,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    tls: {
-      servername: "smtp.gmail.com",
-      rejectUnauthorized: false,
+      user: process.env.SMTP_USER!,
+      pass: process.env.SMTP_PASS!,
     },
   });
 
-  await Transporter.verify();
-  console.log("✅ Serveur SMTP connecté avec succès");
+  // ✅ DO NOT crash app if SMTP fails
+  transporter.verify()
+    .then(() => console.log("📧 SMTP ready"))
+    .catch(err =>
+      console.error("⚠️ SMTP not available:", err.message)
+    );
 
-  return Transporter;
+  return transporter;
 };
 
 export const getTransporter = async () => {
-  if (!Transporter) {
+  if (!transporter) {
     await initializeEmailService();
   }
-  return Transporter!;
+  return transporter!;
 };

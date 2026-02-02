@@ -5,23 +5,20 @@ WORKDIR /usr/src/app
 # Copier les fichiers de dépendances
 COPY package*.json ./
 
+# Copier Prisma avant npm install
+COPY prisma ./prisma/
+
 # Installer dépendances
 RUN npm install
-
-# Copier Prisma schema
-COPY prisma ./prisma/
 
 # Générer Prisma Client
 RUN npx prisma generate
 
-# Copier le reste de l'application (sans node_modules)
+# Copier le reste de l'application
 COPY . .
 
-# Ajouter le fichier de clé de service Firebase
-COPY src/config/serviceAccountKey.json ./src/config/serviceAccountKey.json
-
+# Expose le port
 EXPOSE 3500
 
-CMD ["npm", "run", "dev"]
-
-
+# Lancer Prisma Migrate puis le serveur Node
+CMD ["sh", "-c", "npx prisma migrate deploy && node index.ts"]

@@ -29,7 +29,7 @@ const bodyLimit = process.env.BODY_LIMIT || "100mb";
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["http://localhost:5173"];
+  : ["https://socialnetworkes.vercel.app"];
 
 app.use(cors({
   origin: allowedOrigins,
