@@ -1,16 +1,11 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
-import { isBlockedEitherWay } from "../../Service/BlockService";
-import { createNotification } from "../../Service/notificationService";
-import { emitNotificationNew } from "../../Service/notificationRealtime";
+import { isBlockedEitherWay } from "../../services/BlockService";
 
 export const toggleRepost = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    const { postId } = req.params;
-    if (typeof postId !== 'string') {
-        return res.status(400).json({ message: "Invalid post ID" });
-    }
+    const { postId } = req.params as { [key: string]: string };
 
     if (!userId) {
       return res.status(401).json({ message: "Non authentifié" });
@@ -35,7 +30,7 @@ export const toggleRepost = async (req: Request, res: Response) => {
       
       const updatedPost = await prisma.post.findUnique({
         where: { id: postId },
-        select: { _count: { select: { reposts: true, shares: true } } }
+        include: { _count: { select: { reposts: true, shares: true } } }
       });
       
       return res.json({ 
@@ -48,33 +43,9 @@ export const toggleRepost = async (req: Request, res: Response) => {
       data: { user_id: userId, original_post_id: postId },
     });
 
-    // Notify post owner
-    if (post.user_id && post.user_id !== userId) {
-      try {
-        const notif = await createNotification({
-          userId: post.user_id,
-          code: "POST_REPOSTED",
-          title: "Post reposted",
-          message: "reposted your post",
-          senderId: userId,
-          sourceId: postId,
-          sourceType: "post",
-          metadata: { postId },
-        });
-        await emitNotificationNew({
-          receiverId: post.user_id,
-          kind: "repost",
-          notification: notif,
-          extra: { postId },
-        });
-      } catch {
-        // ignore
-      }
-    }
-
     const updatedPost = await prisma.post.findUnique({
       where: { id: postId },
-      select: { _count: { select: { reposts: true, shares: true } } }
+      include: { _count: { select: { reposts: true, shares: true } } }
     });
 
     return res.json({ 

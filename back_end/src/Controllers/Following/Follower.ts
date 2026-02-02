@@ -1,17 +1,20 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
-import { Follow, User } from "@prisma/client";
 
-type FollowWithFollower = Follow & {
-  follower: User
+type FollowWithFollower = {
+  follower: {
+    id: string;
+    username: string;
+    display_name: string;
+    avatar_url: string | null;
+    is_private: boolean;
+    cover_image: string | null;
+  };
 };
 type FollowedIdOnly = { followed_id: string };
 
 const Follower = async (req: Request, res: Response) => {
-  const userId = req.params.userId;
-  if (typeof userId !== 'string') {
-    return res.status(400).json({ message: "Invalid user ID" });
-  }
+  const userId = (req.params.userId as string);
   const viewerId = req.user?.id;
 
   try {
@@ -21,7 +24,16 @@ const Follower = async (req: Request, res: Response) => {
         status: "accepted",
       },
       include: {
-        follower: true,
+        follower: {
+          select: {
+            id: true,
+            username: true,
+            display_name: true,
+            avatar_url: true,
+            is_private: true,
+            cover_image: true,
+          },
+        },
       },
       orderBy: { created_at: "desc" },
     });
@@ -33,7 +45,7 @@ const Follower = async (req: Request, res: Response) => {
       },
     });
 
-    const followerIds = followers.map((f) => f.follower.id).filter((id): id is string => id !== undefined);
+    const followerIds = followers.map((f) => f.follower.id);
     let viewerFollowingIds = new Set<string>();
 
     if (viewerId && followerIds.length > 0) {

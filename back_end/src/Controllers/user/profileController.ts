@@ -8,10 +8,7 @@ const URL_MAX = 2000;
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
     const viewerId = req.user?.id;
-    const { username } = req.params;
-    if (typeof username !== 'string') {
-        return res.status(400).json({ message: "Invalid username" });
-    }
+    const { username } = req.params as { [key: string]: string };
 
     const userProfile = await prisma.user.findUnique({
       where: { username },

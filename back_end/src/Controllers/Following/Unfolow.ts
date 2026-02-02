@@ -4,10 +4,7 @@ import { isBlockedEitherWay } from "../../services/BlockService";
 
 const Unfollow = async (req: Request, res: Response) => {
   try {
-    const userIdToUnfollow = req.params.userIdToUnfollow;
-    if (typeof userIdToUnfollow !== 'string') {
-        return res.status(400).json({ message: "Invalid user ID" });
-    }
+    const userIdToUnfollow = (req.params.userIdToUnfollow as string) as string;
     const userId = req.user?.id; 
 
     if (!userId) {

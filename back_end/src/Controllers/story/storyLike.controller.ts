@@ -11,11 +11,8 @@ export class StoryLikeController {
     if (!req.user) {
       throw new AppError("Utilisateur non authentifié", 401);
     }
-    if (typeof req.params.id !== 'string') {
-        return res.status(400).json({ message: "Invalid ID" });
-    }
 
-    const like = await StoryLikeService.likeStory(req.params.id, req.user.id);
+    const like = await StoryLikeService.likeStory((req.params.id as string), req.user.id);
 
     return res.status(201).json({
       success: true,
@@ -32,11 +29,8 @@ export class StoryLikeController {
     if (!req.user) {
       throw new AppError("Utilisateur non authentifié", 401);
     }
-    if (typeof req.params.id !== 'string') {
-        return res.status(400).json({ message: "Invalid ID" });
-    }
 
-    const result = await StoryLikeService.unlikeStory(req.params.id, req.user.id);
+    const result = await StoryLikeService.unlikeStory((req.params.id as string), req.user.id);
 
     return res.status(200).json({
       success: true,
@@ -49,10 +43,7 @@ export class StoryLikeController {
    * GET /stories/:id/likes
    */
   static async getStoryLikes(req: Request, res: Response) {
-    if (typeof req.params.id !== 'string') {
-        return res.status(400).json({ message: "Invalid ID" });
-    }
-    const likes = await StoryLikeService.getStoryLikes(req.params.id);
+    const likes = await StoryLikeService.getStoryLikes((req.params.id as string));
 
     return res.status(200).json({
       success: true,

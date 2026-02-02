@@ -18,7 +18,7 @@ export class StoryMessageController {
     const { recipient_id, content } = req.body;
 
     const message = await StoryMessageService.sendMessageToStory(
-      req.params.id,
+      (req.params.id as string),
       req.user.id,
       recipient_id,
       content
@@ -44,7 +44,7 @@ export class StoryMessageController {
     }
 
     const messages = await StoryMessageService.getStoryMessages(
-      req.params.id,
+      (req.params.id as string),
       req.user.id
     );
 

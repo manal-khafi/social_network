@@ -9,7 +9,7 @@ export class StoryViewController {
         return res.status(400).json({ message: "Invalid ID" });
     }
 
-    const view = await StoryViewService.viewStory(req.params.id, req.user.id);
+    const view = await StoryViewService.viewStory((req.params.id as string), req.user.id);
 
     return res.status(200).json({
       success: true,
@@ -24,7 +24,7 @@ export class StoryViewController {
         return res.status(400).json({ message: "Invalid ID" });
     }
 
-    const views = await StoryViewService.getStoryViews(req.params.id, req.user.id);
+    const views = await StoryViewService.getStoryViews((req.params.id as string), req.user.id);
 
     return res.status(200).json({
       success: true,

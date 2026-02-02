@@ -3,10 +3,7 @@ import { Request, Response } from "express";
 
 export const modifierComment = async (req: Request, res: Response) => {
     try {
-        const { commentId } = req.params;
-        if (typeof commentId !== 'string') {
-            return res.status(400).json({ message: "Invalid comment ID" });
-        }
+        const commentId = (req.params.commentId as string) as string;
         const { content } = req.body;
         const userId = req.user?.id;
 

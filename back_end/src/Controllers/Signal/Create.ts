@@ -47,10 +47,7 @@ export class ReportController {
   }
   static async getReportById(req: Request, res: Response) {
     try {
-      const { id } = req.params;
-      if (typeof id !== 'string') {
-        return res.status(400).json({ message: "Invalid ID" });
-      }
+      const { id } = req.params as { [key: string]: string };
       const report = await prisma.report.findUnique({
         where: { id },
         include: {
@@ -69,10 +66,7 @@ export class ReportController {
   }
   static async updateReportStatus(req: Request, res: Response) {
     try {
-      const { id } = req.params;
-      if (typeof id !== 'string') {
-        return res.status(400).json({ message: "Invalid ID" });
-      }
+      const { id } = req.params as { [key: string]: string };
       const { status } = req.body;
 
       const report = await prisma.report.update({
@@ -88,10 +82,7 @@ export class ReportController {
   }
   static async deleteReport(req: Request, res: Response) {
     try {
-      const { id } = req.params;
-      if (typeof id !== 'string') {
-        return res.status(400).json({ message: "Invalid ID" });
-      }
+      const { id } = req.params as { [key: string]: string };
 
       await prisma.report.delete({ where: { id } });
 
@@ -103,10 +94,7 @@ export class ReportController {
   }
   static async getReportsByUser(req: Request, res: Response) {
     try {
-      const { userId } = req.params;
-      if (typeof userId !== 'string') {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
+      const { userId } = req.params as { [key: string]: string };
 
       const reportsMade = await prisma.report.findMany({
         where: { reporter_id: userId },

@@ -1,14 +1,9 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
-import { createNotification } from "../../Service/notificationService";
-import { emitNotificationNew } from "../../Service/notificationRealtime";
 
 const Acceptdemande = async (req: Request, res: Response) => {
   try {
-    const demandeId = req.params.demandeId; // string UUID
-    if (typeof demandeId !== 'string') {
-        return res.status(400).json({ message: "Invalid ID" });
-    }
+    const demandeId = (req.params.demandeId as string); // string UUID
     const userId = req.user?.id; // string UUID depuis token
 
     if (!userId) {
@@ -38,31 +33,6 @@ const Acceptdemande = async (req: Request, res: Response) => {
       where: { id: demandeId },
       data: { status: "accepted" }
     });
-
-    // Notify the follower that their request was accepted
-    try {
-      const receiverId = followRequest.follower_id;
-      if (receiverId && receiverId !== userId) {
-        const notif = await createNotification({
-          userId: receiverId,
-          code: "FOLLOW_ACCEPTED",
-          title: "Follow request accepted",
-          message: "accepted your follow request",
-          senderId: userId,
-          sourceId: userId,
-          sourceType: "user",
-          metadata: { followedId: userId },
-        });
-        await emitNotificationNew({
-          receiverId,
-          kind: "follow",
-          notification: notif,
-          extra: { followedId: userId },
-        });
-      }
-    } catch {
-      // ignore
-    }
 
     res.status(200).json({ message: "Follow request accepted" });
 

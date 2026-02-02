@@ -1,23 +1,13 @@
 import { Request, Response } from 'express';
 import prisma from '../../config/prismaClient';
-import { isBlockedEitherWay } from '../../Service/BlockService';
-import { createNotification } from '../../Service/notificationService';
-import { emitNotificationNew } from '../../Service/notificationRealtime';
+import { isBlockedEitherWay } from '../../services/BlockService';
 
 export const toggleLike = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.id;
-        const { postId, commentId } = req.params;
-        
+        const { postId, commentId } = req.params as { [key: string]: string } as { postId?: string; commentId?: string };
         const targetPostId = postId || null;
         const targetCommentId = commentId || null;
-
-        if (targetPostId && typeof targetPostId !== 'string') {
-            return res.status(400).json({ message: "Invalid postId" });
-        }
-        if (targetCommentId && typeof targetCommentId !== 'string') {
-            return res.status(400).json({ message: "Invalid commentId" });
-        }
 
         if (!targetPostId && !targetCommentId) {
             return res.status(400).json({ message: "postId or commentId is required" });
@@ -67,55 +57,35 @@ export const toggleLike = async (req: Request, res: Response) => {
             // Get updated counts
             const post = targetPostId ? await prisma.post.findUnique({
                 where: { id: targetPostId },
-                select: { _count: { select: { likes: true } } }
-            }) : null;
+                include: { _count: { select: { likes: true } } }
+            }) : null as any;
             
             return res.json({
                 liked: false,
                 message: 'Post unliked',
-                likes: post?._count.likes ?? 0
+                likes: post?._count?.likes ?? 0
             });
         }
 
         //like
-        const createdLike = await prisma.like.create({
+        await prisma.like.create({
             data: {
                 user_id: userId!,
                 post_id: targetPostId,
                 comment_id: targetCommentId,
             },
         });
-
-        // Realtime notification (posts only)
-        if (targetPostId && targetOwnerId && targetOwnerId !== userId) {
-            const notif = await createNotification({
-                userId: targetOwnerId,
-                code: 'POST_LIKED',
-                title: 'Post liked',
-                message: 'liked your post',
-                senderId: userId,
-                sourceId: targetPostId,
-                sourceType: 'post',
-                metadata: { postId: targetPostId, likeId: createdLike.id },
-            });
-            await emitNotificationNew({
-                receiverId: targetOwnerId,
-                kind: 'like',
-                notification: notif,
-                extra: { postId: targetPostId },
-            });
-        }
         
         // Get updated counts
         const post = targetPostId ? await prisma.post.findUnique({
             where: { id: targetPostId },
-            select: { _count: { select: { likes: true } } }
-        }) : null;
+            include: { _count: { select: { likes: true } } }
+        }) : null as any;
         
         return res.json({ 
             liked: true,
             message: 'Post liked',
-            likes: post?._count.likes ?? 0
+            likes: post?._count?.likes ?? 0
         });
     } catch (error) {
         res.status(500).json({ message: "something went wrong" });

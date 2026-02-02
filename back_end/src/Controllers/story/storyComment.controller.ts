@@ -11,14 +11,11 @@ export class StoryCommentController {
     if (!req.user) {
       throw new AppError("Utilisateur non authentifié", 401);
     }
-    if (typeof req.params.id !== 'string') {
-        return res.status(400).json({ message: "Invalid ID" });
-    }
 
     const { content } = req.body;
 
     const comment = await StoryCommentService.commentStory(
-      req.params.id,
+      (req.params.id as string),
       req.user.id,
       content
     );
@@ -35,10 +32,7 @@ export class StoryCommentController {
    * GET /stories/:id/comments
    */
   static async getStoryComments(req: Request, res: Response) {
-    if (typeof req.params.id !== 'string') {
-        return res.status(400).json({ message: "Invalid ID" });
-    }
-    const comments = await StoryCommentService.getStoryComments(req.params.id);
+    const comments = await StoryCommentService.getStoryComments((req.params.id as string));
 
     return res.status(200).json({
       success: true,
@@ -54,12 +48,9 @@ export class StoryCommentController {
     if (!req.user) {
       throw new AppError("Utilisateur non authentifié", 401);
     }
-    if (typeof req.params.commentId !== 'string') {
-        return res.status(400).json({ message: "Invalid ID" });
-    }
 
     const result = await StoryCommentService.deleteComment(
-      req.params.commentId,
+      (req.params.commentId as string),
       req.user.id
     );
 

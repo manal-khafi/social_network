@@ -7,10 +7,7 @@ export const updatePost = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Non authentifié" });
     }
 
-    const { postId } = req.params;
-    if (typeof postId !== 'string') {
-        return res.status(400).json({ message: "Invalid post ID" });
-    }
+    const { postId } = req.params as { [key: string]: string };
     const { content, media_urls } = req.body;
 
     // Check if post exists and belongs to user
@@ -27,7 +24,7 @@ export const updatePost = async (req: Request, res: Response) => {
     }
 
     // Update post
-    const updatedPost: any = await prisma.post.update({
+    const updatedPost = await prisma.post.update({
       where: { id: postId },
       data: {
         content: content !== undefined ? content.trim() : undefined,

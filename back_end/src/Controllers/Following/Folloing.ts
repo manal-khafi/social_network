@@ -2,10 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 
 const Following = async (req: Request, res: Response) => {
-  const userId = req.params.userId;
-  if (typeof userId !== 'string') {
-    return res.status(400).json({ message: "Invalid user ID" });
-  }
+  const userId = (req.params.userId as string);
   const viewerId = req.user?.id;
 
   try {

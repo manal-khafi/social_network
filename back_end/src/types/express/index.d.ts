@@ -14,6 +14,7 @@ declare global {
 
     interface Request {
       user?: User;
+      params: { [key: string]: string };
     }
   }
 }

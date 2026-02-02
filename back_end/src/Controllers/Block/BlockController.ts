@@ -94,10 +94,7 @@ export const unblockUser = async (req: AuthRequest, res: Response) => {
 export const checkBlock = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-    const { targetUserId } = req.params;
-    if (typeof targetUserId !== 'string') {
-        return res.status(400).json({ success: false, message: "Invalid user ID." });
-    }
+    const { targetUserId } = req.params as { [key: string]: string };
     requireAuth(userId);
     const blocked = await BlockService.isBlocked(userId!, targetUserId);
     return res.status(200).json({
@@ -119,10 +116,7 @@ export const checkBlock = async (req: AuthRequest, res: Response) => {
 export const getBlockStatus = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
-    const { targetUserId } = req.params;
-    if (typeof targetUserId !== 'string') {
-        return res.status(400).json({ success: false, message: "Invalid user ID." });
-    }
+    const { targetUserId } = req.params as { [key: string]: string };
     requireAuth(userId);
 
     const status = await BlockService.getBlockStatus(userId!, targetUserId);
