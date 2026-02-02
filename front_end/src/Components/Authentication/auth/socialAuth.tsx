@@ -1,7 +1,17 @@
 import { loginWithGoogle, loginWithFacebook } from "../../../config/firebaseConfig";
 import { socialLoginBackend } from "../../../utils/api";
 
-export const handleSocialAuth = async (provider: "google" | "facebook") => {
+export type SocialAuthResult = {
+  success: true;
+  token: string;
+  user: any;
+  message?: string;
+  redirectTo?: string;
+};
+
+export const handleSocialAuth = async (
+  provider: "google" | "facebook",
+): Promise<SocialAuthResult> => {
   try {
     let user;
     if (provider === "google") user = await loginWithGoogle();
@@ -14,8 +24,17 @@ export const handleSocialAuth = async (provider: "google" | "facebook") => {
     const backendResponse = await socialLoginBackend(idToken, provider);
 
     console.log("Backend response:", backendResponse);
-    if (!backendResponse.token) throw new Error("Backend did not return JWT token");
-    return { success: true, token: backendResponse.token, user: backendResponse.user };
+    if (!backendResponse?.token) {
+      throw new Error("Backend did not return JWT token");
+    }
+
+    return {
+      success: true,
+      token: backendResponse.token,
+      user: backendResponse.user,
+      message: backendResponse.message,
+      redirectTo: backendResponse.redirectTo,
+    };
 
 
   } catch (error: any) {

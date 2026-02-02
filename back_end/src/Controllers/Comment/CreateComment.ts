@@ -1,6 +1,18 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { isBlockedEitherWay } from "../../Service/BlockService";
+import { createNotification } from "../../Service/notificationService";
+import { emitNotificationNew } from "../../Service/notificationRealtime";
+
+const extractMentions = (text: string) => {
+  const out = new Set<string>();
+  const re = /@([a-zA-Z0-9_]{2,30})/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    out.add(m[1]);
+  }
+  return Array.from(out);
+};
 
 const Comment = async (req: Request, res: Response) => {
   try {
@@ -60,6 +72,92 @@ const Comment = async (req: Request, res: Response) => {
         parent_comment_id: parent_comment_id || null,
       },
     });
+
+    // --- Notifications (post owner / parent comment owner) ---
+    try {
+      const sender = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, username: true, display_name: true },
+      });
+      const senderName = sender?.display_name || sender?.username || "Someone";
+
+      if (newComment.parent_comment_id) {
+        const parent = await prisma.comment.findUnique({
+          where: { id: newComment.parent_comment_id },
+          select: { user_id: true },
+        });
+        const receiverId = parent?.user_id;
+        if (receiverId && receiverId !== userId) {
+          const notif = await createNotification({
+            userId: receiverId,
+            code: "COMMENT_REPLIED",
+            title: "New reply",
+            message: "replied to your comment",
+            senderId: userId,
+            sourceId: newComment.id,
+            sourceType: "comment",
+            metadata: { postId, commentId: newComment.id, parentCommentId: newComment.parent_comment_id },
+          });
+          await emitNotificationNew({
+            receiverId,
+            kind: "comment",
+            notification: notif,
+            extra: { postId, commentId: newComment.id },
+          });
+        }
+      } else {
+        const receiverId = findpost.user_id;
+        if (receiverId && receiverId !== userId) {
+          const notif = await createNotification({
+            userId: receiverId,
+            code: "POST_COMMENTED",
+            title: "New comment",
+            message: "commented on your post",
+            senderId: userId,
+            sourceId: postId,
+            sourceType: "post",
+            metadata: { postId, commentId: newComment.id },
+          });
+          await emitNotificationNew({
+            receiverId,
+            kind: "comment",
+            notification: notif,
+            extra: { postId, commentId: newComment.id },
+          });
+        }
+      }
+
+      // Mentions inside comment
+      const mentions = extractMentions(String(content));
+      if (mentions.length) {
+        const mentionedUsers = await prisma.user.findMany({
+          where: { username: { in: mentions } },
+          select: { id: true },
+        });
+
+        for (const u of mentionedUsers) {
+          if (u.id === userId) continue;
+          const notif = await createNotification({
+            userId: u.id,
+            code: "COMMENT_MENTION",
+            title: "Mention",
+            message: `${senderName} mentioned you in a comment`,
+            senderId: userId,
+            sourceId: newComment.id,
+            sourceType: "comment",
+            metadata: { postId, commentId: newComment.id },
+          });
+          await emitNotificationNew({
+            receiverId: u.id,
+            kind: "mention",
+            notification: notif,
+            extra: { postId, commentId: newComment.id },
+          });
+        }
+      }
+    } catch {
+      // do not block comment creation
+    }
 
     return res.status(201).json({
       message: "Comment created successfully",

@@ -1,11 +1,11 @@
-import React, { InputHTMLAttributes, forwardRef, useState } from "react";
-import { motion } from "framer-motion";
+import { forwardRef, useState } from "react";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 
-interface AuthInputProps extends InputHTMLAttributes<HTMLInputElement> {
+type AuthInputProps = Omit<HTMLMotionProps<"input">, "ref"> & {
   label: string;
   error?: string;
-}
+};
 
 export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
   ({ label, error, type, ...props }, ref) => {

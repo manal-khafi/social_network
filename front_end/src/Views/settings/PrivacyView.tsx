@@ -189,11 +189,16 @@ export default function PrivacyView() {
                 <div key={user.id} className="flex items-center justify-between p-3 hover:bg-muted rounded-lg">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-10 h-10">
-                      <AvatarImage src={user.avatar} />
+                      <AvatarImage
+                        src={
+                          ("avatar_url" in (user as any) ? (user as any).avatar_url : undefined) ??
+                          ("avatar" in (user as any) ? (user as any).avatar : undefined)
+                        }
+                      />
                       <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">{user.fullName}</p>
+                      <p className="font-medium">{(user as any).fullName ?? user.username}</p>
                       <p className="text-sm text-muted-foreground">@{user.username}</p>
                     </div>
                   </div>

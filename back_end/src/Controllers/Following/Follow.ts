@@ -1,6 +1,8 @@
 import {Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { isBlockedEitherWay } from "../../Service/BlockService";
+import { createNotification } from "../../Service/notificationService";
+import { emitNotificationNew } from "../../Service/notificationRealtime";
 
 const Follow = async (req: Request, res: Response) => {
   try {
@@ -54,6 +56,26 @@ const Follow = async (req: Request, res: Response) => {
         }
       });
 
+      // notify followed user about follow request
+      if (userIdToFollow !== userId) {
+        const notif = await createNotification({
+          userId: userIdToFollow,
+          code: "FOLLOW_REQUEST",
+          title: "Follow request",
+          message: "sent you a follow request",
+          senderId: userId,
+          sourceId: userId,
+          sourceType: "user",
+          metadata: { followerId: userId },
+        });
+        await emitNotificationNew({
+          receiverId: userIdToFollow,
+          kind: "follow",
+          notification: notif,
+          extra: { followerId: userId },
+        });
+      }
+
       return res.status(201).json({ message: "Follow request sent", status: "PENDING" });
     }
 
@@ -65,6 +87,26 @@ const Follow = async (req: Request, res: Response) => {
         status: "accepted"
       }
     });
+
+    // notify followed user about new follower
+    if (userIdToFollow !== userId) {
+      const notif = await createNotification({
+        userId: userIdToFollow,
+        code: "USER_FOLLOWED",
+        title: "New follower",
+        message: "started following you",
+        senderId: userId,
+        sourceId: userId,
+        sourceType: "user",
+        metadata: { followerId: userId },
+      });
+      await emitNotificationNew({
+        receiverId: userIdToFollow,
+        kind: "follow",
+        notification: notif,
+        extra: { followerId: userId },
+      });
+    }
 
     return res.status(201).json({ message: "Successfully followed the user", status: "ACCEPTED" });
 

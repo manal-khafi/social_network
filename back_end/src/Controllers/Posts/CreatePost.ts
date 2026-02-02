@@ -1,5 +1,17 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
+import { createNotification } from "../../Service/notificationService";
+import { emitNotificationNew } from "../../Service/notificationRealtime";
+
+const extractMentions = (text: string) => {
+  const out = new Set<string>();
+  const re = /@([a-zA-Z0-9_]{2,30})/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    out.add(m[1]);
+  }
+  return Array.from(out);
+};
 
 export const createPost = async (req: Request, res: Response) => {
   try {
@@ -71,6 +83,40 @@ export const createPost = async (req: Request, res: Response) => {
       commentsAllowed: true,
       likesVisible: true,
     };
+
+    // Mentions inside post content
+    try {
+      const mentions = extractMentions(content);
+      if (mentions.length) {
+        const sender = post.user;
+        const senderName = sender.display_name || sender.username || "Someone";
+        const mentionedUsers = await prisma.user.findMany({
+          where: { username: { in: mentions } },
+          select: { id: true },
+        });
+        for (const u of mentionedUsers) {
+          if (u.id === req.user.id) continue;
+          const notif = await createNotification({
+            userId: u.id,
+            code: "POST_MENTION",
+            title: "Mention",
+            message: `${senderName} mentioned you in a post`,
+            senderId: req.user.id,
+            sourceId: post.id,
+            sourceType: "post",
+            metadata: { postId: post.id },
+          });
+          await emitNotificationNew({
+            receiverId: u.id,
+            kind: "mention",
+            notification: notif,
+            extra: { postId: post.id },
+          });
+        }
+      }
+    } catch {
+      // ignore
+    }
 
     return res
       .status(201)

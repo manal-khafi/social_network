@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { promises as fs } from "fs";
 import path from "path";
+import crypto from "crypto";
+import { uploadBufferToFirebaseStorage } from "../../util/firebaseStorage";
 
 const Create = async (req: Request, res: Response) => {
   try {
@@ -51,14 +53,29 @@ const Create = async (req: Request, res: Response) => {
           .json({ message: "Image too large (max 5MB)" });
       }
 
-      const avatarFileName = `${userId}.png`;
-      const avatarDir = path.join(__dirname, "../../../uploads/avatars");
-      await fs.mkdir(avatarDir, { recursive: true });
+      const mimetype = String(req.file.mimetype || "image/png");
+      const ext = mimetype.includes("jpeg") || mimetype.includes("jpg") ? "jpg" : mimetype.includes("webp") ? "webp" : "png";
+      const rand = crypto.randomBytes(8).toString("hex");
 
-      const avatarPath = path.join(avatarDir, avatarFileName);
-      await fs.writeFile(avatarPath, req.file.buffer);
+      try {
+        const objectPath = `avatars/${userId}/${Date.now()}-${rand}.${ext}`;
+        const uploaded = await uploadBufferToFirebaseStorage({
+          objectPath,
+          buffer: req.file.buffer,
+          contentType: mimetype,
+          cacheControl: "public, max-age=86400",
+        });
+        avatarUrl = uploaded.url;
+      } catch {
+        const avatarFileName = `${userId}.${ext}`;
+        const avatarDir = path.join(__dirname, "../../../uploads/avatars");
+        await fs.mkdir(avatarDir, { recursive: true });
 
-      avatarUrl = `/uploads/avatars/${avatarFileName}`;
+        const avatarPath = path.join(avatarDir, avatarFileName);
+        await fs.writeFile(avatarPath, req.file.buffer);
+
+        avatarUrl = `/uploads/avatars/${avatarFileName}`;
+      }
     }
 
     const updatedUser = await prisma.user.update({

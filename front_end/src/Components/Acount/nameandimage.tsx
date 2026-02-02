@@ -8,6 +8,7 @@ interface SetupProfileProps {
   initialData?: {
     username: string;
     profileImage: string | null;
+    imageFile?: File | null;
   };
 }
 
@@ -15,7 +16,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState(initialData?.username || '');
   const [profileImage, setProfileImage] = useState<string | null>(initialData?.profileImage || null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(initialData?.imageFile ?? null);
   const [error, setError] = useState('');
 
   // Update the parent whenever data changes

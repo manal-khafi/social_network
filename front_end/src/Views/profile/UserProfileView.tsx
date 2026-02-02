@@ -175,7 +175,11 @@ export default function UserProfileView() {
               >
                 {getFollowButtonText()}
               </Button>
-              <Link to={`/home/inbox/${user.id}`} className="flex-1">
+              <Link
+                to={`/home/inbox/${user.id}`}
+                state={{ directUserId: user.id }}
+                className="flex-1"
+              >
                 <Button variant="outline" className="w-full">
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Message

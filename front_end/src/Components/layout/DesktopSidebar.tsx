@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Home, Users, PlusCircle, Mail, User, Settings, LogOut, Heart, Search } from 'lucide-react';
+import { useMemo } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { logoutUser } from '../../features/auth/authSlice';
@@ -16,16 +17,41 @@ export default function DesktopSidebar() {
   const { currentUser } = useAppSelector((state) => state.user);
   const { user: authUser } = useAppSelector((state) => state.auth);
   const { unreadCount } = useAppSelector((state) => state.notifications);
+  const inboxUnreadTotal = useAppSelector((state) => state.messages.unreadTotal);
   const logoUrl = new URL('../../../logo.png', import.meta.url).href;
 
   // Use detailed profile if available, otherwise fallback to basic auth user
   const user = currentUser ?? authUser;
 
+  const avatarSrc = useMemo(() => {
+    if (!user || typeof user !== "object") return undefined;
+    if ("avatar_url" in user && typeof user.avatar_url === "string") return user.avatar_url;
+    if ("avatar" in user && typeof user.avatar === "string") return user.avatar;
+    return undefined;
+  }, [user]);
+
+  const displayName = useMemo(() => {
+    if (!user || typeof user !== "object") return "";
+    if ("display_name" in user && typeof user.display_name === "string") return user.display_name;
+    if ("fullName" in user && typeof user.fullName === "string") return user.fullName;
+    return user.username ?? "";
+  }, [user]);
+
+  const followersCount = useMemo(() => {
+    if (!user || typeof user !== "object") return 0;
+    return "followersCount" in user ? Number((user as any).followersCount ?? 0) : 0;
+  }, [user]);
+
+  const followingCount = useMemo(() => {
+    if (!user || typeof user !== "object") return 0;
+    return "followingCount" in user ? Number((user as any).followingCount ?? 0) : 0;
+  }, [user]);
+
   const navItems = [
     { path: PATHS.FEED, icon: Home, label: 'Home' },
     { path: PATHS.COMMUNITY, icon: Users, label: 'Community' },
     { path: PATHS.CREATE_POST, icon: PlusCircle, label: 'Create' },
-    { path: PATHS.INBOX, icon: Mail, label: 'Inbox' },
+    { path: PATHS.INBOX, icon: Mail, label: 'Inbox', badge: inboxUnreadTotal },
     { path: PATHS.NOTIFICATIONS, icon: Heart, label: 'Notifications', badge: unreadCount },
     { path: PATHS.PROFILE_ME, icon: User, label: 'Profile' },
   ];
@@ -69,11 +95,11 @@ export default function DesktopSidebar() {
         >
           <div className="flex items-center gap-3">
             <Avatar className="w-12 h-12">
-              <AvatarImage src={user.avatar_url ?? user.avatar ?? undefined} />
+              <AvatarImage src={avatarSrc} />
               <AvatarFallback>{(user.username?.[0] ?? '?').toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold truncate">{user.display_name ?? user.username}</p>
+              <p className="font-semibold truncate">{displayName || user.username}</p>
               <p className="text-sm text-muted-foreground truncate">@{user.username}</p>
             </div>
           </div>
@@ -112,6 +138,7 @@ export default function DesktopSidebar() {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname.startsWith(item.path);
+            const badge = item.badge ?? 0;
 
             return (
               <Link
@@ -126,9 +153,9 @@ export default function DesktopSidebar() {
               >
                 <div className="relative">
                   <Icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} />
-                  {item.badge > 0 && (
+                  {badge > 0 && (
                      <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">
-                       {item.badge > 9 ? '9+' : item.badge}
+                       {badge > 9 ? '9+' : badge}
                      </Badge>
                   )}
                 </div>
@@ -168,8 +195,8 @@ export default function DesktopSidebar() {
       <div className="hidden p-4 border-t border-border group-hover:block">
         {user ? (
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>{Number(user.followersCount ?? 0).toLocaleString()} Followers</span>
-            <span>{Number(user.followingCount ?? 0).toLocaleString()} Following</span>
+            <span>{followersCount.toLocaleString()} Followers</span>
+            <span>{followingCount.toLocaleString()} Following</span>
           </div>
         ) : (
           <div className="flex items-center justify-between">

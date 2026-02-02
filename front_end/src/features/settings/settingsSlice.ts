@@ -24,6 +24,8 @@ interface SettingsState {
   };
 }
 
+type NotificationToggleKey = Exclude<keyof SettingsState['notifications'], 'channels'>;
+
 const initialState: SettingsState = {
   theme: 'system',
   language: (loadLanguage() as SettingsState['language']) || 'en',
@@ -51,7 +53,7 @@ const settingsSlice = createSlice({
     setLanguage: (state, action: PayloadAction<'en' | 'fr' | 'es' | 'ar' | 'de'>) => {
       state.language = action.payload;
     },
-    toggleNotification: (state, action: PayloadAction<keyof typeof initialState.notifications>) => {
+    toggleNotification: (state, action: PayloadAction<NotificationToggleKey>) => {
       state.notifications[action.payload] = !state.notifications[action.payload];
     },
     toggleAllNotifications: (state) => {

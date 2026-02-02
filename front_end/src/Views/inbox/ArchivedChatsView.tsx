@@ -1,12 +1,25 @@
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAppSelector } from '../../hooks';
+import { useAppDispatch } from '../../hooks';
+import { fetchConversations, unarchiveConversation } from '../../features/messages/messagesSlice';
 import { Card } from '../../Components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { Archive } from 'lucide-react';
 
 export default function ArchivedChatsView() {
+  const dispatch = useAppDispatch();
   const { conversations } = useAppSelector((state) => state.messages);
   const archivedChats = conversations.filter(c => c.isArchived);
+
+  useEffect(() => {
+    dispatch(fetchConversations({ archived: true }));
+  }, [dispatch]);
+
+  const handleRestore = (e: React.MouseEvent, conversationId: string) => {
+    e.preventDefault();
+    dispatch(unarchiveConversation(conversationId));
+  };
 
   return (
     <div className="p-4 space-y-4 max-w-2xl mx-auto pb-24">
@@ -23,7 +36,7 @@ export default function ArchivedChatsView() {
       ) : (
         <div className="space-y-2">
           {archivedChats.map((conversation) => (
-            <Link key={conversation.id} to={`/inbox/${conversation.id}`}>
+            <Link key={conversation.id} to={`/home/inbox/${conversation.id}`}>
               <Card className="p-4 hover:bg-muted/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <Avatar>
@@ -37,6 +50,12 @@ export default function ArchivedChatsView() {
                     </div>
                     <p className="text-sm text-muted-foreground truncate">{conversation.lastMessage}</p>
                   </div>
+                  <button
+                    className="px-3 py-1.5 rounded-lg text-sm bg-[#ECF8F6] text-[#18534F] hover:bg-[#dff3f1]"
+                    onClick={(e) => handleRestore(e, conversation.id)}
+                  >
+                    Restaurer
+                  </button>
                 </div>
               </Card>
             </Link>

@@ -1,12 +1,16 @@
 import { useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { markAsRead, markAllAsRead } from '../../features/notifications/notificationsSlice';
+import {
+  fetchNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from '../../features/notifications/notificationsSlice';
 import { acceptFollowRequest, denyFollowRequest, fetchFollowRequests } from '../../features/user/userSlice';
 import { Card } from '../../Components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { Button } from '../../Components/ui/button';
 import { Separator } from '../../Components/ui/separator';
-import { Heart, MessageCircle, UserPlus, Repeat, Check, X } from 'lucide-react';
+import { Heart, MessageCircle, UserPlus, Repeat, Check, X, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function NotificationsView() {
@@ -26,6 +30,9 @@ export default function NotificationsView() {
 
   useEffect(() => {
     dispatch(fetchFollowRequests());
+    dispatch(fetchNotifications());
+    // Visiting the notifications page resets the unread badge.
+    dispatch(markAllNotificationsAsRead());
   }, [dispatch]);
 
   const getIcon = (type: string) => {
@@ -34,6 +41,8 @@ export default function NotificationsView() {
       case 'comment': return <MessageCircle className="w-5 h-5 text-blue-500" />;
       case 'follow': return <UserPlus className="w-5 h-5 text-green-500" />;
       case 'repost': return <Repeat className="w-5 h-5 text-purple-500" />;
+      case 'message': return <MessageCircle className="w-5 h-5 text-primary" />;
+      case 'call': return <Phone className="w-5 h-5 text-primary" />;
       default: return null;
     }
   };
@@ -45,7 +54,7 @@ export default function NotificationsView() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => dispatch(markAllAsRead())}
+          onClick={() => dispatch(markAllNotificationsAsRead())}
         >
           Mark all as read
         </Button>
@@ -115,7 +124,7 @@ export default function NotificationsView() {
             <Card
               key={notif.id}
               className={`p-4 cursor-pointer transition-colors ${!notif.isRead ? 'bg-muted/30 border-primary/20' : ''}`}
-              onClick={() => dispatch(markAsRead(notif.id))}
+              onClick={() => dispatch(markNotificationAsRead(notif.id))}
             >
               <div className="flex gap-3">
                 <Avatar>

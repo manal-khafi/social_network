@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const CreateComment_1 = __importDefault(require("../Controllers/Comment/CreateComment"));
+const deleteComment_1 = require("../Controllers/Comment/deleteComment");
+const ModifierComment_1 = __importDefault(require("../Controllers/Comment/ModifierComment"));
+const getComment_1 = __importDefault(require("../Controllers/Comment/getComment"));
+const authMiddlware_1 = require("../Middleware/authMiddlware");
+const express_1 = require("express");
+const likeController_1 = require("../Controllers/like/likeController");
+const blockGuardMiddleware_1 = require("../Middleware/Block/blockGuardMiddleware");
+const commentRouter = (0, express_1.Router)();
+commentRouter.post("/create-comment", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), CreateComment_1.default);
+commentRouter.post("/like/:commentId", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), likeController_1.toggleLike);
+commentRouter.delete("/delete-comment/:commentId", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), deleteComment_1.deleteComment);
+commentRouter.put("/modify-comment/:commentId", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), ModifierComment_1.default);
+commentRouter.get("/get-comments/:postId", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), getComment_1.default);
+exports.default = commentRouter;

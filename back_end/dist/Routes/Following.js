@@ -1,0 +1,24 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const Follow_1 = __importDefault(require("../Controllers/Following/Follow"));
+const Unfolow_1 = __importDefault(require("../Controllers/Following/Unfolow"));
+const Acceptfolow_1 = __importDefault(require("../Controllers/Following/Acceptfolow"));
+const Refusedemande_1 = require("../Controllers/Following/Refusedemande");
+const Folloing_1 = __importDefault(require("../Controllers/Following/Folloing"));
+const Follower_1 = __importDefault(require("../Controllers/Following/Follower"));
+const FollowRequests_1 = require("../Controllers/Following/FollowRequests");
+const authMiddlware_1 = require("../Middleware/authMiddlware");
+const blockGuardMiddleware_1 = require("../Middleware/Block/blockGuardMiddleware");
+const FollowRoutes = (0, express_1.Router)();
+FollowRoutes.post("/follow/:userIdToFollow", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), Follow_1.default);
+FollowRoutes.delete("/unfollow/:userIdToUnfollow", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), Unfolow_1.default);
+FollowRoutes.post("/accept-follow/:demandeId", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), Acceptfolow_1.default);
+FollowRoutes.post("/refuse-follow/:requestId", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), Refusedemande_1.refuseFollowRequest);
+FollowRoutes.get("/following/:userId", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), Folloing_1.default);
+FollowRoutes.get("/followers/:userId", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), Follower_1.default);
+FollowRoutes.get("/requests", authMiddlware_1.authMiddleware, (0, blockGuardMiddleware_1.blockGuard)(), FollowRequests_1.getFollowRequests);
+exports.default = FollowRoutes;
