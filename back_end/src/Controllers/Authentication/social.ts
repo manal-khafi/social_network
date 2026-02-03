@@ -46,7 +46,7 @@ export const socialLogin = async (req: Request, res: Response) => {
           avatar_url: avatarUrl,
           is_verified: true,
           provider: firebaseSignInProvider, // Use Firebase sign-in provider
-          onboarding_done: true, // Assuming social login implies onboarding is done
+          onboarding_done: false, // Require onboarding for new social users
         },
       });
     } else {

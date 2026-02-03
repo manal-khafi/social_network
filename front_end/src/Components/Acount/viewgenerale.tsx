@@ -6,7 +6,7 @@ import ChooseGender from "./gender";
 import PrivacySettings from "./privacy";
 import { Check, Sparkles, Loader } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks";
-import { fetchMe } from "../../features/auth/authSlice";
+import { fetchMe, setAuth } from "../../features/auth/authSlice";
 import api from "../../api/axios";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ const PersonalizationWizard: React.FC = () => {
   const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const token = useAppSelector((state) => state.auth.token);
+  const currentUser = useAppSelector((state) => state.auth.user);
 
   // ✅ Read username from Redux (saved at register/login)
   const authUsername = useAppSelector((s) => s.auth.user?.username);
@@ -131,9 +132,23 @@ const PersonalizationWizard: React.FC = () => {
 
   const dispatch = useAppDispatch();
 
+  const getTokenFromResponse = (response: any) => {
+    return response?.data?.token || response?.headers?.["x-access-token"] || token;
+  };
+
   const handleSkipToHome = async () => {
     try {
-      await api.patch("/authentication/onboarding/complete");
+      const response = await api.patch("/authentication/onboarding/complete");
+      const updatedUser = response?.data?.user;
+      const nextToken = getTokenFromResponse(response);
+      if (nextToken) {
+        dispatch(
+          setAuth({
+            token: nextToken,
+            user: updatedUser ?? (currentUser ? { ...currentUser, onboarding_done: true } : null),
+          })
+        );
+      }
       await dispatch(fetchMe());
       navigate("/home");
     } catch (error) {
@@ -188,7 +203,27 @@ const PersonalizationWizard: React.FC = () => {
 
       console.log("JSON response:", result);
 
-      await api.patch("/authentication/onboarding/complete");
+      const onboardingResponse = await api.patch("/authentication/onboarding/complete");
+      const updatedUser = onboardingResponse?.data?.user;
+      const nextToken = getTokenFromResponse(onboardingResponse);
+      const updatedProfile = result?.user?.updatedUser;
+      const mergedUser =
+        updatedUser ??
+        (currentUser
+          ? {
+              ...currentUser,
+              ...(updatedProfile ?? {}),
+              onboarding_done: true,
+            }
+          : null);
+      if (nextToken) {
+        dispatch(
+          setAuth({
+            token: nextToken,
+            user: mergedUser,
+          })
+        );
+      }
       await dispatch(fetchMe());
 
       localStorage.removeItem("setupWizardData");

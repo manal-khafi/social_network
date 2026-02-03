@@ -33,9 +33,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     password: "",
   });
 
-  const goNextAfterAuth = (_user?: any, redirectTo?: string) => {
+  const goNextAfterAuth = (user?: any, redirectTo?: string) => {
     if (redirectTo && redirectTo !== "/personalize") {
       navigate(redirectTo);
+      return;
+    }
+    if (user?.onboarding_done === false) {
+      navigate("/personalize");
       return;
     }
     navigate("/home");
