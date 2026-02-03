@@ -15,7 +15,7 @@ const readPersistedAuth = (): { token: string | null } => {
   }
 };
 
-const rawBaseURL = import.meta.env.VITE_API_URL || "http://localhost:3500";
+const rawBaseURL = import.meta.env.VITE_API_URL ?? "";
 const baseURL = rawBaseURL.endsWith("/api") ? rawBaseURL : `${rawBaseURL}/api`;
 
 const api = axios.create({

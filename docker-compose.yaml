@@ -70,7 +70,7 @@ services:
       - ./front_end:/usr/src/app
       - /usr/src/app/node_modules
     environment:
-      - VITE_API_URL=http://localhost:3500
+      - VITE_API_URL=
 
   nginx:
     image: nginx:alpine
