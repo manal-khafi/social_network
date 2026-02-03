@@ -6,7 +6,7 @@ import ChooseGender from "./gender";
 import PrivacySettings from "./privacy";
 import { Check, Sparkles, Loader } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks";
-import { fetchMe } from "../../features/auth/authSlice";
+import { fetchMe, setAuth } from "../../features/auth/authSlice";
 import api from "../../api/axios";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ type Step = "choice" | "profile" | "gender" | "privacy" | "summary";
 
 const PersonalizationWizard: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const token = useAppSelector((state) => state.auth.token);
 
@@ -129,12 +130,14 @@ const PersonalizationWizard: React.FC = () => {
     }
   };
 
-  const dispatch = useAppDispatch();
-
   const handleSkipToHome = async () => {
     try {
-      await api.patch("/authentication/onboarding/complete");
-      await dispatch(fetchMe());
+      const response = await api.patch("/authentication/onboarding/complete");
+      if (response.data.token && response.data.user) {
+        dispatch(setAuth({ token: response.data.token, user: response.data.user }));
+      } else {
+        await dispatch(fetchMe());
+      }
       navigate("/home");
     } catch (error) {
       console.error("Failed to mark onboarding as complete", error);
@@ -188,8 +191,12 @@ const PersonalizationWizard: React.FC = () => {
 
       console.log("JSON response:", result);
 
-      await api.patch("/authentication/onboarding/complete");
-      await dispatch(fetchMe());
+      const completeResponse = await api.patch("/authentication/onboarding/complete");
+      if (completeResponse.data.token && completeResponse.data.user) {
+        dispatch(setAuth({ token: completeResponse.data.token, user: completeResponse.data.user }));
+      } else {
+        await dispatch(fetchMe());
+      }
 
       localStorage.removeItem("setupWizardData");
 

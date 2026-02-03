@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import prisma from "../../config/prismaClient";
 
 export const Me = async (req: Request, res: Response) => {
   try {
@@ -8,6 +9,29 @@ export const Me = async (req: Request, res: Response) => {
         message: "Not authenticated",
       });
     }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: {
+        role: {
+          include: {
+            rolePermissions: {
+              include: { permission: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const permissions =
+      user.role?.rolePermissions.map((rp: any) => rp.permission.code) || [];
 
     const headerToken = res.getHeader("x-access-token") as string | undefined;
     const authHeader = req.headers.authorization;
@@ -25,13 +49,13 @@ export const Me = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       user: {
-        id: req.user.id,
-        email: req.user.email,
-        username: req.user.username ?? "",
-        avatar_url: req.user.avatar_url ?? null,
-        role: req.user.role,
-        permissions: req.user.permissions ?? [],
-        onboarding_done: req.user.onboarding_done
+        id: user.id,
+        email: user.email,
+        username: user.username ?? "",
+        avatar_url: user.avatar_url ?? null,
+        role: user.role?.name,
+        permissions,
+        onboarding_done: user.onboarding_done
       },
       token,
     });
