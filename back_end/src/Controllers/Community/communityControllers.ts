@@ -139,7 +139,7 @@ const getCommunityById = async (req: Request, res: Response, next: NextFunction)
     }
 }
 
-const modifyCommunity = async (req: Request, res: Response, next: NextFunction) => {
+const updateCommunity = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params as { [key: string]: string };
         const { name, description, bio, banner_url, avatar_url, is_private, type } = req.body;
@@ -200,4 +200,4 @@ const deleteCommunity = async (req: Request, res: Response, next: NextFunction) 
 }
 
 
-export default { createCommunity, getAllCommunities, getCommunityById, modifyCommunity, deleteCommunity };
+export default { createCommunity, getAllCommunities, getCommunityById, updateCommunity, deleteCommunity };
