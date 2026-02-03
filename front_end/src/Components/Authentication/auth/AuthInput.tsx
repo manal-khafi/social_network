@@ -24,7 +24,7 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
           <motion.input
             ref={ref}
             type={inputType}
-            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:border-[#226d68] focus:shadow-lg focus:shadow-[#226d68]/10"
+            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white text-[#4A5565] transition-all duration-200 focus:outline-none focus:border-[#226d68] focus:shadow-lg focus:shadow-[#226d68]/10"
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             animate={{
