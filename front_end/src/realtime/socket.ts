@@ -4,8 +4,12 @@ let socket: Socket | null = null;
 let currentToken: string | null = null;
 
 const resolveSocketURL = () => {
-  const rawBaseURL = import.meta.env.VITE_API_URL || "http://localhost:3500";
-  // backend server is on base (not /api)
+  const rawBaseURL = import.meta.env.VITE_API_URL ?? "";
+  if (!rawBaseURL) {
+    // If no ENV var is set, assume we are behind a proxy serving both frontend and backend on the same origin
+    return typeof window !== "undefined" ? window.location.origin : "";
+  }
+  // If env var is set (e.g. http://localhost:3500/api), strip /api to get the root
   return String(rawBaseURL).replace(/\/+$/, "").replace(/\/api$/, "");
 };
 
