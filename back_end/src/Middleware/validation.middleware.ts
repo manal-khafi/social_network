@@ -64,6 +64,11 @@ export const validateStoryCreation = (
           return next(new AppError('Mention invalide', 400));
         }
       }
+      if (ov.type === 'gif') {
+        if (typeof ov.gifUrl !== 'string' || !/^https:\/\//i.test(ov.gifUrl)) {
+          return next(new AppError('GIF invalide', 400));
+        }
+      }
     }
   }
 

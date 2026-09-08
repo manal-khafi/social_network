@@ -15,6 +15,7 @@ import { StoryCommentController } from '../Controllers/story/storyComment.contro
 import { StoryMessageController } from '../Controllers/story/storyMessage.controller';
 import { StoryShareController } from '../Controllers/story/storyShare.controller';
 import { StoryMusicController } from '../Controllers/story/storyMusic.controller';
+import { StoryGifController } from '../Controllers/story/storyGif.controller';
 import { HighlightController } from '../Controllers/story/highlight.controller';
 import { StoryPollController } from '../Controllers/story/storyPoll.controller';
 import { StoryQuestionController } from '../Controllers/story/storyQuestion.controller';
@@ -24,8 +25,9 @@ const router = express.Router();
 // Toutes les routes nécessitent une authentification
 router.use(authMiddleware);
 
-// Recherche de musique (avant les routes /:id)
+// Recherche de musique / GIF (avant les routes /:id)
 router.get('/music/search', StoryMusicController.search);
+router.get('/gifs/search', StoryGifController.search);
 
 // Highlights (permanents) — avant les routes /:id
 router.post('/highlights', HighlightController.create);

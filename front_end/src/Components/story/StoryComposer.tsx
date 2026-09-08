@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   X, Type, Smile, Music2, ImagePlus, Loader2, Sparkles, Check, ChevronDown, Trash2, Link2, BarChart3,
-  HelpCircle, AtSign,
+  HelpCircle, AtSign, Sticker,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { uploadStoryMedia } from "../../utils/uploadStoryMedia";
 import type { StoryOverlay, StoryVisibility, SharedPostRef } from "../../api/storiesApi";
 import MusicPicker, { type SelectedMusic } from "./MusicPicker";
 import MentionPicker from "./MentionPicker";
+import GifPicker from "./GifPicker";
 import StoryOverlayLayer from "./StoryOverlayLayer";
 import {
   TEXT_COLORS, STORY_BACKGROUNDS, FONT_FAMILIES, VISIBILITY_OPTIONS,
@@ -49,6 +50,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
   const [showMusic, setShowMusic] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showMention, setShowMention] = useState(false);
+  const [showGif, setShowGif] = useState(false);
   const [showVisibility, setShowVisibility] = useState(false);
   const [textDraft, setTextDraft] = useState<{
     open: boolean;
@@ -217,6 +219,14 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
       ...prev,
       { id: uid(), type: "question", prompt, x: 0.5, y: 0.5, rotation: 0, scale: 1 },
     ]);
+  };
+
+  const addGif = (gif: { url: string; width: number; height: number }) => {
+    setOverlays((prev) => [
+      ...prev,
+      { id: uid(), type: "gif", gifUrl: gif.url, x: 0.5, y: 0.5, rotation: 0, scale: 1 },
+    ]);
+    setShowGif(false);
   };
 
   const addMention = (username: string) => {
@@ -420,6 +430,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
         <div className="flex items-center justify-around px-2 py-3 border-t border-white/10">
           <ToolButton icon={<Type className="w-5 h-5" />} label="Text" onClick={() => openTextEditor()} />
           <ToolButton icon={<Smile className="w-5 h-5" />} label="Sticker" onClick={() => setShowEmoji(true)} />
+          <ToolButton icon={<Sticker className="w-5 h-5" />} label="GIF" onClick={() => setShowGif(true)} />
           <ToolButton icon={<AtSign className="w-5 h-5" />} label="Mention" onClick={() => setShowMention(true)} />
           <ToolButton icon={<Link2 className="w-5 h-5" />} label="Link" onClick={addLink} />
           <ToolButton icon={<BarChart3 className="w-5 h-5" />} label="Poll" onClick={addPoll} />
@@ -499,6 +510,8 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
       {showMention && (
         <MentionPicker onPick={addMention} onClose={() => setShowMention(false)} />
       )}
+
+      {showGif && <GifPicker onPick={addGif} onClose={() => setShowGif(false)} />}
 
       {showEmoji && (
         <div className="absolute inset-0 z-40 bg-black/95 flex flex-col">
