@@ -15,6 +15,7 @@ import { StoryCommentController } from '../Controllers/story/storyComment.contro
 import { StoryMessageController } from '../Controllers/story/storyMessage.controller';
 import { StoryShareController } from '../Controllers/story/storyShare.controller';
 import { StoryMusicController } from '../Controllers/story/storyMusic.controller';
+import { HighlightController } from '../Controllers/story/highlight.controller';
 
 const router = express.Router();
 
@@ -23,6 +24,15 @@ router.use(authMiddleware);
 
 // Recherche de musique (avant les routes /:id)
 router.get('/music/search', StoryMusicController.search);
+
+// Highlights (permanents) — avant les routes /:id
+router.post('/highlights', HighlightController.create);
+router.get('/highlights/user/:userId', HighlightController.listForUser);
+router.get('/highlights/:id', HighlightController.getById);
+router.patch('/highlights/:id', HighlightController.update);
+router.post('/highlights/:id/items', HighlightController.addItems);
+router.delete('/highlights/:id/items/:storyId', HighlightController.removeItem);
+router.delete('/highlights/:id', HighlightController.remove);
 
 // Routes principales pour les stories
 router.post('/', validateStoryCreation, StoryController.createStory);

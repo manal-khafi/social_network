@@ -3,6 +3,8 @@ import http from "http";
 import express from "express";
 import cors from "cors";
 import path from "path";
+import pinoHttp from "pino-http";
+import { logger } from "./util/logger";
 import { initRealtime } from "./realtime/io";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
@@ -41,6 +43,14 @@ app.set("trust proxy", 1);
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
   : ["https://socialnetworkes.vercel.app"];
+
+// Per-request structured logging with a generated request id (req.log / req.id).
+app.use(
+  pinoHttp({
+    logger,
+    autoLogging: { ignore: (req) => req.url === "/health" },
+  })
+);
 
 // Security headers. crossOriginResourcePolicy is relaxed so that uploaded
 // media can be embedded by the frontend when it is served from another origin.
@@ -127,12 +137,12 @@ const server = http.createServer(app);
 initRealtime(server, allowedOrigins);
 
 server.listen(port, () => {
-  console.log(`API listening on port ${port}`);
+  logger.info({ port }, "API listening");
 });
 
 // Graceful shutdown so Prisma closes its pool and sockets drain.
 const shutdown = (signal: string) => {
-  console.log(`${signal} received, shutting down...`);
+  logger.info({ signal }, "shutting down");
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(1), 10000).unref();
 };

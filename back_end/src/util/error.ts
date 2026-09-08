@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { logger } from './logger';
 
 export class AppError extends Error {
   public statusCode: number;
@@ -44,7 +45,7 @@ export const errorHandler = (
   }
 
   // Erreur par défaut
-  console.error('Erreur non gérée:', err);
+  logger.error({ err, path: req.originalUrl, method: req.method }, 'unhandled error');
   return res.status(500).json({
     success: false,
     message: 'Une erreur interne est survenue',

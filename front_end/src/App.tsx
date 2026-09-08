@@ -15,6 +15,7 @@ import AuthView from "./Views/authentification";
 import FeedView from "./Views/feed/FeedView";
 import CreatePostView from "./Views/post/CreatePostView";
 import StoryViewerView from "./Views/story/StoryViewerView";
+import HighlightViewerView from "./Views/story/HighlightViewerView";
 import InboxView from "./Views/inbox/InboxView";
 import ChatView from "./Views/inbox/ChatView";
 import NotificationsView from "./Views/notifications/NotificationsView";
@@ -89,6 +90,7 @@ function AppContent() {
           <Route path="my-posts" element={<MyPostsView />} />
           <Route path="stories/:userId" element={<StoryViewerView />} />
           <Route path="story/:userId" element={<StoryViewerView />} />
+          <Route path="highlights/:highlightId" element={<HighlightViewerView />} />
 
           <Route path="community" element={<Navigate to="list" replace />} />
 

@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import { logger } from "../util/logger";
 
 dotenv.config();
 
@@ -20,10 +21,8 @@ export const initializeEmailService = async () => {
 
   // ✅ DO NOT crash app if SMTP fails
   transporter.verify()
-    .then(() => console.log("📧 SMTP ready"))
-    .catch(err =>
-      console.error("⚠️ SMTP not available:", err.message)
-    );
+    .then(() => logger.info("SMTP ready"))
+    .catch(err => logger.warn({ err: err.message }, "SMTP not available"));
 
   return transporter;
 };

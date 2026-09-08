@@ -19,6 +19,7 @@ import { PATHS } from "../../routes/paths";
 import MyPostsView from "./MyPostsView";
 import MyRepostsView from "./MyRepostsView";
 import ProfileHeaderLayout from "../../Components/Profile/ProfileHeaderLayout";
+import HighlightsBar from "../../Components/story/HighlightsBar";
 
 import {
   DropdownMenu,
@@ -261,6 +262,7 @@ export default function MyProfileView() {
           {renderFollowList(following, "Not following anyone yet")}
         </DialogContent>
       </Dialog>
+      {myUserId && <HighlightsBar userId={myUserId} />}
 
       <Tabs defaultValue="posts" className="mt-4">
         <TabsList className="w-full justify-start rounded-none border-b">

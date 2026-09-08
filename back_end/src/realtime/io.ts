@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import type { Server as HttpServer } from "http";
 import { verifyAccessToken } from "../util/jwt";
+import { logger } from "../util/logger";
 
 let io: Server | null = null;
 
@@ -38,7 +39,7 @@ export function initRealtime(httpServer: HttpServer, allowedOrigins: string[]) {
     socket.emit("realtime:ready", { userId });
   });
 
-  console.log("Realtime (Socket.IO) initialised on /socket.io");
+  logger.info("Realtime (Socket.IO) initialised on /socket.io");
   return io;
 }
 

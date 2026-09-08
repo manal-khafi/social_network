@@ -139,6 +139,7 @@ model User {
   storyLikes               StoryLike[]
   storyComments            StoryComment[]
   storyReactions           StoryReaction[]
+  highlights               Highlight[]
   closeFriends             CloseFriend[]             @relation("User")
   closeFriendsOf           CloseFriend[]             @relation("CloseFriend")
   conversationParticipants ConversationParticipant[]
@@ -317,11 +318,39 @@ model Story {
   reshares    Story[] @relation("StoryReshare")
 
   // Relations
-  views     StoryView[]
-  likes     StoryLike[]
-  comments  StoryComment[]
-  reactions StoryReaction[]
-  messages  Message[]
+  views          StoryView[]
+  likes          StoryLike[]
+  comments       StoryComment[]
+  reactions      StoryReaction[]
+  messages       Message[]
+  highlightItems HighlightItem[]
+}
+
+model Highlight {
+  id         String   @id @default(uuid())
+  title      String
+  cover_url  String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+
+  items HighlightItem[]
+}
+
+model HighlightItem {
+  id       String   @id @default(uuid())
+  position Int      @default(0)
+  added_at DateTime @default(now())
+
+  highlight_id String
+  story_id     String
+
+  highlight Highlight @relation(fields: [highlight_id], references: [id], onDelete: Cascade)
+  story     Story     @relation(fields: [story_id], references: [id], onDelete: Cascade)
+
+  @@unique([highlight_id, story_id])
 }
 
 model StoryView {

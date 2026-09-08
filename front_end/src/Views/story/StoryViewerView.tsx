@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCallbackRef } from "../../Components/story/useCallbackRef";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
-  X, Heart, Send, Volume2, VolumeX, Music2, Trash2, ChevronLeft, ChevronRight, Eye,
+  X, Heart, Send, Volume2, VolumeX, Music2, Trash2, ChevronLeft, ChevronRight, Eye, Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "../../hooks";
@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../Components/ui/avatar"
 import StoryOverlayLayer from "../../Components/story/StoryOverlayLayer";
 import ShareStorySheet from "../../Components/story/ShareStorySheet";
 import SeenBySheet from "../../Components/story/SeenBySheet";
+import AddToHighlightSheet from "../../Components/story/AddToHighlightSheet";
 import { DEFAULT_REACTIONS } from "../../api/storiesApi";
 import { IMAGE_STORY_MS, MAX_VIDEO_STORY_MS } from "../../Components/story/storyConfig";
 
@@ -48,6 +49,7 @@ export default function StoryViewerView() {
   const [showReactions, setShowReactions] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showSeenBy, setShowSeenBy] = useState(false);
+  const [showHighlight, setShowHighlight] = useState(false);
   const [flyHearts, setFlyHearts] = useState<number[]>([]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -60,7 +62,7 @@ export default function StoryViewerView() {
   const items = group?.items ?? [];
   const story = items[itemIdx];
   const isOwn = story?.user_id === currentUser?.id;
-  const anySheetOpen = showShare || showSeenBy || showReactions;
+  const anySheetOpen = showShare || showSeenBy || showReactions || showHighlight;
 
   // Load stories if the feed isn't in redux yet (deep link / refresh).
   useEffect(() => {
@@ -419,14 +421,23 @@ export default function StoryViewerView() {
         {/* footer */}
         <div className="absolute bottom-0 left-0 right-0 p-3 z-30">
           {isOwn ? (
-            <button
-              onClick={() => setShowSeenBy(true)}
-              className="w-full flex items-center justify-center gap-2 text-white/90 text-sm py-2"
-            >
-              <Eye className="w-4 h-4" />
-              {story._count.views} views
-              {story._count.reactions > 0 && ` · ${story._count.reactions} reactions`}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSeenBy(true)}
+                className="flex-1 flex items-center justify-center gap-2 text-white/90 text-sm py-2"
+              >
+                <Eye className="w-4 h-4" />
+                {story._count.views} views
+                {story._count.reactions > 0 && ` · ${story._count.reactions} reactions`}
+              </button>
+              <button
+                onClick={() => setShowHighlight(true)}
+                className="flex items-center gap-1 text-white/90 text-sm py-2 px-3 rounded-full bg-white/10"
+              >
+                <Star className="w-4 h-4" />
+                Highlight
+              </button>
+            </div>
           ) : (
             <div className="flex items-center gap-2">
               <div className="flex-1 flex items-center gap-2 bg-black/40 border border-white/25 rounded-full px-3 py-1.5 backdrop-blur">
@@ -516,6 +527,13 @@ export default function StoryViewerView() {
             storyId={story.id}
             viewCount={story._count.views}
             onClose={() => setShowSeenBy(false)}
+          />
+        )}
+        {showHighlight && (
+          <AddToHighlightSheet
+            storyId={story.id}
+            ownerId={story.user_id}
+            onClose={() => setShowHighlight(false)}
           />
         )}
       </div>
