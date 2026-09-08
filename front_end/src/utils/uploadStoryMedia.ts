@@ -10,8 +10,46 @@ export interface UploadedStoryMedia {
   height?: number;
 }
 
-const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 25 * 1024 * 1024; // pre-compression
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+const MAX_VIDEO_SEC = 90;
+const TARGET_LONG_EDGE = 1440; // story canvas is ~1080 wide; keep some headroom
+
+/**
+ * Downscale + re-encode a large photo to a story-sized JPEG so we're not
+ * uploading (and later downloading) a 20 MP camera original.
+ */
+async function compressImage(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  if (!bitmap) return file;
+
+  const { width, height } = bitmap;
+  const longEdge = Math.max(width, height);
+  const scale = longEdge > TARGET_LONG_EDGE ? TARGET_LONG_EDGE / longEdge : 1;
+
+  // Nothing to gain: small image and already a reasonable size.
+  if (scale === 1 && file.size < 1.5 * 1024 * 1024) {
+    bitmap.close?.();
+    return file;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(width * scale);
+  canvas.height = Math.round(height * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    bitmap.close?.();
+    return file;
+  }
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close?.();
+
+  const blob: Blob = await new Promise((resolve) =>
+    canvas.toBlob((b) => resolve(b ?? file), "image/jpeg", 0.85)
+  );
+  // Only keep the compressed version if it actually helped.
+  return blob.size < file.size ? blob : file;
+}
 
 function readVideoMeta(file: File): Promise<{ duration: number; width: number; height: number; poster: Blob | null }> {
   return new Promise((resolve, reject) => {
@@ -94,21 +132,29 @@ export async function uploadStoryMedia(
   const isVideo = file.type.startsWith("video/");
   const isImage = file.type.startsWith("image/");
   if (!isVideo && !isImage) throw new Error("Choisissez une image ou une vidéo");
-  if (isImage && file.size > MAX_IMAGE_BYTES) throw new Error("Image trop lourde (max 15 Mo)");
+  if (isImage && file.size > MAX_IMAGE_BYTES) throw new Error("Image trop lourde (max 25 Mo)");
   if (isVideo && file.size > MAX_VIDEO_BYTES) throw new Error("Vidéo trop lourde (max 100 Mo)");
 
   const base = `users/${uid}/stories/${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
 
   if (isImage) {
     const { width, height } = await readImageSize(file);
-    const fileRef = ref(storage, `${base}.${ext}`);
-    await uploadBytes(fileRef, file);
+    const compressed = await compressImage(file);
+    const fileRef = ref(storage, `${base}.jpg`);
+    await uploadBytes(fileRef, compressed, { contentType: "image/jpeg" });
     const url = await getDownloadURL(fileRef);
     return { url, type: "image", width, height };
   }
 
+  // Read metadata first so we can reject an over-long clip before uploading it.
   const meta = await readVideoMeta(file);
+  if (meta.duration && meta.duration > MAX_VIDEO_SEC) {
+    throw new Error(
+      `Vidéo trop longue (${Math.round(meta.duration)}s, max ${MAX_VIDEO_SEC}s). Raccourcissez-la puis réessayez.`
+    );
+  }
+
+  const ext = file.name.split(".").pop() || "mp4";
   const fileRef = ref(storage, `${base}.${ext}`);
   await uploadBytes(fileRef, file);
   const url = await getDownloadURL(fileRef);

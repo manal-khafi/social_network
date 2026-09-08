@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   X, Type, Smile, Music2, ImagePlus, Loader2, Sparkles, Check, ChevronDown, Trash2,
@@ -58,6 +58,26 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
 
   const [uploading, setUploading] = useState(false);
   const [posting, setPosting] = useState(false);
+
+  // Play the selected track on the editing canvas (Instagram behaviour).
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    if (!previewAudioRef.current) previewAudioRef.current = new Audio();
+    const audio = previewAudioRef.current;
+    const editing =
+      open && (mode === "media" || mode === "text") && !showMusic && !showEmoji && !textDraft.open;
+    const preview = music?.preview_url;
+    if (!preview || !editing) {
+      audio.pause();
+      return;
+    }
+    if (audio.src !== preview) audio.src = preview;
+    audio.currentTime = music?.start_sec ?? 0;
+    audio.loop = true;
+    audio.play().catch(() => {});
+    return () => audio.pause();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, mode, showMusic, showEmoji, textDraft.open, music?.preview_url, music?.start_sec]);
 
   const reset = () => {
     setMode(sharedPost ? "text" : "choose");
@@ -281,7 +301,12 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
             {music && (
               <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/50 rounded-full pl-1 pr-3 py-1 text-xs backdrop-blur">
                 {music.cover_url ? (
-                  <img src={music.cover_url} className="w-6 h-6 rounded-full object-cover" alt="" />
+                  <img
+                    src={music.cover_url}
+                    className="w-6 h-6 rounded-full object-cover"
+                    style={{ animation: "spin 5s linear infinite" }}
+                    alt=""
+                  />
                 ) : (
                   <Music2 className="w-4 h-4 ml-1" />
                 )}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCallbackRef } from "../../Components/story/useCallbackRef";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   X, Heart, Send, Volume2, VolumeX, Music2, Trash2, ChevronLeft, ChevronRight, Eye,
 } from "lucide-react";
@@ -38,6 +38,7 @@ export default function StoryViewerView() {
   const groups = useAppSelector(selectStoryGroups);
   const currentUser = useAppSelector((s) => s.user.currentUser);
 
+  const reduceMotion = useReducedMotion();
   const [localGroup, setLocalGroup] = useState<{ user: StoryUser; items: Story[] } | null>(null);
   const [itemIdx, setItemIdx] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -171,6 +172,26 @@ export default function StoryViewerView() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
+  // Keyboard navigation.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "ArrowRight" || e.key === " ") {
+        e.preventDefault();
+        goNext();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goPrev();
+      } else if (e.key === "Escape") {
+        navigate(-1);
+      } else if (e.key.toLowerCase() === "m") {
+        setMuted((m) => !m);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goNext, goPrev, navigate]);
+
   const react = (emoji: string) => {
     if (!story) return;
     dispatch(setStoryReaction({ storyId: story.id, emoji }));
@@ -285,18 +306,20 @@ export default function StoryViewerView() {
             {(story.music || story.content_type === "video") && (
               <button
                 onClick={() => setMuted((m) => !m)}
+                aria-label={muted ? "Unmute" : "Mute"}
                 className="p-2 rounded-full bg-black/40 text-white"
               >
                 {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
             )}
             {isOwn && (
-              <button onClick={del} className="p-2 rounded-full bg-black/40 text-white">
+              <button onClick={del} aria-label="Delete story" className="p-2 rounded-full bg-black/40 text-white">
                 <Trash2 className="w-4 h-4" />
               </button>
             )}
             <button
               onClick={() => navigate(-1)}
+              aria-label="Close stories"
               className="p-2 rounded-full bg-black/40 text-white"
             >
               <X className="w-5 h-5" />
@@ -318,7 +341,11 @@ export default function StoryViewerView() {
           style={isText ? { background: story.bg_color ?? "#111827" } : undefined}
         >
           {story.content_type === "image" && (
-            <img src={story.content_url} alt="" className="w-full h-full object-contain" />
+            <img
+              src={story.content_url}
+              alt={story.caption || `Story by ${group.user.username}`}
+              className="w-full h-full object-contain"
+            />
           )}
           {story.content_type === "video" && (
             <video
@@ -374,10 +401,14 @@ export default function StoryViewerView() {
           {flyHearts.map((k) => (
             <motion.div
               key={k}
-              initial={{ opacity: 0, scale: 0.4, y: 0 }}
-              animate={{ opacity: [0, 1, 1, 0], scale: [0.4, 1.4, 1, 0.9], y: -160 }}
+              initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.4, y: 0 }}
+              animate={
+                reduceMotion
+                  ? { opacity: [0, 1, 0], y: 0 }
+                  : { opacity: [0, 1, 1, 0], scale: [0.4, 1.4, 1, 0.9], y: -160 }
+              }
               exit={{ opacity: 0 }}
-              transition={{ duration: 1.1 }}
+              transition={{ duration: reduceMotion ? 0.5 : 1.1 }}
               className="absolute left-1/2 bottom-28 -translate-x-1/2 z-30"
             >
               <Heart className="w-20 h-20 fill-red-500 text-red-500" />
@@ -466,12 +497,14 @@ export default function StoryViewerView() {
         {/* side nav (desktop) */}
         <button
           onClick={goPrev}
+          aria-label="Previous story"
           className="hidden md:flex absolute left-[-52px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 items-center justify-center text-white"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
         <button
           onClick={goNext}
+          aria-label="Next story"
           className="hidden md:flex absolute right-[-52px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 items-center justify-center text-white"
         >
           <ChevronRight className="w-6 h-6" />

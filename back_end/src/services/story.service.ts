@@ -76,6 +76,8 @@ export interface CreateStoryInput {
 }
 
 export class StoryService {
+  private static lastArchiveSweep = 0;
+
   private static hydrate(story: any, userId: string, sets: InteractionSets) {
     const music = story.music_preview_url
       ? {
@@ -254,6 +256,13 @@ export class StoryService {
    */
   static async getStoriesFeed(userId: string) {
     const now = new Date();
+
+    // Opportunistic, throttled housekeeping instead of an in-process interval
+    // (idempotent updateMany -> safe with multiple instances, no cron needed).
+    if (Date.now() - StoryService.lastArchiveSweep > 10 * 60 * 1000) {
+      StoryService.lastArchiveSweep = Date.now();
+      StoryService.archiveExpiredStories().catch(() => {});
+    }
 
     const [all, visibilityCtx] = await Promise.all([
       prisma.story.findMany({

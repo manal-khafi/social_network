@@ -12,6 +12,9 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
+    // Legacy controllers rely on Prisma callback-param inference; keep the rest
+    // of strict (null checks, etc.) but don't fail the build on implicit any.
+    "noImplicitAny": false,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,

@@ -34,6 +34,7 @@ import NotificationsSettingsView from "./Views/settings/NotificationsView";
 import PrivacyView from "./Views/settings/PrivacyView";
 import AppearanceView from "./Views/settings/AppearanceView";
 import BlockedContactsView from "./Views/settings/BlockedContactsView";
+import CloseFriendsView from "./Views/settings/CloseFriendsView";
 import LikedPostsSettingsView from "./Views/settings/LikedPostsSettingsView";
 import InfoSupportView from "./Views/settings/InfoSupportView";
 import HelpView from "./Views/settings/HelpView";
@@ -140,6 +141,7 @@ function AppContent() {
             <Route path="privacy" element={<PrivacyView />} />
             <Route path="appearance" element={<AppearanceView />} />
             <Route path="blocked-contacts" element={<BlockedContactsView />} />
+            <Route path="close-friends" element={<CloseFriendsView />} />
             <Route path="liked-posts" element={<LikedPostsSettingsView />} />
 
             <Route path="archive">

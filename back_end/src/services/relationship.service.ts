@@ -170,7 +170,9 @@ export class RelationshipService {
     const mutualFriendIds = new Set<string>();
     for (const id of outgoing) if (incoming.has(id)) mutualFriendIds.add(id);
 
-    const closeFriendOwnerIds = new Set(closeFriendOf.map((c) => c.user_id));
+    const closeFriendOwnerIds = new Set<string>(
+      closeFriendOf.map((c: { user_id: string }) => c.user_id)
+    );
 
     return { blockedIds, mutualFriendIds, closeFriendOwnerIds };
   }

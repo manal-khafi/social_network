@@ -19,6 +19,9 @@ COPY . .
 # a throwaway value is passed for this build step only.
 RUN DATABASE_URL="postgresql://build:build@localhost:5432/build" npx prisma generate
 
+# Compile TypeScript -> dist/ (runtime is plain `node`, no ts-node)
+RUN npm run build
+
 # Uploads directory (mounted as a named volume in production) owned by the runtime user
 RUN mkdir -p uploads/avatars \
     && chown -R node:node /usr/src/app
@@ -32,4 +35,4 @@ USER node
 EXPOSE 3500
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["npm", "run", "serve"]
+CMD ["node", "dist/index.js"]
