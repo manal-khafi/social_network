@@ -49,6 +49,8 @@ export interface StoryOverlay {
   // poll sticker
   question?: string;
   options?: string[];
+  // question sticker
+  prompt?: string;
 }
 
 export interface PollResult {
@@ -233,6 +235,43 @@ export const getPollResults = async (
 ): Promise<PollResult> => {
   const res = await api.get(`/stories/${storyId}/poll/${overlayId}`);
   return res.data.data;
+};
+
+// ---- Question stickers ----
+
+export interface QuestionResponse {
+  id: string;
+  answer: string;
+  created_at: string;
+  user: StoryUser;
+}
+
+export const answerQuestion = async (
+  storyId: string,
+  overlayId: string,
+  answer: string
+): Promise<void> => {
+  await api.post(`/stories/${storyId}/question`, { overlay_id: overlayId, answer });
+};
+
+export const getQuestionResponses = async (
+  storyId: string,
+  overlayId: string
+): Promise<QuestionResponse[]> => {
+  const res = await api.get(`/stories/${storyId}/question/${overlayId}`);
+  return res.data.data;
+};
+
+// ---- Account search (for @mentions) ----
+
+export const searchAccounts = async (q: string): Promise<StoryUser[]> => {
+  const res = await api.get("/search/accounts", { params: { q, limit: 12 } });
+  return (res.data?.accounts ?? []).map((u: any) => ({
+    id: u.id,
+    username: u.username,
+    display_name: u.display_name,
+    avatar_url: u.avatar_url ?? null,
+  }));
 };
 
 // ---- Music ----

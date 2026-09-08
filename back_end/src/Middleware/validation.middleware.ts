@@ -54,6 +54,16 @@ export const validateStoryCreation = (
           return next(new AppError('Lien invalide (http/https requis)', 400));
         }
       }
+      if (ov.type === 'question') {
+        if (typeof ov.prompt !== 'string' || !ov.prompt.trim() || ov.prompt.length > 200) {
+          return next(new AppError('Question invalide', 400));
+        }
+      }
+      if (ov.type === 'mention') {
+        if (typeof ov.text !== 'string' || !ov.text.trim()) {
+          return next(new AppError('Mention invalide', 400));
+        }
+      }
     }
   }
 

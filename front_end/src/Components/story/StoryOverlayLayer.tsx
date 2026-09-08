@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { StoryOverlay } from "../../api/storiesApi";
 
@@ -18,6 +18,11 @@ interface Props {
   /** Viewer-side: poll results keyed by overlay id, and a vote handler. */
   pollResults?: Record<string, PollState>;
   onPollVote?: (overlayId: string, optionIndex: number) => void;
+  /** Viewer-side: question sticker handlers. */
+  onQuestionSubmit?: (overlayId: string, answer: string) => void;
+  onQuestionOpen?: (overlayId: string) => void;
+  questionAuthorView?: boolean;
+  onMentionTap?: (username: string) => void;
 }
 
 const pct = (n: number, total: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
@@ -34,7 +39,12 @@ export default function StoryOverlayLayer({
   onChange,
   pollResults,
   onPollVote,
+  onQuestionSubmit,
+  onQuestionOpen,
+  questionAuthorView,
+  onMentionTap,
 }: Props) {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const layerRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{ id: string; pointerId: number } | null>(null);
 
@@ -121,6 +131,74 @@ export default function StoryOverlayLayer({
             })}
           </div>
         </div>
+      );
+    }
+
+    if (ov.type === "question") {
+      const val = answers[ov.id] ?? "";
+      return (
+        <div
+          className="rounded-2xl bg-white text-black w-60 p-3 shadow"
+          onPointerDown={(e) => editable && e.preventDefault()}
+        >
+          <p className="text-sm font-semibold text-center text-neutral-500 mb-2">{ov.prompt}</p>
+          {editable ? (
+            <div className="rounded-full bg-neutral-100 text-sm px-3 py-1.5 text-neutral-400">
+              Type something…
+            </div>
+          ) : questionAuthorView ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onQuestionOpen?.(ov.id);
+              }}
+              className="w-full rounded-full bg-neutral-100 text-sm py-1.5 font-medium"
+            >
+              View responses
+            </button>
+          ) : (
+            <div className="flex items-center gap-1">
+              <input
+                value={val}
+                onChange={(e) => setAnswers((a) => ({ ...a, [ov.id]: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && val.trim()) {
+                    onQuestionSubmit?.(ov.id, val.trim());
+                    setAnswers((a) => ({ ...a, [ov.id]: "" }));
+                  }
+                }}
+                placeholder="Type something…"
+                className="flex-1 rounded-full bg-neutral-100 text-sm px-3 py-1.5 outline-none"
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (val.trim()) {
+                    onQuestionSubmit?.(ov.id, val.trim());
+                    setAnswers((a) => ({ ...a, [ov.id]: "" }));
+                  }
+                }}
+                className="text-sm font-semibold text-sky-600 px-2"
+              >
+                Send
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (ov.type === "mention") {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!editable && ov.text) onMentionTap?.(ov.text);
+          }}
+          className="rounded-lg bg-black/40 text-white font-bold px-2 py-1 text-lg drop-shadow"
+        >
+          @{ov.text}
+        </button>
       );
     }
 

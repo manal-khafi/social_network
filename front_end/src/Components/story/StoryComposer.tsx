@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   X, Type, Smile, Music2, ImagePlus, Loader2, Sparkles, Check, ChevronDown, Trash2, Link2, BarChart3,
+  HelpCircle, AtSign,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import { createStory } from "../../features/stories/storiesSlice";
 import { uploadStoryMedia } from "../../utils/uploadStoryMedia";
 import type { StoryOverlay, StoryVisibility, SharedPostRef } from "../../api/storiesApi";
 import MusicPicker, { type SelectedMusic } from "./MusicPicker";
+import MentionPicker from "./MentionPicker";
 import StoryOverlayLayer from "./StoryOverlayLayer";
 import {
   TEXT_COLORS, STORY_BACKGROUNDS, FONT_FAMILIES, VISIBILITY_OPTIONS,
@@ -46,6 +48,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
 
   const [showMusic, setShowMusic] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
+  const [showMention, setShowMention] = useState(false);
   const [showVisibility, setShowVisibility] = useState(false);
   const [textDraft, setTextDraft] = useState<{
     open: boolean;
@@ -205,6 +208,23 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
       ...prev,
       { id: uid(), type: "poll", question, options: [a, b], x: 0.5, y: 0.5, rotation: 0, scale: 1 },
     ]);
+  };
+
+  const addQuestion = () => {
+    const prompt = window.prompt("Ask your followers a question")?.trim();
+    if (!prompt) return;
+    setOverlays((prev) => [
+      ...prev,
+      { id: uid(), type: "question", prompt, x: 0.5, y: 0.5, rotation: 0, scale: 1 },
+    ]);
+  };
+
+  const addMention = (username: string) => {
+    setOverlays((prev) => [
+      ...prev,
+      { id: uid(), type: "mention", text: username, x: 0.5, y: 0.62, rotation: 0, scale: 1 },
+    ]);
+    setShowMention(false);
   };
 
   const canShare =
@@ -400,8 +420,10 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
         <div className="flex items-center justify-around px-2 py-3 border-t border-white/10">
           <ToolButton icon={<Type className="w-5 h-5" />} label="Text" onClick={() => openTextEditor()} />
           <ToolButton icon={<Smile className="w-5 h-5" />} label="Sticker" onClick={() => setShowEmoji(true)} />
+          <ToolButton icon={<AtSign className="w-5 h-5" />} label="Mention" onClick={() => setShowMention(true)} />
           <ToolButton icon={<Link2 className="w-5 h-5" />} label="Link" onClick={addLink} />
           <ToolButton icon={<BarChart3 className="w-5 h-5" />} label="Poll" onClick={addPoll} />
+          <ToolButton icon={<HelpCircle className="w-5 h-5" />} label="Question" onClick={addQuestion} />
           <ToolButton
             icon={<Music2 className="w-5 h-5" />}
             label={music ? "Music ✓" : "Music"}
@@ -472,6 +494,10 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
           onChange={setMusic}
           onClose={() => setShowMusic(false)}
         />
+      )}
+
+      {showMention && (
+        <MentionPicker onPick={addMention} onClose={() => setShowMention(false)} />
       )}
 
       {showEmoji && (

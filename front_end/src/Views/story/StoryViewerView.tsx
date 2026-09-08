@@ -20,6 +20,7 @@ import {
   getUserStories,
   votePoll,
   getPollResults,
+  answerQuestion,
   type Story,
   type StoryUser,
   type PollResult,
@@ -29,6 +30,7 @@ import StoryOverlayLayer from "../../Components/story/StoryOverlayLayer";
 import ShareStorySheet from "../../Components/story/ShareStorySheet";
 import SeenBySheet from "../../Components/story/SeenBySheet";
 import AddToHighlightSheet from "../../Components/story/AddToHighlightSheet";
+import QuestionResponsesSheet from "../../Components/story/QuestionResponsesSheet";
 import { DEFAULT_REACTIONS } from "../../api/storiesApi";
 import { IMAGE_STORY_MS, MAX_VIDEO_STORY_MS } from "../../Components/story/storyConfig";
 
@@ -59,6 +61,7 @@ export default function StoryViewerView() {
   const [showHighlight, setShowHighlight] = useState(false);
   const [flyHearts, setFlyHearts] = useState<number[]>([]);
   const [pollResults, setPollResults] = useState<Record<string, PollResult>>({});
+  const [questionSheet, setQuestionSheet] = useState<{ overlayId: string; prompt: string } | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -70,7 +73,8 @@ export default function StoryViewerView() {
   const items = group?.items ?? [];
   const story = items[itemIdx];
   const isOwn = story?.user_id === currentUser?.id;
-  const anySheetOpen = showShare || showSeenBy || showReactions || showHighlight;
+  const anySheetOpen =
+    showShare || showSeenBy || showReactions || showHighlight || !!questionSheet;
 
   // Load stories if the feed isn't in redux yet (deep link / refresh).
   useEffect(() => {
@@ -317,6 +321,20 @@ export default function StoryViewerView() {
     }
   };
 
+  const handleQuestionSubmit = async (overlayId: string, answer: string) => {
+    if (!story) return;
+    try {
+      await answerQuestion(story.id, overlayId, answer);
+      toast.success("Sent");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not send");
+    }
+  };
+
+  const handleMentionTap = (username: string) => {
+    navigate(`/home/profile/${username}`);
+  };
+
   if (!group || !story) {
     return <div className="fixed inset-0 bg-black z-50" />;
   }
@@ -443,6 +461,13 @@ export default function StoryViewerView() {
             overlays={overlays}
             pollResults={pollResults}
             onPollVote={handlePollVote}
+            onQuestionSubmit={handleQuestionSubmit}
+            questionAuthorView={isOwn}
+            onQuestionOpen={(overlayId) => {
+              const ov = overlays.find((o) => o.id === overlayId);
+              setQuestionSheet({ overlayId, prompt: ov?.prompt ?? "" });
+            }}
+            onMentionTap={handleMentionTap}
           />
 
           {isText && !overlays.length && story.caption && (
@@ -599,6 +624,14 @@ export default function StoryViewerView() {
             storyId={story.id}
             ownerId={story.user_id}
             onClose={() => setShowHighlight(false)}
+          />
+        )}
+        {questionSheet && (
+          <QuestionResponsesSheet
+            storyId={story.id}
+            overlayId={questionSheet.overlayId}
+            prompt={questionSheet.prompt}
+            onClose={() => setQuestionSheet(null)}
           />
         )}
       </div>

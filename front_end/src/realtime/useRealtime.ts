@@ -83,6 +83,11 @@ export function useRealtime() {
       window.dispatchEvent(new CustomEvent("story:poll", { detail: p }));
     };
 
+    const onStoryQuestion = (p: any) => {
+      const who = p?.user?.username ? `@${p.user.username}` : "Someone";
+      toast(`${who} answered your question`);
+    };
+
     const onMessage = (m: any) => {
       const who = m?.sender?.username ? `@${m.sender.username}` : "New message";
       toast(m?.shared_story_id ? `${who} sent you a story` : `${who}: ${m?.content ?? ""}`);
@@ -94,6 +99,7 @@ export function useRealtime() {
     socket.on("story:new", onStoryNew);
     socket.on("story:reply", onStoryReply);
     socket.on("story:poll", onStoryPoll);
+    socket.on("story:question", onStoryQuestion);
     socket.on("message:new", onMessage);
 
     connectSocket();
@@ -105,6 +111,7 @@ export function useRealtime() {
       socket.off("story:new", onStoryNew);
       socket.off("story:reply", onStoryReply);
       socket.off("story:poll", onStoryPoll);
+      socket.off("story:question", onStoryQuestion);
       socket.off("message:new", onMessage);
       if (feedRefreshTimer.current) window.clearTimeout(feedRefreshTimer.current);
     };

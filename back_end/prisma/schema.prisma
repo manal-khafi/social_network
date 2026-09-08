@@ -140,6 +140,7 @@ model User {
   storyComments            StoryComment[]
   storyReactions           StoryReaction[]
   storyPollVotes           StoryPollVote[]
+  storyQuestionResponses    StoryQuestionResponse[]
   highlights               Highlight[]
   closeFriends             CloseFriend[]             @relation("User")
   closeFriendsOf           CloseFriend[]             @relation("CloseFriend")
@@ -325,6 +326,7 @@ model Story {
   reactions      StoryReaction[]
   messages       Message[]
   pollVotes      StoryPollVote[]
+  questionResponses StoryQuestionResponse[]
   highlightItems HighlightItem[]
 }
 
@@ -339,6 +341,21 @@ model Highlight {
   user    User   @relation(fields: [user_id], references: [id])
 
   items HighlightItem[]
+}
+
+model StoryQuestionResponse {
+  id         String   @id @default(uuid())
+  answer     String
+  created_at DateTime @default(now())
+
+  story_id   String
+  overlay_id String
+  user_id    String
+
+  story Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id])
+
+  @@index([story_id, overlay_id])
 }
 
 model StoryPollVote {
