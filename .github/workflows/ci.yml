@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main, producation]
+  pull_request:
+
+# Dummy value: prisma.config.ts requires DATABASE_URL to load, but nothing in CI
+# opens a DB connection (typecheck + unit tests + build only).
+env:
+  DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: back_end
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: back_end/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run typecheck
+      - run: npm test
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: front_end
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: front_end/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # compose parses env_file / ${VAR:?} at build time; a throwaway env is enough.
+      - run: cp .env.example .env
+      - name: Build images
+        run: docker compose build

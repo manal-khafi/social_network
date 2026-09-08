@@ -6,6 +6,7 @@ import { refuseFollowRequest } from "../Controllers/Following/Refusedemande";
 import Following from "../Controllers/Following/Folloing";
 import Follower from "../Controllers/Following/Follower";
 import { getFollowRequests } from "../Controllers/Following/FollowRequests";
+import { CloseFriendsController } from "../Controllers/Following/CloseFriends";
 import { authMiddleware } from "../Middleware/authMiddlware";
 
 import { blockGuard } from "../Middleware/Block/blockGuardMiddleware";
@@ -16,6 +17,10 @@ FollowRoutes.post("/follow/:userIdToFollow",authMiddleware, blockGuard(), Follow
 FollowRoutes.delete("/unfollow/:userIdToUnfollow",authMiddleware, blockGuard(), Unfollow);
 FollowRoutes.post("/accept-follow/:demandeId",authMiddleware, blockGuard(), Acceptdemande);
 FollowRoutes.post("/refuse-follow/:requestId",authMiddleware, blockGuard(), refuseFollowRequest);
+FollowRoutes.get("/close-friends", authMiddleware, CloseFriendsController.list);
+FollowRoutes.put("/close-friends/:userId", authMiddleware, CloseFriendsController.add);
+FollowRoutes.delete("/close-friends/:userId", authMiddleware, CloseFriendsController.remove);
+
 FollowRoutes.get("/following/:userId",authMiddleware, blockGuard(), Following);
 FollowRoutes.get("/followers/:userId",authMiddleware, blockGuard(), Follower);
 FollowRoutes.get("/requests", authMiddleware, blockGuard(), getFollowRequests);

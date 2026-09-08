@@ -1,22 +1,22 @@
-version: '3.8'
-
+# Production stack. All configuration/secrets come from a repo-root .env file
+# (copy .env.example -> .env and fill it in). Only nginx is published to the host.
 services:
   db:
     image: postgres:17
     container_name: db_postgres
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: socielle_network
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-socielle_network}
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
+    expose:
+      - "5432"
     networks:
       - app_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,51 +28,46 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "3500:3500"
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql://postgres:root@db:5432/socielle_network?schema=public
-      SMTP_HOST: smtp.gmail.com
-      SMTP_PORT: 587
-      SMTP_USER: imanemharach@gmail.com
-      SMTP_PASS: "qrhiyehjndrvqzld"
-      RESET_PASSWORD_EXPIRES_IN: 15m
-      RESET_PASSWORD_SECRET: your_super_secret_key
-      JWT_SECRET: ariqerhtuzerj
-      NODE_ENV: development
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+    expose:
+      - "3500"
+    volumes:
+      - uploads:/usr/src/app/uploads
     networks:
       - app_network
-    volumes:
-      - ./back_end:/usr/src/app
-      - backend_node_modules:/usr/src/app/node_modules
-
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    extra_hosts:  
-    - "smtp.gmail.com:142.250.102.108"
-    command: sh -c "
-      echo 'En attente de la base de données...' &&
-      sleep 5 &&
-      npx prisma migrate deploy &&
-      npx prisma generate &&
-      npm run dev"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3500/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   frontend:
-    build: ./front_end
+    build:
+      context: ./front_end
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL:-}
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-}
+        VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET:-}
+        VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID:-}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-}
     container_name: frontend_app
     restart: always
     depends_on:
       - backend
-    ports:
-      - "5173:5173"
+    expose:
+      - "80"
     networks:
       - app_network
-    volumes:
-      - ./front_end:/usr/src/app
-      - /usr/src/app/node_modules  
-    environment:
-      - VITE_API_URL=http://localhost:3500
 
   nginx:
     image: nginx:alpine
@@ -80,8 +75,11 @@ services:
     restart: always
     ports:
       - "80:80"
+      # - "443:443"
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # - ./nginx/certs:/etc/nginx/certs:ro
+      # - ./nginx/certbot:/var/www/certbot
     depends_on:
       - backend
       - frontend
@@ -90,7 +88,7 @@ services:
 
 volumes:
   pgdata:
-  backend_node_modules:
+  uploads:
 
 networks:
   app_network:

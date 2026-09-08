@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { 
-  ChevronRight, User, Bell, Lock, Palette, UserX, Heart, Archive, Activity, Info, LogOut 
+import {
+  ChevronRight, User, Bell, Lock, Palette, UserX, Heart, Archive, Activity, Info, LogOut, Star
 } from 'lucide-react';
 import { Card } from '../../Components/ui/card';
 import { useAppDispatch } from '../../hooks';
@@ -40,6 +40,14 @@ const settingsSections = [
     icon: Palette,
     path: 'appearance',
     color: 'text-[#226d68]'
+  },
+  {
+    id: 'close-friends',
+    title: 'Close Friends',
+    description: 'Choose who sees your close-friends stories',
+    icon: Star,
+    path: 'close-friends',
+    color: 'text-green-500'
   },
   {
     id: 'blocked',

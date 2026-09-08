@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../Components/ui/ta
 import { toast } from 'sonner';
 import PostCard from '../../Components/post/PostCard';
 import ProfileHeaderLayout from '../../Components/Profile/ProfileHeaderLayout';
+import HighlightsBar from '../../Components/story/HighlightsBar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../Components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '../../Components/ui/avatar';
 import { Card } from '../../Components/ui/card';
@@ -220,6 +221,7 @@ export default function UserProfileView() {
           {renderFollowList(following, "Not following anyone yet")}
         </DialogContent>
       </Dialog>
+      {user?.id && <HighlightsBar userId={user.id} />}
 
       <Tabs defaultValue="posts" className="mt-4">
         <TabsList className="w-full justify-start rounded-none border-b">

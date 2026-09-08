@@ -10,14 +10,15 @@ import {
 } from "firebase/auth";
 import { getStorage } from "firebase/storage"; // ✅ ADD THIS
 
-// Firebase configuration
+// Firebase configuration. Values come from VITE_FIREBASE_* at build time and
+// fall back to the existing project so local builds keep working unconfigured.
 const firebaseConfig = {
-  apiKey: "AIzaSyCKB3zKrAUvWBJ3E83tLlLw5vGvfrOqX1E",
-  authDomain: "exam9-1.firebaseapp.com",
-  projectId: "exam9-1",
-  storageBucket: "exam9-1.appspot.com",
-  messagingSenderId: "479705895775",
-  appId: "1:479705895775:web:49446745724018e8cd5cea",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCKB3zKrAUvWBJ3E83tLlLw5vGvfrOqX1E",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "exam9-1.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "exam9-1",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "exam9-1.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "479705895775",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:479705895775:web:49446745724018e8cd5cea",
 };
 
 // Initialize Firebase

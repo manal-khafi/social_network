@@ -2,6 +2,7 @@ import prisma from '../util/prisma';
 import { AppError } from '../util/error';
 import { StoryService } from './story.service';
 import { NotificationService } from '../services/notificationService';
+import { emitToUser } from '../realtime/io';
 
 export class StoryViewService {
   /**
@@ -40,6 +41,20 @@ export class StoryViewService {
         viewerId,
         storyId
       );
+
+      const [viewer, viewCount] = await Promise.all([
+        prisma.user.findUnique({
+          where: { id: viewerId },
+          select: { id: true, username: true, display_name: true, avatar_url: true },
+        }),
+        prisma.storyView.count({ where: { story_id: storyId } }),
+      ]);
+
+      emitToUser(story.user_id, 'story:view', {
+        story_id: storyId,
+        view_count: viewCount,
+        viewer,
+      });
     }
 
     return view;

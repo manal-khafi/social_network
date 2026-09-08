@@ -1,6 +1,10 @@
 import { initializeEmailService } from "../config/EmailConfig";
 import { getTransporter } from "../config/EmailConfig";
 
+// Public base URL of the frontend, used to build links inside outgoing emails.
+// Falls back to the local dev server so nothing breaks when running locally.
+const FRONTEND_URL = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
+
 interface EmailOptions {
   to: string;
   subject: string;
@@ -30,7 +34,7 @@ export const sendEmail = async (options: EmailOptions) => {
 
 
 export const sendVerificationEmail = async (email: string, username: string, token: string) => {
-  const verificationLink = `http://localhost:5173/verify-email?token=${token}`;
+  const verificationLink = `${FRONTEND_URL}/verify-email?token=${token}`;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -57,7 +61,7 @@ export const sendVerificationEmail = async (email: string, username: string, tok
 };
 
 export const sendResetPasswordEmail = async (email: string, token: string) => {
-  const resetLink = `http://localhost:5173/reset-password?token=${token}`;
+  const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

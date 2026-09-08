@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { store } from "./store";
 import { useAppSelector } from "./hooks";
 import { useAuthSession } from "./hooks/useAuthSession";
+import { useRealtime } from "./realtime/useRealtime";
 import i18n from "./i18n/i18n";
 import MainLayout from "./layouts/MainLayout";
 import RequireAuth from "./guards/RequireAuth";
@@ -14,6 +15,7 @@ import AuthView from "./Views/authentification";
 import FeedView from "./Views/feed/FeedView";
 import CreatePostView from "./Views/post/CreatePostView";
 import StoryViewerView from "./Views/story/StoryViewerView";
+import HighlightViewerView from "./Views/story/HighlightViewerView";
 import InboxView from "./Views/inbox/InboxView";
 import ChatView from "./Views/inbox/ChatView";
 import NotificationsView from "./Views/notifications/NotificationsView";
@@ -33,6 +35,7 @@ import NotificationsSettingsView from "./Views/settings/NotificationsView";
 import PrivacyView from "./Views/settings/PrivacyView";
 import AppearanceView from "./Views/settings/AppearanceView";
 import BlockedContactsView from "./Views/settings/BlockedContactsView";
+import CloseFriendsView from "./Views/settings/CloseFriendsView";
 import LikedPostsSettingsView from "./Views/settings/LikedPostsSettingsView";
 import InfoSupportView from "./Views/settings/InfoSupportView";
 import HelpView from "./Views/settings/HelpView";
@@ -53,6 +56,7 @@ import { CreateCommunity } from "./Views/community/createCommunity";
 function AppContent() {
   const navigate = useNavigate();
   const { isSessionLoading } = useAuthSession();
+  useRealtime();
 
   if (isSessionLoading) {
     return (
@@ -84,7 +88,9 @@ function AppContent() {
           <Route path="search" element={<SearchView />} />
           <Route path="create-post" element={<CreatePostView />} />
           <Route path="my-posts" element={<MyPostsView />} />
-          <Route path="story/:storyId" element={<StoryViewerView />} />
+          <Route path="stories/:userId" element={<StoryViewerView />} />
+          <Route path="story/:userId" element={<StoryViewerView />} />
+          <Route path="highlights/:highlightId" element={<HighlightViewerView />} />
 
           <Route path="community" element={<Navigate to="list" replace />} />
 
@@ -137,6 +143,7 @@ function AppContent() {
             <Route path="privacy" element={<PrivacyView />} />
             <Route path="appearance" element={<AppearanceView />} />
             <Route path="blocked-contacts" element={<BlockedContactsView />} />
+            <Route path="close-friends" element={<CloseFriendsView />} />
             <Route path="liked-posts" element={<LikedPostsSettingsView />} />
 
             <Route path="archive">
