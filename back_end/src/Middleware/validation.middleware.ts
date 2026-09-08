@@ -28,8 +28,33 @@ export const validateStoryCreation = (
   if (overlays != null && !Array.isArray(overlays)) {
     return next(new AppError('Format des overlays invalide', 400));
   }
-  if (Array.isArray(overlays) && overlays.length > 30) {
-    return next(new AppError('Trop d\'éléments sur la story (max 30)', 400));
+  if (Array.isArray(overlays)) {
+    if (overlays.length > 30) {
+      return next(new AppError('Trop d\'éléments sur la story (max 30)', 400));
+    }
+    for (const ov of overlays) {
+      if (!ov || typeof ov !== 'object' || typeof ov.id !== 'string') {
+        return next(new AppError('Overlay invalide', 400));
+      }
+      if (ov.type === 'poll') {
+        const opts = ov.options;
+        if (
+          typeof ov.question !== 'string' ||
+          !ov.question.trim() ||
+          !Array.isArray(opts) ||
+          opts.length < 2 ||
+          opts.length > 4 ||
+          !opts.every((o: unknown) => typeof o === 'string' && (o as string).trim().length > 0)
+        ) {
+          return next(new AppError('Sondage invalide (question + 2 à 4 options)', 400));
+        }
+      }
+      if (ov.type === 'link') {
+        if (typeof ov.url !== 'string' || !/^https?:\/\//i.test(ov.url)) {
+          return next(new AppError('Lien invalide (http/https requis)', 400));
+        }
+      }
+    }
   }
 
   if (music != null) {

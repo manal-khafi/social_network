@@ -2,6 +2,12 @@ import { useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { StoryOverlay } from "../../api/storiesApi";
 
+export interface PollState {
+  counts: Record<number, number> | null;
+  total: number;
+  my_choice: number | null;
+}
+
 interface Props {
   overlays: StoryOverlay[];
   /** When set, overlays can be dragged and this reports new relative positions. */
@@ -9,11 +15,16 @@ interface Props {
   selectedId?: string | null;
   onSelect?: (id: string) => void;
   onChange?: (id: string, patch: Partial<StoryOverlay>) => void;
+  /** Viewer-side: poll results keyed by overlay id, and a vote handler. */
+  pollResults?: Record<string, PollState>;
+  onPollVote?: (overlayId: string, optionIndex: number) => void;
 }
 
+const pct = (n: number, total: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
+
 /**
- * Renders draggable text / emoji / mention overlays positioned as a fraction of
- * the story canvas (x,y in 0..1 = centre of the element).
+ * Renders draggable text / emoji / mention / link / poll overlays positioned as
+ * a fraction of the story canvas (x,y in 0..1 = centre of the element).
  */
 export default function StoryOverlayLayer({
   overlays,
@@ -21,6 +32,8 @@ export default function StoryOverlayLayer({
   selectedId,
   onSelect,
   onChange,
+  pollResults,
+  onPollVote,
 }: Props) {
   const layerRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{ id: string; pointerId: number } | null>(null);
@@ -52,6 +65,88 @@ export default function StoryOverlayLayer({
     }
   };
 
+  const renderContent = (ov: StoryOverlay) => {
+    if (ov.type === "link") {
+      const label = ov.label?.trim() || ov.url?.replace(/^https?:\/\//, "").slice(0, 24) || "Link";
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!editable && ov.url) window.open(ov.url, "_blank", "noopener,noreferrer");
+          }}
+          className="flex items-center gap-1 rounded-full bg-white text-black text-sm font-semibold px-3 py-1.5 shadow"
+        >
+          🔗 {label}
+        </button>
+      );
+    }
+
+    if (ov.type === "poll") {
+      const options = ov.options ?? [];
+      const res = pollResults?.[ov.id];
+      const revealed = !!res && (res.counts != null || res.my_choice != null);
+      return (
+        <div
+          className="rounded-2xl bg-black/40 backdrop-blur px-3 py-2 w-56 text-white"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <p className="text-sm font-semibold text-center mb-2">{ov.question}</p>
+          <div className="flex flex-col gap-1.5">
+            {options.map((opt, i) => {
+              const count = res?.counts?.[i] ?? 0;
+              const mine = res?.my_choice === i;
+              return (
+                <button
+                  key={i}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!editable) onPollVote?.(ov.id, i);
+                  }}
+                  className={`relative overflow-hidden rounded-full text-sm px-3 py-1.5 text-left ${
+                    mine ? "bg-white text-black font-semibold" : "bg-white/20"
+                  }`}
+                >
+                  {revealed && (
+                    <span
+                      className="absolute inset-y-0 left-0 bg-white/25"
+                      style={{ width: `${pct(count, res!.total)}%` }}
+                    />
+                  )}
+                  <span className="relative flex justify-between">
+                    <span>{opt}</span>
+                    {revealed && <span>{pct(count, res!.total)}%</span>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    const isEmoji = ov.type === "emoji";
+    return (
+      <div
+        style={{
+          fontFamily: ov.fontFamily,
+          color: ov.color ?? "#ffffff",
+          background: ov.background ?? "transparent",
+          padding: ov.background ? "4px 10px" : 0,
+          borderRadius: ov.background ? 8 : 0,
+          fontSize: isEmoji ? 44 : 28,
+          fontWeight: isEmoji ? 400 : 800,
+          lineHeight: 1.15,
+          textShadow: ov.background ? "none" : "0 1px 6px rgba(0,0,0,0.45)",
+          whiteSpace: "pre-wrap",
+          textAlign: "center",
+          maxWidth: "80vw",
+        }}
+      >
+        {ov.type === "mention" ? `@${ov.text}` : ov.text}
+      </div>
+    );
+  };
+
   return (
     <div
       ref={layerRef}
@@ -59,7 +154,6 @@ export default function StoryOverlayLayer({
       style={{ touchAction: editable ? "none" : "auto" }}
     >
       {overlays.map((ov) => {
-        const isEmoji = ov.type === "emoji";
         const selected = editable && selectedId === ov.id;
         return (
           <div
@@ -73,28 +167,11 @@ export default function StoryOverlayLayer({
               top: `${ov.y * 100}%`,
               transform: `translate(-50%, -50%) rotate(${ov.rotation ?? 0}deg) scale(${ov.scale ?? 1})`,
               transformOrigin: "center",
+              outline: selected ? "2px dashed rgba(255,255,255,0.9)" : "none",
+              outlineOffset: 4,
             }}
           >
-            <div
-              style={{
-                fontFamily: ov.fontFamily,
-                color: ov.color ?? "#ffffff",
-                background: ov.background ?? "transparent",
-                padding: ov.background ? "4px 10px" : 0,
-                borderRadius: ov.background ? 8 : 0,
-                fontSize: isEmoji ? 44 : 28,
-                fontWeight: isEmoji ? 400 : 800,
-                lineHeight: 1.15,
-                textShadow: ov.background ? "none" : "0 1px 6px rgba(0,0,0,0.45)",
-                whiteSpace: "pre-wrap",
-                textAlign: "center",
-                maxWidth: "80vw",
-                outline: selected ? "2px dashed rgba(255,255,255,0.9)" : "none",
-                outlineOffset: 4,
-              }}
-            >
-              {ov.type === "mention" ? `@${ov.text}` : ov.text}
-            </div>
+            {renderContent(ov)}
           </div>
         );
       })}

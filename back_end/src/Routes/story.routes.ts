@@ -16,6 +16,7 @@ import { StoryMessageController } from '../Controllers/story/storyMessage.contro
 import { StoryShareController } from '../Controllers/story/storyShare.controller';
 import { StoryMusicController } from '../Controllers/story/storyMusic.controller';
 import { HighlightController } from '../Controllers/story/highlight.controller';
+import { StoryPollController } from '../Controllers/story/storyPoll.controller';
 
 const router = express.Router();
 
@@ -67,5 +68,9 @@ router.get('/:id/messages', StoryMessageController.getStoryMessages);
 
 // Partage de la story en DM ("Envoyer à…")
 router.post('/:id/share', validateStoryShare, StoryShareController.shareToUsers);
+
+// Sondages (poll stickers)
+router.post('/:id/poll', StoryPollController.vote);
+router.get('/:id/poll/:overlayId', StoryPollController.results);
 
 export default router;

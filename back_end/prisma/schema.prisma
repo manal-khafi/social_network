@@ -139,6 +139,7 @@ model User {
   storyLikes               StoryLike[]
   storyComments            StoryComment[]
   storyReactions           StoryReaction[]
+  storyPollVotes           StoryPollVote[]
   highlights               Highlight[]
   closeFriends             CloseFriend[]             @relation("User")
   closeFriendsOf           CloseFriend[]             @relation("CloseFriend")
@@ -323,6 +324,7 @@ model Story {
   comments       StoryComment[]
   reactions      StoryReaction[]
   messages       Message[]
+  pollVotes      StoryPollVote[]
   highlightItems HighlightItem[]
 }
 
@@ -337,6 +339,22 @@ model Highlight {
   user    User   @relation(fields: [user_id], references: [id])
 
   items HighlightItem[]
+}
+
+model StoryPollVote {
+  id           String   @id @default(uuid())
+  option_index Int
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  story_id   String
+  overlay_id String
+  user_id    String
+
+  story Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id])
+
+  @@unique([story_id, overlay_id, user_id])
 }
 
 model HighlightItem {

@@ -29,7 +29,7 @@ export interface MusicTrack {
   duration_sec: number | null;
 }
 
-export type StoryOverlayType = "text" | "emoji" | "mention" | "post";
+export type StoryOverlayType = "text" | "emoji" | "mention" | "post" | "link" | "poll";
 
 export interface StoryOverlay {
   id: string;
@@ -43,6 +43,18 @@ export interface StoryOverlay {
   color?: string;
   background?: string | null;
   fontFamily?: string;
+  // link sticker
+  url?: string;
+  label?: string;
+  // poll sticker
+  question?: string;
+  options?: string[];
+}
+
+export interface PollResult {
+  counts: Record<number, number> | null;
+  total: number;
+  my_choice: number | null;
 }
 
 export interface SharedPostRef {
@@ -198,6 +210,28 @@ export const shareStory = async (
     recipient_ids: recipientIds,
     note,
   });
+  return res.data.data;
+};
+
+// ---- Poll stickers ----
+
+export const votePoll = async (
+  storyId: string,
+  overlayId: string,
+  optionIndex: number
+): Promise<PollResult> => {
+  const res = await api.post(`/stories/${storyId}/poll`, {
+    overlay_id: overlayId,
+    option_index: optionIndex,
+  });
+  return res.data.data;
+};
+
+export const getPollResults = async (
+  storyId: string,
+  overlayId: string
+): Promise<PollResult> => {
+  const res = await api.get(`/stories/${storyId}/poll/${overlayId}`);
   return res.data.data;
 };
 

@@ -16,7 +16,14 @@ import {
   removeStory,
   selectStoryGroups,
 } from "../../features/stories/storiesSlice";
-import { getUserStories, type Story, type StoryUser } from "../../api/storiesApi";
+import {
+  getUserStories,
+  votePoll,
+  getPollResults,
+  type Story,
+  type StoryUser,
+  type PollResult,
+} from "../../api/storiesApi";
 import { Avatar, AvatarFallback, AvatarImage } from "../../Components/ui/avatar";
 import StoryOverlayLayer from "../../Components/story/StoryOverlayLayer";
 import ShareStorySheet from "../../Components/story/ShareStorySheet";
@@ -51,6 +58,7 @@ export default function StoryViewerView() {
   const [showSeenBy, setShowSeenBy] = useState(false);
   const [showHighlight, setShowHighlight] = useState(false);
   const [flyHearts, setFlyHearts] = useState<number[]>([]);
+  const [pollResults, setPollResults] = useState<Record<string, PollResult>>({});
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -256,6 +264,59 @@ export default function StoryViewerView() {
 
   const overlays = useMemo(() => story?.overlays ?? [], [story]);
 
+  // Load existing poll results for the current story's poll stickers.
+  useEffect(() => {
+    if (!story) return;
+    const polls = (story.overlays ?? []).filter((o) => o.type === "poll");
+    if (polls.length === 0) return;
+    let active = true;
+    Promise.all(
+      polls.map((p) =>
+        getPollResults(story.id, p.id)
+          .then((r) => [p.id, r] as const)
+          .catch(() => null)
+      )
+    ).then((entries) => {
+      if (!active) return;
+      setPollResults((prev) => {
+        const next = { ...prev };
+        for (const e of entries) if (e) next[e[0]] = e[1];
+        return next;
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [story?.id]);
+
+  // Live poll updates for the author (bridged from the realtime hook).
+  useEffect(() => {
+    const onPoll = (e: Event) => {
+      const d = (e as CustomEvent).detail;
+      if (!d || d.story_id !== story?.id || !d.overlay_id) return;
+      setPollResults((prev) => ({
+        ...prev,
+        [d.overlay_id]: {
+          counts: d.counts ?? prev[d.overlay_id]?.counts ?? null,
+          total: d.total ?? 0,
+          my_choice: prev[d.overlay_id]?.my_choice ?? null,
+        },
+      }));
+    };
+    window.addEventListener("story:poll", onPoll);
+    return () => window.removeEventListener("story:poll", onPoll);
+  }, [story?.id]);
+
+  const handlePollVote = async (overlayId: string, optionIndex: number) => {
+    if (!story) return;
+    try {
+      const res = await votePoll(story.id, overlayId, optionIndex);
+      setPollResults((prev) => ({ ...prev, [overlayId]: res }));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not vote");
+    }
+  };
+
   if (!group || !story) {
     return <div className="fixed inset-0 bg-black z-50" />;
   }
@@ -378,7 +439,11 @@ export default function StoryViewerView() {
             </div>
           )}
 
-          <StoryOverlayLayer overlays={overlays} />
+          <StoryOverlayLayer
+            overlays={overlays}
+            pollResults={pollResults}
+            onPollVote={handlePollVote}
+          />
 
           {isText && !overlays.length && story.caption && (
             <div className="absolute inset-0 flex items-center justify-center p-8">

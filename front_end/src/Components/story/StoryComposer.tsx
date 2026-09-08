@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  X, Type, Smile, Music2, ImagePlus, Loader2, Sparkles, Check, ChevronDown, Trash2,
+  X, Type, Smile, Music2, ImagePlus, Loader2, Sparkles, Check, ChevronDown, Trash2, Link2, BarChart3,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { toast } from "sonner";
@@ -176,6 +176,35 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
       { id: uid(), type: "emoji", text: emoji, x: 0.5, y: 0.5, rotation: 0, scale: 1 },
     ]);
     setShowEmoji(false);
+  };
+
+  const addLink = () => {
+    const url = window.prompt("Link URL (https://…)")?.trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) {
+      toast.error("Link must start with http:// or https://");
+      return;
+    }
+    const label = window.prompt("Label (optional)")?.trim() || undefined;
+    setOverlays((prev) => [
+      ...prev,
+      { id: uid(), type: "link", url, label, x: 0.5, y: 0.72, rotation: 0, scale: 1 },
+    ]);
+  };
+
+  const addPoll = () => {
+    const question = window.prompt("Poll question")?.trim();
+    if (!question) return;
+    const a = window.prompt("Option 1")?.trim();
+    const b = window.prompt("Option 2")?.trim();
+    if (!a || !b) {
+      toast.error("A poll needs two options");
+      return;
+    }
+    setOverlays((prev) => [
+      ...prev,
+      { id: uid(), type: "poll", question, options: [a, b], x: 0.5, y: 0.5, rotation: 0, scale: 1 },
+    ]);
   };
 
   const canShare =
@@ -371,6 +400,8 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
         <div className="flex items-center justify-around px-2 py-3 border-t border-white/10">
           <ToolButton icon={<Type className="w-5 h-5" />} label="Text" onClick={() => openTextEditor()} />
           <ToolButton icon={<Smile className="w-5 h-5" />} label="Sticker" onClick={() => setShowEmoji(true)} />
+          <ToolButton icon={<Link2 className="w-5 h-5" />} label="Link" onClick={addLink} />
+          <ToolButton icon={<BarChart3 className="w-5 h-5" />} label="Poll" onClick={addPoll} />
           <ToolButton
             icon={<Music2 className="w-5 h-5" />}
             label={music ? "Music ✓" : "Music"}
