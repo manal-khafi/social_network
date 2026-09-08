@@ -138,6 +138,7 @@ model User {
   storyViews               StoryView[]
   storyLikes               StoryLike[]
   storyComments            StoryComment[]
+  storyReactions           StoryReaction[]
   closeFriends             CloseFriend[]             @relation("User")
   closeFriendsOf           CloseFriend[]             @relation("CloseFriend")
   conversationParticipants ConversationParticipant[]
@@ -193,12 +194,13 @@ model Post {
   user    User   @relation(fields: [user_id], references: [id])
 
   // Relations
-  reports  Report[]
-  comments Comment[]
-  likes    Like[]
-  shares   Share[]
-  reposts  Repost[]
-  saves    Save[]
+  reports     Report[]
+  comments    Comment[]
+  likes       Like[]
+  shares      Share[]
+  reposts     Repost[]
+  saves       Save[]
+  storyShares Story[]   @relation("StorySharedPost")
 }
 
 model Comment {
@@ -280,6 +282,27 @@ model Story {
   content_type StoryContentType
   visibility   StoryVisibility  @default(public)
 
+  // Media metadata
+  caption       String?
+  thumbnail_url String?
+  duration_sec  Int? // for video stories
+  bg_color      String? // for text stories
+
+  // Draggable text / emoji / sticker overlays: [{ type, text, x, y, rotation, scale, color, ... }]
+  overlays Json?
+
+  // Attached music (iTunes / Deezer 30s preview)
+  music_track_id    String?
+  music_title       String?
+  music_artist      String?
+  music_cover_url   String?
+  music_preview_url String?
+  music_start_sec   Int?    @default(0)
+
+  // Reshared content ("add post to your story" / re-share a story)
+  shared_post_id  String?
+  shared_story_id String?
+
   duration_hours Int      @default(24)
   expires_at     DateTime
   is_archived    Boolean  @default(false)
@@ -289,11 +312,16 @@ model Story {
   user_id String
   user    User   @relation(fields: [user_id], references: [id])
 
+  sharedPost  Post?  @relation("StorySharedPost", fields: [shared_post_id], references: [id])
+  sharedStory Story? @relation("StoryReshare", fields: [shared_story_id], references: [id])
+  reshares    Story[] @relation("StoryReshare")
+
   // Relations
-  views    StoryView[]
-  likes    StoryLike[]
-  comments StoryComment[]
-  messages Message[]
+  views     StoryView[]
+  likes     StoryLike[]
+  comments  StoryComment[]
+  reactions StoryReaction[]
+  messages  Message[]
 }
 
 model StoryView {
@@ -334,6 +362,21 @@ model StoryComment {
 
   user  User  @relation(fields: [user_id], references: [id])
   story Story @relation(fields: [story_id], references: [id])
+}
+
+model StoryReaction {
+  id         String   @id @default(uuid())
+  emoji      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user_id  String
+  story_id String
+
+  user  User  @relation(fields: [user_id], references: [id])
+  story Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, story_id])
 }
 
 model CloseFriend {

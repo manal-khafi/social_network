@@ -129,5 +129,78 @@ export class RelationshipService {
 
     return closeFriends.map((cf) => cf.close_friend_id);
   }
+
+  /**
+   * Pré-charge en 3 requêtes tout ce qu'il faut pour filtrer un lot de stories
+   * par visibilité, au lieu d'appeler canViewStory (N+1) pour chacune.
+   */
+  static async getStoryVisibilityContext(viewerId: string): Promise<StoryVisibilityContext> {
+    const [blocks, follows, closeFriendOf] = await Promise.all([
+      prisma.block.findMany({
+        where: {
+          OR: [{ blocker_id: viewerId }, { blocked_id: viewerId }],
+        },
+        select: { blocker_id: true, blocked_id: true },
+      }),
+      prisma.follow.findMany({
+        where: {
+          status: 'accepted',
+          OR: [{ follower_id: viewerId }, { followed_id: viewerId }],
+        },
+        select: { follower_id: true, followed_id: true },
+      }),
+      // Owners who added the viewer to *their* close friends list.
+      prisma.closeFriend.findMany({
+        where: { close_friend_id: viewerId },
+        select: { user_id: true },
+      }),
+    ]);
+
+    const blockedIds = new Set<string>();
+    for (const b of blocks) {
+      blockedIds.add(b.blocker_id === viewerId ? b.blocked_id : b.blocker_id);
+    }
+
+    const outgoing = new Set<string>();
+    const incoming = new Set<string>();
+    for (const f of follows) {
+      if (f.follower_id === viewerId) outgoing.add(f.followed_id);
+      if (f.followed_id === viewerId) incoming.add(f.follower_id);
+    }
+    const mutualFriendIds = new Set<string>();
+    for (const id of outgoing) if (incoming.has(id)) mutualFriendIds.add(id);
+
+    const closeFriendOwnerIds = new Set(closeFriendOf.map((c) => c.user_id));
+
+    return { blockedIds, mutualFriendIds, closeFriendOwnerIds };
+  }
+
+  /**
+   * Version synchrone de canViewStory à partir d'un contexte pré-chargé.
+   */
+  static canViewStoryWithContext(
+    ctx: StoryVisibilityContext,
+    viewerId: string,
+    story: { user_id: string; visibility: 'public' | 'friends' | 'close_friends' }
+  ): boolean {
+    if (story.user_id === viewerId) return true;
+    if (ctx.blockedIds.has(story.user_id)) return false;
+    switch (story.visibility) {
+      case 'public':
+        return true;
+      case 'friends':
+        return ctx.mutualFriendIds.has(story.user_id);
+      case 'close_friends':
+        return ctx.closeFriendOwnerIds.has(story.user_id);
+      default:
+        return false;
+    }
+  }
+}
+
+export interface StoryVisibilityContext {
+  blockedIds: Set<string>;
+  mutualFriendIds: Set<string>;
+  closeFriendOwnerIds: Set<string>;
 }
 

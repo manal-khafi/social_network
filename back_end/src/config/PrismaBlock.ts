@@ -1,30 +1,18 @@
 // back_end/src/config/PrismaBlock.ts
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
+import prisma from "./prismaClient";
 
-// Singleton pattern pour Prisma Client
+// Kept for backwards compatibility. The actual client is the shared singleton
+// defined in ./prismaClient so the whole process uses one connection pool.
 class PrismaService {
-  private static instance: PrismaClient;
-
-  private constructor() {}
-
   public static getInstance(): PrismaClient {
-    if (!PrismaService.instance) {
-      PrismaService.instance = new PrismaClient({
-        log:
-          process.env.NODE_ENV === "development"
-            ? ["query", "error", "warn"]
-            : ["error"],
-      });
-    }
-    return PrismaService.instance;
+    return prisma;
   }
 
   public static async disconnect(): Promise<void> {
-    if (PrismaService.instance) {
-      await PrismaService.instance.$disconnect();
-    }
+    await prisma.$disconnect();
   }
 }
 
-export const prisma = PrismaService.getInstance();
+export { prisma };
 export default PrismaService;

@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { store } from "./store";
 import { useAppSelector } from "./hooks";
 import { useAuthSession } from "./hooks/useAuthSession";
+import { useRealtime } from "./realtime/useRealtime";
 import i18n from "./i18n/i18n";
 import MainLayout from "./layouts/MainLayout";
 import RequireAuth from "./guards/RequireAuth";
@@ -53,6 +54,7 @@ import { CreateCommunity } from "./Views/community/createCommunity";
 function AppContent() {
   const navigate = useNavigate();
   const { isSessionLoading } = useAuthSession();
+  useRealtime();
 
   if (isSessionLoading) {
     return (
@@ -84,7 +86,8 @@ function AppContent() {
           <Route path="search" element={<SearchView />} />
           <Route path="create-post" element={<CreatePostView />} />
           <Route path="my-posts" element={<MyPostsView />} />
-          <Route path="story/:storyId" element={<StoryViewerView />} />
+          <Route path="stories/:userId" element={<StoryViewerView />} />
+          <Route path="story/:userId" element={<StoryViewerView />} />
 
           <Route path="community" element={<Navigate to="list" replace />} />
 

@@ -1,93 +1,35 @@
 import prisma from '../util/prisma';
 import { AppError } from '../util/error';
 import { StoryService } from './story.service';
-import { NotificationService } from '../services/notificationService';
+import { NotificationService } from './notificationService';
+import { getOrCreateDirectConversation } from '../util/conversation';
+import { emitToUser } from '../realtime/io';
 
 export class StoryMessageService {
   /**
-   * Envoie un message privé en réponse à une story
+   * Reply to a story by private message. The recipient is always the story
+   * author (Instagram behaviour); `recipientId` is optional and validated if
+   * provided.
    */
   static async sendMessageToStory(
     storyId: string,
     senderId: string,
-    recipientId: string,
+    recipientId: string | undefined,
     content: string
   ) {
-    // Vérifier que la story existe et est visible
+    // Ensures the story exists, is live and visible to the sender.
     const story = await StoryService.getStoryById(storyId, senderId);
+    const target = recipientId || story.user_id;
 
-    // Vérifier que le destinataire est bien le créateur de la story
-    if (story.user_id !== recipientId) {
+    if (target !== story.user_id) {
       throw new AppError('Le destinataire doit être le créateur de la story', 400);
     }
-
-    // Vérifier qu'on ne s'envoie pas un message à soi-même
-    if (senderId === recipientId) {
-      throw new AppError('Vous ne pouvez pas vous envoyer un message', 400);
+    if (senderId === target) {
+      throw new AppError('Vous ne pouvez pas répondre à votre propre story', 400);
     }
 
-    // Trouver une conversation existante entre les deux utilisateurs
-    // Rechercher toutes les conversations non-groupes
-    const conversations = await prisma.conversation.findMany({
-      where: {
-        is_group: false,
-      },
-      include: {
-        participants: true,
-      },
-    });
+    const conversation = await getOrCreateDirectConversation(senderId, target);
 
-    // Trouver la conversation qui a exactement ces deux participants
-    let conversation = conversations.find((conv) => {
-      const participantIds = conv.participants.map((p) => p.user_id);
-      return (
-        participantIds.length === 2 &&
-        participantIds.includes(senderId) &&
-        participantIds.includes(recipientId)
-      );
-    });
-
-    // Si aucune conversation n'existe, en créer une
-    if (!conversation) {
-      conversation = await prisma.conversation.create({
-        data: {
-          is_group: false,
-          participants: {
-            create: [
-              { user_id: senderId },
-              { user_id: recipientId },
-            ],
-          },
-        },
-        include: {
-          participants: true,
-        },
-      });
-    } else {
-      // Vérifier que les deux utilisateurs sont bien dans la conversation
-      const participantIds = conversation.participants.map((p) => p.user_id);
-      if (!participantIds.includes(senderId) || !participantIds.includes(recipientId)) {
-        // Ajouter les participants manquants
-        if (!participantIds.includes(senderId)) {
-          await prisma.conversationParticipant.create({
-            data: {
-              conversation_id: conversation.id,
-              user_id: senderId,
-            },
-          });
-        }
-        if (!participantIds.includes(recipientId)) {
-          await prisma.conversationParticipant.create({
-            data: {
-              conversation_id: conversation.id,
-              user_id: recipientId,
-            },
-          });
-        }
-      }
-    }
-
-    // Créer le message lié à la story
     const message = await prisma.message.create({
       data: {
         conversation_id: conversation.id,
@@ -98,70 +40,48 @@ export class StoryMessageService {
       },
       include: {
         sender: {
-          select: {
-            id: true,
-            username: true,
-            display_name: true,
-            avatar_url: true,
-          },
+          select: { id: true, username: true, display_name: true, avatar_url: true },
         },
       },
     });
 
-    // Créer les statuts de message pour le destinataire
     await prisma.messageStatus.create({
-      data: {
-        message_id: message.id,
-        user_id: recipientId,
-        status: 'sent',
-      },
+      data: { message_id: message.id, user_id: target, status: 'sent' },
     });
 
-    // Créer une notification pour le créateur
     await NotificationService.createStoryMessageNotification(
-      recipientId,
+      target,
       senderId,
       storyId,
       message.id
     );
 
+    emitToUser(target, 'message:new', { ...message, conversation_id: conversation.id });
+    emitToUser(target, 'story:reply', {
+      story_id: storyId,
+      message_id: message.id,
+      sender: message.sender,
+      content: message.content,
+    });
+
     return message;
   }
 
-  /**
-   * Récupère les messages liés à une story (pour le créateur uniquement)
-   */
   static async getStoryMessages(storyId: string, userId: string) {
-    const story = await prisma.story.findUnique({
-      where: { id: storyId },
-    });
-
-    if (!story) {
-      throw new AppError('Story non trouvée', 404);
-    }
-
+    const story = await prisma.story.findUnique({ where: { id: storyId } });
+    if (!story) throw new AppError('Story non trouvée', 404);
     if (story.user_id !== userId) {
-      throw new AppError('Vous n\'êtes pas autorisé à voir les messages de cette story', 403);
+      throw new AppError("Vous n'êtes pas autorisé à voir les messages de cette story", 403);
     }
 
-    const messages = await prisma.message.findMany({
+    return prisma.message.findMany({
       where: { story_id: storyId },
       include: {
         sender: {
-          select: {
-            id: true,
-            username: true,
-            display_name: true,
-            avatar_url: true,
-          },
+          select: { id: true, username: true, display_name: true, avatar_url: true },
         },
       },
-      orderBy: {
-        created_at: 'asc',
-      },
+      orderBy: { created_at: 'asc' },
     });
-
-    return messages;
   }
 }
-

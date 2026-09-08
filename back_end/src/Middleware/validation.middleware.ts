@@ -6,7 +6,8 @@ export const validateStoryCreation = (
   res: Response,
   next: NextFunction
 ) => {
-  const { content_url, content_type, visibility } = req.body;
+  const { content_url, content_type, visibility, caption, overlays, music, duration_hours } =
+    req.body;
 
   if (!content_url || typeof content_url !== 'string') {
     return next(new AppError('Le contenu de la story est requis', 400));
@@ -16,10 +17,73 @@ export const validateStoryCreation = (
     return next(new AppError('Type de contenu invalide', 400));
   }
 
-  if (!visibility || !['public', 'friends', 'close_friends'].includes(visibility)) {
+  if (visibility && !['public', 'friends', 'close_friends'].includes(visibility)) {
     return next(new AppError('Visibilité invalide', 400));
   }
 
+  if (caption != null && (typeof caption !== 'string' || caption.length > 2200)) {
+    return next(new AppError('Légende invalide', 400));
+  }
+
+  if (overlays != null && !Array.isArray(overlays)) {
+    return next(new AppError('Format des overlays invalide', 400));
+  }
+  if (Array.isArray(overlays) && overlays.length > 30) {
+    return next(new AppError('Trop d\'éléments sur la story (max 30)', 400));
+  }
+
+  if (music != null) {
+    if (typeof music !== 'object' || Array.isArray(music)) {
+      return next(new AppError('Format de la musique invalide', 400));
+    }
+    if (music.preview_url && typeof music.preview_url !== 'string') {
+      return next(new AppError('URL de prévisualisation musicale invalide', 400));
+    }
+  }
+
+  if (
+    duration_hours != null &&
+    (typeof duration_hours !== 'number' || duration_hours < 1 || duration_hours > 168)
+  ) {
+    return next(new AppError('Durée invalide (1 à 168 heures)', 400));
+  }
+
+  next();
+};
+
+export const validateStoryReaction = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { emoji } = req.body;
+  if (!emoji || typeof emoji !== 'string' || [...emoji.trim()].length === 0) {
+    return next(new AppError('Emoji requis', 400));
+  }
+  if ([...emoji.trim()].length > 4) {
+    return next(new AppError('Emoji invalide', 400));
+  }
+  next();
+};
+
+export const validateStoryShare = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { recipient_ids, note } = req.body;
+  if (!Array.isArray(recipient_ids) || recipient_ids.length === 0) {
+    return next(new AppError('Au moins un destinataire est requis', 400));
+  }
+  if (recipient_ids.length > 25) {
+    return next(new AppError('Trop de destinataires (max 25)', 400));
+  }
+  if (!recipient_ids.every((id) => typeof id === 'string' && id.length > 0)) {
+    return next(new AppError('Liste de destinataires invalide', 400));
+  }
+  if (note != null && (typeof note !== 'string' || note.length > 1000)) {
+    return next(new AppError('Message trop long', 400));
+  }
   next();
 };
 
@@ -52,8 +116,9 @@ export const validateStoryMessage = (
     return next(new AppError('Le contenu du message est requis', 400));
   }
 
-  if (!recipient_id || typeof recipient_id !== 'string') {
-    return next(new AppError('Le destinataire est requis', 400));
+  // recipient_id is optional — defaults to the story author server-side.
+  if (recipient_id != null && typeof recipient_id !== 'string') {
+    return next(new AppError('Le destinataire est invalide', 400));
   }
 
   next();

@@ -1,6 +1,12 @@
+import "express-async-errors";
+import http from "http";
 import express from "express";
 import cors from "cors";
 import path from "path";
+import { initRealtime } from "./realtime/io";
+import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import AuthenticationRoutes from "./Routes/Authentication";
 import commentRouter from "./Routes/Comment";
 import FollowRoutes from "./Routes/Following";
@@ -19,6 +25,7 @@ import twoFactorRouter from "./Routes/TwoFactorAuth";
 import communityRoutes from "./Routes/communityRoutes";
 import { authMiddleware } from "./Middleware/authMiddlware";
 import storyRoutes from "./Routes/story.routes";
+import { errorHandler } from "./util/error";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -27,9 +34,21 @@ const port = process.env.PORT || 3500;
 const app = express();
 const bodyLimit = process.env.BODY_LIMIT || "100mb";
 
+// Running behind nginx / a load balancer: trust the first proxy hop so that
+// secure cookies, req.protocol and express-rate-limit see the real client IP.
+app.set("trust proxy", 1);
+
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",")
+  ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
   : ["https://socialnetworkes.vercel.app"];
+
+// Security headers. crossOriginResourcePolicy is relaxed so that uploaded
+// media can be embedded by the frontend when it is served from another origin.
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 
 app.use(cors({
   origin: allowedOrigins,
@@ -38,18 +57,38 @@ app.use(cors({
     "Content-Type",
     "Authorization",
     "X-Requested-With",
-    "Accept"
+    "Accept",
+    "x-refresh-token"
   ],
+  // Let the browser read the rotated access token when the API is cross-origin.
+  exposedHeaders: ["x-access-token"],
   credentials: true,
   optionsSuccessStatus: 200
 }));
 
 app.use(express.json({ limit: bodyLimit }));
 app.use(express.urlencoded({ extended: true, limit: bodyLimit }));
+app.use(cookieParser());
+
+// Coarse global rate limit. Route-level limiters (auth, 2FA, register) stack on top.
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: Number(process.env.GLOBAL_RATE_LIMIT || 1000),
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 initializeEmailService();
+
+// Liveness/readiness probe for Docker / load balancers.
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok", uptime: process.uptime() });
+});
+
 app.use("/api/authentication", AuthenticationRoutes);
 app.use("/api/comments", commentRouter);
 app.use("/api/follow", FollowRoutes);
@@ -65,7 +104,6 @@ app.use("/api/account", AccountRouter);
 app.use("/api/privacy", PrivacySettingsRoutes);
 app.use("/api/auth", twoFactorRouter);
 app.use('/api/stories', storyRoutes);
-app.use(express.json());
 
 app.use("/api/communities", authMiddleware, communityRoutes);
 
@@ -77,7 +115,26 @@ app.get("/", (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`port connected en http://localhost:${port}`);
+// Unknown route -> JSON 404 (instead of Express' default HTML page).
+app.use((_req, res) => {
+  res.status(404).json({ success: false, message: "Route introuvable" });
 });
 
+// Centralised error handler. Must be registered last and keep its 4 arguments.
+app.use(errorHandler);
+
+const server = http.createServer(app);
+initRealtime(server, allowedOrigins);
+
+server.listen(port, () => {
+  console.log(`API listening on port ${port}`);
+});
+
+// Graceful shutdown so Prisma closes its pool and sockets drain.
+const shutdown = (signal: string) => {
+  console.log(`${signal} received, shutting down...`);
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(1), 10000).unref();
+};
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

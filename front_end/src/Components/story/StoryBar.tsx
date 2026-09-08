@@ -1,121 +1,88 @@
-import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { useAppSelector, useAppDispatch } from '../../hooks';
-import { addStory, fetchStories } from '../../features/stories/storiesSlice';
-import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Plus, Image as ImageIcon } from 'lucide-react';
-import { toast } from 'sonner';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "../../hooks";
+import { fetchStories, selectStoryGroups } from "../../features/stories/storiesSlice";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import StoryComposer from "./StoryComposer";
 
 export default function StoryBar() {
   const dispatch = useAppDispatch();
-  const { stories } = useAppSelector((state) => state.stories);
-  const { currentUser } = useAppSelector((state) => state.user);
-  const [open, setOpen] = useState(false);
-  const [storyImage, setStoryImage] = useState('');
+  const navigate = useNavigate();
+  const groups = useAppSelector(selectStoryGroups);
+  const currentUser = useAppSelector((s) => s.user.currentUser);
+  const [composerOpen, setComposerOpen] = useState(false);
 
-  // Fetch stories on mount
   useEffect(() => {
     dispatch(fetchStories());
   }, [dispatch]);
 
-  const handleCreateStory = async () => {
-    if (storyImage.trim()) {
-      try {
-        await dispatch(addStory({ image: storyImage })).unwrap();
-        toast.success('Story created!');
-        setStoryImage('');
-        setOpen(false);
-      } catch (error) {
-        toast.error('Failed to create story');
-      }
-    }
-  };
-
-  const useRandomImage = () => {
-    const randomImages = [
-      'https://images.unsplash.com/photo-1682687220742-aba13b6e50ba?w=800',
-      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800',
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800'
-    ];
-    setStoryImage(randomImages[Math.floor(Math.random() * randomImages.length)]);
-  };
+  const myGroup = groups.find((g) => g.user.id === currentUser?.id);
+  const otherGroups = groups.filter((g) => g.user.id !== currentUser?.id);
 
   return (
     <div className="border-b border-border bg-card">
       <div className="p-4 flex gap-4 overflow-x-auto">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <button className="flex flex-col items-center gap-2 flex-shrink-0">
-              <div className="relative">
-                <Avatar className="w-16 h-16 border-2 border-primary">
-                  <AvatarImage src={currentUser?.avatar} />
-                  <AvatarFallback>{currentUser?.username[0].toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="absolute bottom-0 right-0 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-card">
-                  <Plus className="w-3 h-3 text-primary-foreground" />
-                </div>
-              </div>
-              <span className="text-xs">Your story</span>
-            </button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create Story</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm">Story Image URL</label>
-                <Input
-                  placeholder="https://example.com/image.jpg"
-                  value={storyImage}
-                  onChange={(e) => setStoryImage(e.target.value)}
-                />
-                <Button
-                  onClick={useRandomImage}
-                  variant="outline"
-                  className="w-full"
-                  size="sm"
-                >
-                  <ImageIcon className="w-4 h-4 mr-2" />
-                  Use Random Image
-                </Button>
-              </div>
-              {storyImage && (
-                <div className="relative rounded-lg overflow-hidden">
-                  <img src={storyImage} alt="Preview" className="w-full h-64 object-cover" />
-                </div>
-              )}
-              <Button
-                onClick={handleCreateStory}
-                disabled={!storyImage.trim()}
-                className="w-full bg-[#d6955b] hover:bg-[#c58549]"
-              >
-                Create Story
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {stories.map((story) => (
-          <Link
-            key={story.id}
-            to={`/story/${story.id}`}
-            className="flex flex-col items-center gap-2 flex-shrink-0"
+        {/* Your story */}
+        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() =>
+              myGroup ? navigate(`/home/stories/${currentUser?.id}`) : setComposerOpen(true)
+            }
+            className="relative"
           >
-            <div className={`p-0.5 rounded-full ${story.isViewed ? 'bg-muted' : 'bg-gradient-to-tr from-primary to-accent'}`}>
+            <div
+              className={`p-0.5 rounded-full ${
+                myGroup?.has_unseen
+                  ? "bg-gradient-to-tr from-primary to-accent"
+                  : "bg-muted"
+              }`}
+            >
               <Avatar className="w-16 h-16 border-2 border-card">
-                <AvatarImage src={story.avatar} />
-                <AvatarFallback>{story.username[0].toUpperCase()}</AvatarFallback>
+                <AvatarImage src={currentUser?.avatar_url ?? undefined} />
+                <AvatarFallback>
+                  {currentUser?.username?.[0]?.toUpperCase() ?? "?"}
+                </AvatarFallback>
               </Avatar>
             </div>
-            <span className="text-xs max-w-[64px] truncate">{story.username}</span>
-          </Link>
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                setComposerOpen(true);
+              }}
+              className="absolute bottom-0 right-0 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-card"
+            >
+              <Plus className="w-3 h-3 text-primary-foreground" />
+            </span>
+          </button>
+          <span className="text-xs">Your story</span>
+        </div>
+
+        {/* Everyone else */}
+        {otherGroups.map((group) => (
+          <button
+            key={group.user.id}
+            onClick={() => navigate(`/home/stories/${group.user.id}`)}
+            className="flex flex-col items-center gap-2 flex-shrink-0"
+          >
+            <div
+              className={`p-0.5 rounded-full ${
+                group.has_unseen
+                  ? "bg-gradient-to-tr from-primary to-accent"
+                  : "bg-muted"
+              }`}
+            >
+              <Avatar className="w-16 h-16 border-2 border-card">
+                <AvatarImage src={group.user.avatar_url ?? undefined} />
+                <AvatarFallback>{group.user.username[0]?.toUpperCase()}</AvatarFallback>
+              </Avatar>
+            </div>
+            <span className="text-xs max-w-[64px] truncate">{group.user.username}</span>
+          </button>
         ))}
       </div>
+
+      <StoryComposer open={composerOpen} onClose={() => setComposerOpen(false)} />
     </div>
   );
 }
