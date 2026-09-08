@@ -202,6 +202,17 @@ export default function StoryOverlayLayer({
       );
     }
 
+    if (ov.type === "gif") {
+      return (
+        <img
+          src={ov.gifUrl}
+          alt=""
+          draggable={false}
+          className="w-40 max-w-[60vw] rounded-lg pointer-events-none drop-shadow"
+        />
+      );
+    }
+
     const isEmoji = ov.type === "emoji";
     return (
       <div

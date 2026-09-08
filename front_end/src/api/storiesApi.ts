@@ -51,6 +51,16 @@ export interface StoryOverlay {
   options?: string[];
   // question sticker
   prompt?: string;
+  // gif sticker
+  gifUrl?: string;
+}
+
+export interface GifResult {
+  id: string;
+  url: string;
+  preview_url: string | null;
+  width: number;
+  height: number;
 }
 
 export interface PollResult {
@@ -260,6 +270,20 @@ export const getQuestionResponses = async (
 ): Promise<QuestionResponse[]> => {
   const res = await api.get(`/stories/${storyId}/question/${overlayId}`);
   return res.data.data;
+};
+
+// ---- GIF stickers (Giphy) ----
+
+export const searchGifs = async (
+  q: string
+): Promise<{ configured: boolean; gifs: GifResult[] }> => {
+  try {
+    const res = await api.get("/stories/gifs/search", { params: { q } });
+    return { configured: res.data?.configured ?? true, gifs: res.data?.data ?? [] };
+  } catch (e: any) {
+    if (e?.response?.status === 503) return { configured: false, gifs: [] };
+    throw e;
+  }
 };
 
 // ---- Account search (for @mentions) ----
