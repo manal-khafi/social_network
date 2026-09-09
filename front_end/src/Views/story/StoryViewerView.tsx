@@ -338,13 +338,13 @@ export default function StoryViewerView() {
   };
 
   if (!group || !story) {
-    return <div className="fixed inset-0 bg-black z-50" />;
+    return <div className="fixed inset-0 bg-black z-[60]" />;
   }
 
   const isText = story.content_type === "text";
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black z-[60] flex items-center justify-center">
       <div className="relative w-full h-full max-w-[440px] mx-auto overflow-hidden md:rounded-2xl">
         {/* legibility scrims */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 to-transparent z-20" />
