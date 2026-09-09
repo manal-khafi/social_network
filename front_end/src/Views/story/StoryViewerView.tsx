@@ -343,7 +343,11 @@ export default function StoryViewerView() {
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
-      <div className="relative w-full h-full max-w-[440px] mx-auto">
+      <div className="relative w-full h-full max-w-[440px] mx-auto overflow-hidden md:rounded-2xl">
+        {/* legibility scrims */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 to-transparent z-20" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/55 to-transparent z-20" />
+
         {/* progress bars */}
         <div className="absolute top-2 left-3 right-3 flex gap-1 z-30">
           {items.map((s, i) => (

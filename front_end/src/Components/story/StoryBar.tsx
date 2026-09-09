@@ -6,10 +6,41 @@ import { fetchStories, selectStoryGroups } from "../../features/stories/storiesS
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import StoryComposer from "./StoryComposer";
 
+const RING_UNSEEN =
+  "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]";
+
+function Ring({
+  src,
+  fallback,
+  unseen,
+  dim,
+}: {
+  src?: string | null;
+  fallback: string;
+  unseen: boolean;
+  dim?: boolean;
+}) {
+  return (
+    <span
+      className={`inline-flex rounded-full p-[2.5px] ${
+        unseen ? RING_UNSEEN : "bg-border"
+      } ${dim ? "opacity-90" : ""}`}
+    >
+      <span className="rounded-full p-[2px] bg-card">
+        <Avatar className="w-[64px] h-[64px]">
+          <AvatarImage src={src ?? undefined} />
+          <AvatarFallback className="text-lg">{fallback}</AvatarFallback>
+        </Avatar>
+      </span>
+    </span>
+  );
+}
+
 export default function StoryBar() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const groups = useAppSelector(selectStoryGroups);
+  const status = useAppSelector((s) => s.stories.status);
   const currentUser = useAppSelector((s) => s.user.currentUser);
   const [composerOpen, setComposerOpen] = useState(false);
 
@@ -19,65 +50,81 @@ export default function StoryBar() {
 
   const myGroup = groups.find((g) => g.user.id === currentUser?.id);
   const otherGroups = groups.filter((g) => g.user.id !== currentUser?.id);
+  const loading = status === "loading" && groups.length === 0;
 
   return (
     <div className="border-b border-border bg-card">
-      <div className="p-4 flex gap-4 overflow-x-auto">
+      <div className="flex gap-4 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* Your story */}
-        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+        <div className="flex flex-col items-center gap-1.5 flex-shrink-0 w-[76px]">
           <button
             onClick={() =>
               myGroup ? navigate(`/home/stories/${currentUser?.id}`) : setComposerOpen(true)
             }
-            className="relative"
+            className="relative active:scale-95 transition-transform"
+            aria-label={myGroup ? "View your story" : "Add to your story"}
           >
-            <div
-              className={`p-0.5 rounded-full ${
-                myGroup?.has_unseen
-                  ? "bg-gradient-to-tr from-primary to-accent"
-                  : "bg-muted"
-              }`}
-            >
-              <Avatar className="w-16 h-16 border-2 border-card">
-                <AvatarImage src={currentUser?.avatar_url ?? undefined} />
-                <AvatarFallback>
-                  {currentUser?.username?.[0]?.toUpperCase() ?? "?"}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+            {myGroup ? (
+              <Ring
+                src={currentUser?.avatar_url}
+                fallback={currentUser?.username?.[0]?.toUpperCase() ?? "?"}
+                unseen={myGroup.has_unseen}
+              />
+            ) : (
+              <span className="inline-flex rounded-full p-[2.5px] bg-border">
+                <span className="rounded-full p-[2px] bg-card">
+                  <Avatar className="w-[64px] h-[64px]">
+                    <AvatarImage src={currentUser?.avatar_url ?? undefined} />
+                    <AvatarFallback className="text-lg">
+                      {currentUser?.username?.[0]?.toUpperCase() ?? "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                </span>
+              </span>
+            )}
             <span
+              role="button"
+              tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
                 setComposerOpen(true);
               }}
-              className="absolute bottom-0 right-0 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-card"
+              className="absolute bottom-0.5 right-0.5 w-6 h-6 bg-primary rounded-full grid place-items-center border-[3px] border-card shadow"
             >
-              <Plus className="w-3 h-3 text-primary-foreground" />
+              <Plus className="w-3.5 h-3.5 text-primary-foreground" strokeWidth={3} />
             </span>
           </button>
-          <span className="text-xs">Your story</span>
+          <span className="text-[11px] text-muted-foreground truncate max-w-full">Your story</span>
         </div>
+
+        {loading &&
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex flex-col items-center gap-1.5 flex-shrink-0 w-[76px]">
+              <div className="w-[71px] h-[71px] rounded-full bg-muted animate-pulse" />
+              <div className="h-2.5 w-12 rounded bg-muted animate-pulse" />
+            </div>
+          ))}
 
         {/* Everyone else */}
         {otherGroups.map((group) => (
           <button
             key={group.user.id}
             onClick={() => navigate(`/home/stories/${group.user.id}`)}
-            className="flex flex-col items-center gap-2 flex-shrink-0"
+            className="flex flex-col items-center gap-1.5 flex-shrink-0 w-[76px] active:scale-95 transition-transform"
           >
-            <div
-              className={`p-0.5 rounded-full ${
-                group.has_unseen
-                  ? "bg-gradient-to-tr from-primary to-accent"
-                  : "bg-muted"
+            <Ring
+              src={group.user.avatar_url}
+              fallback={group.user.username[0]?.toUpperCase() ?? "?"}
+              unseen={group.has_unseen}
+              dim={!group.has_unseen}
+            />
+            <span
+              className={`text-[11px] truncate max-w-full ${
+                group.has_unseen ? "font-medium" : "text-muted-foreground"
               }`}
             >
-              <Avatar className="w-16 h-16 border-2 border-card">
-                <AvatarImage src={group.user.avatar_url ?? undefined} />
-                <AvatarFallback>{group.user.username[0]?.toUpperCase()}</AvatarFallback>
-              </Avatar>
-            </div>
-            <span className="text-xs max-w-[64px] truncate">{group.user.username}</span>
+              {group.user.username}
+            </span>
           </button>
         ))}
       </div>
