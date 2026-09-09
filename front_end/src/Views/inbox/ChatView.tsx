@@ -323,7 +323,7 @@ export default function ChatView() {
   }
 
   return (
-    <div className="fixed inset-0 bg-background z-50 flex flex-col">
+    <div className="fixed inset-0 bg-background z-[60] flex flex-col h-[100dvh]">
       <div className="bg-card border-b border-border p-4 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
           <ArrowLeft className="w-5 h-5" />
@@ -427,7 +427,7 @@ export default function ChatView() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="bg-card border-t border-border p-4">
+      <div className="bg-card border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {isRecording && (
           <div className="mb-2 flex items-center gap-2 text-red-500 animate-pulse">
             <div className="w-2 h-2 bg-red-500 rounded-full" />

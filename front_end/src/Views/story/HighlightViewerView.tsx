@@ -164,10 +164,10 @@ export default function HighlightViewerView() {
     }
   };
 
-  if (!highlight || !item) return <div className="fixed inset-0 bg-black z-50" />;
+  if (!highlight || !item) return <div className="fixed inset-0 bg-black z-[60]" />;
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black z-[60] flex items-center justify-center">
       <div className="relative w-full h-full max-w-[440px] mx-auto">
         <div className="absolute top-2 left-3 right-3 flex gap-1 z-30">
           {items.map((s, i) => (
