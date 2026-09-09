@@ -28,6 +28,7 @@ import { toast } from "sonner";
 
 import ProfileEditorSection from "../../Components/Profile/ProfileEditorSection";
 import api from "../../api/axios";
+import { fetchCurrentUserProfile } from "../../features/user/userSlice";
 import {
   getTwoFactorAuthStatus,
   setupTwoFactorAuth,
@@ -39,7 +40,7 @@ import {
 export default function AccountSettingsView() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { currentUser } = useAppSelector((state) => state.user);
+  const { currentUser, status: userStatus } = useAppSelector((state) => state.user);
   const {
     isEnabled: is2FAEnabled,
     qrCodeDataUrl,
@@ -68,6 +69,14 @@ export default function AccountSettingsView() {
   useEffect(() => {
     dispatch(getTwoFactorAuthStatus());
   }, [dispatch]);
+
+  // Load the profile if we landed here directly (currentUser only gets populated
+  // when you visit your own profile otherwise -> blank page).
+  useEffect(() => {
+    if (!currentUser && userStatus !== "loading") {
+      dispatch(fetchCurrentUserProfile());
+    }
+  }, [currentUser, userStatus, dispatch]);
 
   const resetPasswordForm = () => {
     setPasswordError("");
@@ -214,8 +223,6 @@ export default function AccountSettingsView() {
     }
   };
 
-  if (!currentUser) return null;
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -227,6 +234,28 @@ export default function AccountSettingsView() {
           <h1 className="text-xl font-bold">Account Settings</h1>
         </div>
       </div>
+
+      {!currentUser ? (
+        <div className="p-4 max-w-2xl mx-auto space-y-4">
+          {userStatus === "failed" ? (
+            <Card className="p-6 text-center text-sm text-muted-foreground">
+              Couldn't load your account.{" "}
+              <button
+                className="text-primary underline"
+                onClick={() => dispatch(fetchCurrentUserProfile())}
+              >
+                Retry
+              </button>
+            </Card>
+          ) : (
+            <>
+              <div className="h-40 rounded-xl bg-muted animate-pulse" />
+              <div className="h-32 rounded-xl bg-muted animate-pulse" />
+              <div className="h-32 rounded-xl bg-muted animate-pulse" />
+            </>
+          )}
+        </div>
+      ) : (
 
       <div className="p-4 space-y-4 max-w-2xl mx-auto pb-24">
         {/* reuse the Edit Profile UI here */}
@@ -316,6 +345,7 @@ export default function AccountSettingsView() {
           </Button>
         </Card>
       </div>
+      )}
 
       {/* Change Password Dialog */}
       <Dialog
