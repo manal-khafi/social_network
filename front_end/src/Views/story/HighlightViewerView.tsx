@@ -24,6 +24,7 @@ export default function HighlightViewerView() {
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -139,9 +140,18 @@ export default function HighlightViewerView() {
     }
   };
 
-  const doRename = async () => {
+  const startRename = () => {
     if (!highlight) return;
-    const title = window.prompt("Rename highlight", highlight.title)?.trim();
+    setMenuOpen(false);
+    setPaused(true);
+    setRenameValue(highlight.title);
+  };
+
+  const commitRename = async () => {
+    if (!highlight || renameValue === null) return;
+    const title = renameValue.trim();
+    setRenameValue(null);
+    setPaused(false);
     if (!title || title === highlight.title) return;
     try {
       await renameHighlight(highlight.id, title);
@@ -150,7 +160,6 @@ export default function HighlightViewerView() {
     } catch {
       toast.error("Could not rename");
     }
-    setMenuOpen(false);
   };
 
   if (!highlight || !item) return <div className="fixed inset-0 bg-black z-50" />;
@@ -203,7 +212,7 @@ export default function HighlightViewerView() {
                 </button>
                 {menuOpen && (
                   <div className="absolute right-0 mt-1 w-44 rounded-xl bg-neutral-900 border border-white/10 overflow-hidden text-sm">
-                    <button onClick={doRename} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/10">
+                    <button onClick={startRename} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/10">
                       <Pencil className="w-4 h-4" /> Rename
                     </button>
                     <button onClick={doRemoveItem} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/10">
@@ -277,6 +286,43 @@ export default function HighlightViewerView() {
             <span className="inline-block bg-black/45 text-white text-sm px-3 py-1.5 rounded-lg">
               {item.caption}
             </span>
+          </div>
+        )}
+
+        {renameValue !== null && (
+          <div className="absolute inset-0 z-40 bg-black/80 flex flex-col justify-center p-6 text-white">
+            <p className="text-sm text-white/70 mb-2">Rename highlight</p>
+            <input
+              autoFocus
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitRename();
+                if (e.key === "Escape") {
+                  setRenameValue(null);
+                  setPaused(false);
+                }
+              }}
+              maxLength={60}
+              className="w-full rounded-xl bg-white/10 px-4 py-3 text-lg font-semibold outline-none"
+            />
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => {
+                  setRenameValue(null);
+                  setPaused(false);
+                }}
+                className="flex-1 rounded-full bg-white/10 py-2.5 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={commitRename}
+                className="flex-1 rounded-full bg-white text-black py-2.5 text-sm font-semibold"
+              >
+                Save
+              </button>
+            </div>
           </div>
         )}
       </div>
