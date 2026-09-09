@@ -7,6 +7,7 @@ import {
   fetchStories,
 } from "../features/stories/storiesSlice";
 import { addNotification } from "../features/notifications/notificationsSlice";
+import { receiveMessage } from "../features/messages/messagesSlice";
 
 /**
  * Opens the realtime connection while the user is authenticated and routes
@@ -89,7 +90,9 @@ export function useRealtime() {
     };
 
     const onMessage = (m: any) => {
+      if (m?.conversation_id) dispatch(receiveMessage(m));
       const who = m?.sender?.username ? `@${m.sender.username}` : "New message";
+      if (m?.message_type === "call") return; // call log; the call UI already handled it
       toast(m?.shared_story_id ? `${who} sent you a story` : `${who}: ${m?.content ?? ""}`);
     };
 

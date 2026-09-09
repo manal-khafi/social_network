@@ -43,6 +43,7 @@ enum MessageType {
   image
   video
   file
+  call
 }
 
 enum MessageStatusEnum {
@@ -457,10 +458,11 @@ model CloseFriend {
 }
 
 model Conversation {
-  id         String   @id @default(uuid())
-  title      String?
-  is_group   Boolean  @default(false)
-  created_at DateTime @default(now())
+  id           String   @id @default(uuid())
+  title        String?
+  is_group     Boolean  @default(false)
+  created_at   DateTime @default(now())
+  last_message_at DateTime @default(now())
 
   // Relations
   messages     Message[]
@@ -468,9 +470,11 @@ model Conversation {
 }
 
 model ConversationParticipant {
-  id              String @id @default(uuid())
+  id              String    @id @default(uuid())
   conversation_id String
   user_id         String
+  is_archived     Boolean   @default(false)
+  last_read_at    DateTime?
 
   conversation Conversation @relation(fields: [conversation_id], references: [id])
   user         User         @relation(fields: [user_id], references: [id])
@@ -484,6 +488,7 @@ model Message {
   is_edited    Boolean     @default(false)
   is_deleted   Boolean     @default(false)
   message_type MessageType @default(text)
+  call_meta    Json? // { callType, status: ended|missed|declined, durationSec } for message_type = call
   created_at   DateTime    @default(now())
   updated_at   DateTime    @updatedAt
 

@@ -1,38 +1,20 @@
-import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import * as messagesApi from "../../api/messagesApi";
+import type { ApiConversation, ApiMessage } from "../../api/messagesApi";
+import type { RootState } from "../../store";
 
-export type MessageType = 'text' | 'sticker' | 'poll' | 'event' | 'location' | 'voice' | 'image';
-export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'seen';
+export type MessageType = "text" | "image" | "video" | "file" | "call";
 
 export interface Message {
   id: string;
   senderId: string;
-  receiverId: string;
   content: string;
   type: MessageType;
-  status: MessageStatus;
   timestamp: string;
+  createdAt: string;
   isRead: boolean;
-  image?: string;
-  sticker?: string;
-  poll?: {
-    question: string;
-    options: { id: string; text: string; votes: number }[];
-    totalVotes: number;
-    userVote?: string;
-  };
-  event?: {
-    title: string;
-    date: string;
-    time: string;
-    location?: string;
-  };
-  location?: {
-    name: string;
-    lat: number;
-    lng: number;
-  };
-  voiceDuration?: number;
+  callMeta?: { callType: "audio" | "video"; status: string; durationSec: number } | null;
 }
 
 export interface Conversation {
@@ -52,148 +34,190 @@ interface MessagesState {
   conversations: Conversation[];
   messages: { [conversationId: string]: Message[] };
   currentConversation: string | null;
+  status: "idle" | "loading" | "succeeded" | "failed";
 }
 
 const initialState: MessagesState = {
-  conversations: [
-    {
-      id: '1',
-      userId: '2',
-      username: 'jane_smith',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-      lastMessage: 'Thanks for sharing that! 😊',
-      timestamp: '10m ago',
-      unreadCount: 2,
-      isArchived: false,
-      isOnline: true,
-    },
-    {
-      id: '2',
-      userId: '3',
-      username: 'mike_wilson',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-      lastMessage: 'See you at the gym tomorrow!',
-      timestamp: '2h ago',
-      unreadCount: 0,
-      isArchived: false,
-      isOnline: false,
-      lastSeen: '1h ago',
-    },
-  ],
-  messages: {
-    '1': [
-      {
-        id: '1',
-        senderId: '2',
-        receiverId: '1',
-        content: 'Hey! How are you?',
-        type: 'text',
-        status: 'seen',
-        timestamp: '1h ago',
-        isRead: true,
-      },
-      {
-        id: '2',
-        senderId: '1',
-        receiverId: '2',
-        content: 'I\'m good! How about you?',
-        type: 'text',
-        status: 'seen',
-        timestamp: '55m ago',
-        isRead: true,
-      },
-      {
-        id: '3',
-        senderId: '2',
-        receiverId: '1',
-        content: 'Thanks for sharing that! 😊',
-        type: 'text',
-        status: 'delivered',
-        timestamp: '10m ago',
-        isRead: false,
-      },
-    ],
-  },
+  conversations: [],
+  messages: {},
   currentConversation: null,
+  status: "idle",
 };
 
+const rel = (iso: string) => {
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "now";
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h`;
+  return `${Math.floor(s / 86400)}d`;
+};
+
+const summarize = (m: ApiMessage | null): string => {
+  if (!m) return "";
+  if (m.message_type === "call") {
+    const t = m.call_meta?.callType === "video" ? "Video call" : "Voice call";
+    return m.call_meta?.status === "missed" ? `Missed ${t.toLowerCase()}` : t;
+  }
+  if (m.message_type === "image") return "Photo";
+  return m.content ?? "";
+};
+
+const mapConversation = (c: ApiConversation): Conversation => ({
+  id: c.id,
+  userId: c.other_user?.id ?? "",
+  username: c.other_user?.username ?? "Unknown",
+  avatar: c.other_user?.avatar_url ?? undefined,
+  lastMessage: summarize(c.last_message),
+  timestamp: rel(c.last_message_at),
+  unreadCount: c.unread_count,
+  isArchived: c.is_archived,
+  isOnline: false,
+});
+
+const mapMessage = (m: ApiMessage): Message => ({
+  id: m.id,
+  senderId: m.sender_id,
+  content: m.content ?? "",
+  type: m.message_type,
+  timestamp: rel(m.created_at),
+  createdAt: m.created_at,
+  isRead: true,
+  callMeta: m.call_meta,
+});
+
+// --- Thunks ---
+
+export const fetchConversations = createAsyncThunk("messages/fetchConversations", async () => {
+  const list = await messagesApi.listConversations();
+  return list.map(mapConversation);
+});
+
+export const fetchMessages = createAsyncThunk(
+  "messages/fetchMessages",
+  async (conversationId: string) => {
+    const msgs = await messagesApi.getMessages(conversationId);
+    return { conversationId, messages: msgs.map(mapMessage) };
+  }
+);
+
+export const openDirectByUserId = createAsyncThunk(
+  "messages/openDirect",
+  async (userId: string) => {
+    const conv = await messagesApi.openDirectConversation(userId);
+    return conv.id;
+  }
+);
+
+export const sendMessage = createAsyncThunk(
+  "messages/sendMessage",
+  async (
+    payload: { conversationId: string; content: string; type?: string },
+    { rejectWithValue }
+  ) => {
+    const content = (payload.content ?? "").trim();
+    if (!content) return rejectWithValue("empty");
+    const m = await messagesApi.sendMessage(payload.conversationId, content);
+    return mapMessage(m);
+  }
+);
+
+export const markRead = createAsyncThunk("messages/markRead", async (conversationId: string) => {
+  await messagesApi.markConversationRead(conversationId);
+  return conversationId;
+});
+
+export const archiveConversation = createAsyncThunk(
+  "messages/archive",
+  async (conversationId: string) => {
+    await messagesApi.setConversationArchived(conversationId, true);
+    return conversationId;
+  }
+);
+
+export const unarchiveConversation = createAsyncThunk(
+  "messages/unarchive",
+  async (conversationId: string) => {
+    await messagesApi.setConversationArchived(conversationId, false);
+    return conversationId;
+  }
+);
+
+export const deleteConversation = archiveConversation; // no hard delete server-side
+
 const messagesSlice = createSlice({
-  name: 'messages',
+  name: "messages",
   initialState,
   reducers: {
-    sendMessage: (state, action: PayloadAction<{ 
-      conversationId: string; 
-      content: string; 
-      type?: MessageType;
-      image?: string;
-      sticker?: string;
-      poll?: Message['poll'];
-      event?: Message['event'];
-      location?: Message['location'];
-      voiceDuration?: number;
-    }>) => {
-      const { conversationId, content, type = 'text', image, sticker, poll, event, location, voiceDuration } = action.payload;
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        senderId: '1',
-        receiverId: conversationId,
-        content,
-        type,
-        status: 'sent',
-        image,
-        sticker,
-        poll,
-        event,
-        location,
-        voiceDuration,
-        timestamp: 'Just now',
-        isRead: false,
-      };
-
-      if (!state.messages[conversationId]) {
-        state.messages[conversationId] = [];
-      }
-      state.messages[conversationId].push(newMessage);
-
-      const conversation = state.conversations.find(c => c.id === conversationId);
-      if (conversation) {
-        conversation.lastMessage = type === 'text' ? content : `Sent a ${type}`;
-        conversation.timestamp = 'Just now';
-      }
-    },
-    deleteConversation: (state, action: PayloadAction<string>) => {
-      state.conversations = state.conversations.filter(c => c.id !== action.payload);
-      delete state.messages[action.payload];
-    },
     setCurrentConversation: (state, action: PayloadAction<string | null>) => {
       state.currentConversation = action.payload;
       if (action.payload) {
-        const conversation = state.conversations.find(c => c.id === action.payload);
-        if (conversation) {
-          conversation.unreadCount = 0;
-        }
-        const messages = state.messages[action.payload];
-        if (messages) {
-          messages.forEach(m => {
-            m.isRead = true;
-          });
-        }
+        const c = state.conversations.find((x) => x.id === action.payload);
+        if (c) c.unreadCount = 0;
       }
     },
-    archiveConversation: (state, action: PayloadAction<string>) => {
-      const conversation = state.conversations.find(c => c.id === action.payload);
-      if (conversation) {
-        conversation.isArchived = true;
-      }
-    },
-    unarchiveConversation: (state, action: PayloadAction<string>) => {
-      const conversation = state.conversations.find(c => c.id === action.payload);
-      if (conversation) {
-        conversation.isArchived = false;
+    // Realtime message:new
+    receiveMessage: (state, action: PayloadAction<ApiMessage>) => {
+      const m = action.payload;
+      const list = state.messages[m.conversation_id] ?? [];
+      if (list.some((x) => x.id === m.id)) return;
+      state.messages[m.conversation_id] = [...list, mapMessage(m)];
+
+      const conv = state.conversations.find((c) => c.id === m.conversation_id);
+      if (conv) {
+        conv.lastMessage = summarize(m);
+        conv.timestamp = "now";
+        if (state.currentConversation !== m.conversation_id) conv.unreadCount += 1;
+        state.conversations = [
+          conv,
+          ...state.conversations.filter((c) => c.id !== conv.id),
+        ];
       }
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchConversations.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchConversations.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.conversations = action.payload;
+      })
+      .addCase(fetchConversations.rejected, (state) => {
+        state.status = "failed";
+      })
+      .addCase(fetchMessages.fulfilled, (state, action) => {
+        state.messages[action.payload.conversationId] = action.payload.messages;
+      })
+      .addCase(sendMessage.fulfilled, (state, action) => {
+        const m = action.payload;
+        const convId = action.meta.arg.conversationId;
+        const arr = state.messages[convId] ?? [];
+        if (!arr.some((x) => x.id === m.id)) state.messages[convId] = [...arr, m];
+        const conv = state.conversations.find((c) => c.id === convId);
+        if (conv) {
+          conv.lastMessage = m.type === "text" ? m.content : "Photo";
+          conv.timestamp = "now";
+          state.conversations = [conv, ...state.conversations.filter((c) => c.id !== conv.id)];
+        }
+      })
+      .addCase(markRead.fulfilled, (state, action) => {
+        const c = state.conversations.find((x) => x.id === action.payload);
+        if (c) c.unreadCount = 0;
+      })
+      .addCase(archiveConversation.fulfilled, (state, action) => {
+        state.conversations = state.conversations.filter((c) => c.id !== action.payload);
+      })
+      .addCase(unarchiveConversation.fulfilled, (state, action) => {
+        const c = state.conversations.find((x) => x.id === action.payload);
+        if (c) c.isArchived = false;
+      });
+  },
 });
 
-export const { sendMessage, deleteConversation, setCurrentConversation, archiveConversation, unarchiveConversation } = messagesSlice.actions;
+export const { setCurrentConversation, receiveMessage } = messagesSlice.actions;
+
+export const selectConversation = (id: string | undefined) => (s: RootState) =>
+  s.messages.conversations.find((c) => c.id === id);
+
 export default messagesSlice.reducer;

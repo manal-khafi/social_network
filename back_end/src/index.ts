@@ -27,6 +27,8 @@ import twoFactorRouter from "./Routes/TwoFactorAuth";
 import communityRoutes from "./Routes/communityRoutes";
 import { authMiddleware } from "./Middleware/authMiddlware";
 import storyRoutes from "./Routes/story.routes";
+import conversationRoutes from "./Routes/conversationRoutes";
+import { getIceServers } from "./Controllers/rtc.controller";
 import { errorHandler } from "./util/error";
 
 import dotenv from "dotenv";
@@ -114,6 +116,8 @@ app.use("/api/account", AccountRouter);
 app.use("/api/privacy", PrivacySettingsRoutes);
 app.use("/api/auth", twoFactorRouter);
 app.use('/api/stories', storyRoutes);
+app.use('/api/conversations', conversationRoutes);
+app.get('/api/rtc/ice-servers', getIceServers);
 
 app.use("/api/communities", authMiddleware, communityRoutes);
 
