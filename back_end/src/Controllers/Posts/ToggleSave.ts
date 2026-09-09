@@ -8,7 +8,7 @@ export const toggleSave = async (req: Request, res: Response) => {
     const { postId } = req.params as { [key: string]: string };
 
     if (!userId) {
-      return res.status(401).json({ message: "Non authentifié" });
+      return res.status(401).json({ message: "Not authenticated" });
     }
 
     const post = await prisma.post.findUnique({ where: { id: postId } });

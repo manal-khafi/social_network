@@ -35,7 +35,7 @@ export const ResetPasswordScreen: React.FC = () => {
         const res = await api.get(`/authentication/verify-reset-token/${token}`);
         const data = res.data;
         if (!data.success) {
-          toast.error("Token invalide ou expiré");
+          toast.error("Invalid or expired token");
           handleNavigate();
         }
       } catch (err: any) {

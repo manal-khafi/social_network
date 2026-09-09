@@ -9,7 +9,7 @@ export class StoryCommentController {
    */
   static async commentStory(req: Request, res: Response) {
     if (!req.user) {
-      throw new AppError("Utilisateur non authentifié", 401);
+      throw new AppError("Not authenticated", 401);
     }
 
     const { content } = req.body;
@@ -22,7 +22,7 @@ export class StoryCommentController {
 
     return res.status(201).json({
       success: true,
-      message: "Commentaire ajouté avec succès",
+      message: "Comment added",
       data: comment,
     });
   }
@@ -46,7 +46,7 @@ export class StoryCommentController {
    */
   static async deleteComment(req: Request, res: Response) {
     if (!req.user) {
-      throw new AppError("Utilisateur non authentifié", 401);
+      throw new AppError("Not authenticated", 401);
     }
 
     const result = await StoryCommentService.deleteComment(

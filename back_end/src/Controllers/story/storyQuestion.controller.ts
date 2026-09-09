@@ -5,9 +5,9 @@ import { AppError } from "../../util/error";
 export class StoryQuestionController {
   /** POST /stories/:id/question  { overlay_id, answer } */
   static async respond(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
     const { overlay_id, answer } = req.body ?? {};
-    if (typeof overlay_id !== "string") throw new AppError("overlay_id requis", 400);
+    if (typeof overlay_id !== "string") throw new AppError("overlay_id is required", 400);
     const data = await StoryQuestionService.respond(
       req.params.id as string,
       req.user.id,
@@ -19,7 +19,7 @@ export class StoryQuestionController {
 
   /** GET /stories/:id/question/:overlayId  (author only) */
   static async list(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
     const data = await StoryQuestionService.list(
       req.params.id as string,
       req.params.overlayId as string,

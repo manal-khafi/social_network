@@ -9,14 +9,14 @@ export class StoryLikeController {
    */
   static async likeStory(req: Request, res: Response) {
     if (!req.user) {
-      throw new AppError("Utilisateur non authentifié", 401);
+      throw new AppError("Not authenticated", 401);
     }
 
     const like = await StoryLikeService.likeStory((req.params.id as string), req.user.id);
 
     return res.status(201).json({
       success: true,
-      message: "Story aimée avec succès",
+      message: "Story liked",
       data: like,
     });
   }
@@ -27,7 +27,7 @@ export class StoryLikeController {
    */
   static async unlikeStory(req: Request, res: Response) {
     if (!req.user) {
-      throw new AppError("Utilisateur non authentifié", 401);
+      throw new AppError("Not authenticated", 401);
     }
 
     const result = await StoryLikeService.unlikeStory((req.params.id as string), req.user.id);

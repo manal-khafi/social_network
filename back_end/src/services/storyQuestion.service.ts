@@ -19,16 +19,16 @@ export class StoryQuestionService {
 
   static async respond(storyId: string, userId: string, overlayId: string, answer: string) {
     const text = (answer ?? '').trim();
-    if (!text) throw new AppError('Réponse vide', 400);
-    if (text.length > 500) throw new AppError('Réponse trop longue (max 500)', 400);
+    if (!text) throw new AppError('Empty answer', 400);
+    if (text.length > 500) throw new AppError('Answer is too long (max 500)', 400);
 
     // ensures the story exists, is live and visible to the responder
     const story = await StoryService.getStoryById(storyId, userId);
     if (!this.findQuestion(story.overlays, overlayId)) {
-      throw new AppError('Question introuvable', 404);
+      throw new AppError('Question not found', 404);
     }
     if (story.user_id === userId) {
-      throw new AppError('Vous ne pouvez pas répondre à votre propre question', 400);
+      throw new AppError('You cannot answer your own question', 400);
     }
 
     const response = await prisma.storyQuestionResponse.create({
@@ -58,12 +58,12 @@ export class StoryQuestionService {
       where: { id: storyId },
       select: { user_id: true, overlays: true },
     });
-    if (!story) throw new AppError('Story non trouvée', 404);
+    if (!story) throw new AppError('Story not found', 404);
     if (story.user_id !== userId) {
-      throw new AppError("Vous n'êtes pas autorisé à voir ces réponses", 403);
+      throw new AppError("You are not allowed to see these responses", 403);
     }
     if (!this.findQuestion(story.overlays, overlayId)) {
-      throw new AppError('Question introuvable', 404);
+      throw new AppError('Question not found', 404);
     }
 
     const responses = await prisma.storyQuestionResponse.findMany({

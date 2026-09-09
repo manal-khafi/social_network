@@ -131,9 +131,9 @@ export class StoryService {
         where: { id: data.shared_post_id },
         select: { id: true, user_id: true, is_deleted: true, visibility: true },
       });
-      if (!post || post.is_deleted) throw new AppError('Publication introuvable', 404);
+      if (!post || post.is_deleted) throw new AppError('Post not found', 404);
       if (post.visibility !== 'public' && post.user_id !== userId) {
-        throw new AppError('Cette publication ne peut pas être repartagée', 403);
+        throw new AppError('This post cannot be reshared', 403);
       }
       sharedPostOwnerId = post.user_id;
     }
@@ -143,9 +143,9 @@ export class StoryService {
         where: { id: data.shared_story_id },
         select: { id: true, user_id: true, visibility: true, expires_at: true },
       });
-      if (!src) throw new AppError('Story introuvable', 404);
+      if (!src) throw new AppError('Story not found', 404);
       if (src.visibility !== 'public' && src.user_id !== userId) {
-        throw new AppError('Cette story ne peut pas être repartagée', 403);
+        throw new AppError('This story cannot be reshared', 403);
       }
       sharedStoryOwnerId = src.user_id;
     }
@@ -186,7 +186,7 @@ export class StoryService {
       };
     }
 
-    throw new AppError("Impossible de valider la musique sélectionnée", 400);
+    throw new AppError("Could not validate the selected track", 400);
   }
 
   /**
@@ -195,7 +195,7 @@ export class StoryService {
    */
   static async createStory(userId: string, data: CreateStoryInput) {
     if (!data.content_url || typeof data.content_url !== 'string') {
-      throw new AppError('Le contenu de la story est requis', 400);
+      throw new AppError('Story content is required', 400);
     }
 
     const { sharedPostOwnerId, sharedStoryOwnerId } = await this.resolveReshareTargets(userId, data);
@@ -324,15 +324,15 @@ export class StoryService {
       include: storyInclude,
     });
 
-    if (!story) throw new AppError('Story non trouvée', 404);
-    if (new Date() > story.expires_at) throw new AppError('Cette story a expiré', 410);
+    if (!story) throw new AppError('Story not found', 404);
+    if (new Date() > story.expires_at) throw new AppError('This story has expired', 410);
 
     const canView = await RelationshipService.canViewStory(
       userId,
       story.user_id,
       story.visibility
     );
-    if (!canView) throw new AppError("Vous n'avez pas accès à cette story", 403);
+    if (!canView) throw new AppError("You don't have access to this story", 403);
 
     const sets = await this.loadInteractions(userId, [story.id]);
     return this.hydrate(story, userId, sets);
@@ -346,7 +346,7 @@ export class StoryService {
       where: { id: ownerId },
       select: storyUserSelect,
     });
-    if (!owner) throw new AppError('Utilisateur non trouvé', 404);
+    if (!owner) throw new AppError('User not found', 404);
 
     const [stories, visibilityCtx] = await Promise.all([
       prisma.story.findMany({
@@ -375,9 +375,9 @@ export class StoryService {
 
   static async deleteStory(storyId: string, userId: string) {
     const story = await prisma.story.findUnique({ where: { id: storyId } });
-    if (!story) throw new AppError('Story non trouvée', 404);
+    if (!story) throw new AppError('Story not found', 404);
     if (story.user_id !== userId) {
-      throw new AppError("Vous n'êtes pas autorisé à supprimer cette story", 403);
+      throw new AppError("You are not allowed to delete this story", 403);
     }
 
     await prisma.story.update({
@@ -385,7 +385,7 @@ export class StoryService {
       data: { is_archived: true },
     });
 
-    return { message: 'Story supprimée avec succès' };
+    return { message: 'Story deleted' };
   }
 
   static async archiveExpiredStories() {

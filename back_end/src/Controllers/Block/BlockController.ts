@@ -20,7 +20,7 @@ interface AuthRequest extends Request {
  */
 const requireAuth = (userId?: string) => {
   if (!userId) {
-    throw new Error("Non authentifié");
+    throw new Error("Not authenticated");
   }
 };
 
@@ -37,7 +37,7 @@ export const blockUser = async (req: AuthRequest, res: Response) => {
     if (!blockedUserId) {
       return res.status(400).json({
         success: false,
-        message: "L'ID de l'utilisateur à bloquer est requis",
+        message: "The user ID to block is required",
       });
     }
 
@@ -45,7 +45,7 @@ export const blockUser = async (req: AuthRequest, res: Response) => {
 
     return res.status(201).json({
       success: true,
-      message: "Utilisateur bloqué avec succès",
+      message: "User blocked",
       data: block,
     });
   } catch (error: any) {
@@ -69,7 +69,7 @@ export const unblockUser = async (req: AuthRequest, res: Response) => {
     if (!blockedUserId) {
       return res.status(400).json({
         success: false,
-        message: "L'ID de l'utilisateur à débloquer est requis",
+        message: "The user ID to unblock is required",
       });
     }
 
@@ -77,7 +77,7 @@ export const unblockUser = async (req: AuthRequest, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: "Utilisateur débloqué avec succès",
+      message: "User unblocked",
     });
   } catch (error: any) {
     return res.status(400).json({

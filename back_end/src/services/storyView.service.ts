@@ -23,7 +23,7 @@ export class StoryViewService {
     });
 
     if (existingView) {
-      return { message: 'Story déjà vue', view: existingView };
+      return { message: 'Story already viewed', view: existingView };
     }
 
     // Créer la vue
@@ -69,11 +69,11 @@ export class StoryViewService {
     });
 
     if (!story) {
-      throw new AppError('Story non trouvée', 404);
+      throw new AppError('Story not found', 404);
     }
 
     if (story.user_id !== userId) {
-      throw new AppError('Vous n\'êtes pas autorisé à voir les vues de cette story', 403);
+      throw new AppError('You are not allowed to see this story viewers', 403);
     }
 
     const views = await prisma.storyView.findMany({

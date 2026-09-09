@@ -5,9 +5,9 @@ import { AppError } from "../../util/error";
 export class StoryPollController {
   /** POST /stories/:id/poll  { overlay_id, option_index } */
   static async vote(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
     const { overlay_id, option_index } = req.body ?? {};
-    if (typeof overlay_id !== "string") throw new AppError("overlay_id requis", 400);
+    if (typeof overlay_id !== "string") throw new AppError("overlay_id is required", 400);
     const data = await StoryPollService.vote(
       req.params.id as string,
       req.user.id,
@@ -19,7 +19,7 @@ export class StoryPollController {
 
   /** GET /stories/:id/poll/:overlayId */
   static async results(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
     const data = await StoryPollService.getResults(
       req.params.id as string,
       req.params.overlayId as string,

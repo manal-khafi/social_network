@@ -67,7 +67,7 @@ const createCommunity = async (req: Request, res: Response, next: NextFunction) 
 
         res.status(201).json({
             status: "success",
-            message: "Communauté créée avec succès",
+            message: "Community created",
             data: community,
         });
     } catch (error: any) {
@@ -76,13 +76,13 @@ const createCommunity = async (req: Request, res: Response, next: NextFunction) 
         if (error.code === 'P2002' && error.meta?.target?.includes('name')) {
             return res.status(400).json({
                 status: "error",
-                message: "Un community avec ce nom existe déjà. Choisissez un autre nom.",
+                message: "A community with this name already exists. Choose another name.",
             });
         }
         
         res.status(500).json({
             status: "error",
-            message: error.message || "Erreur lors de la création de la communauté",
+            message: error.message || "Failed to create the community",
         });
     }
 }
@@ -103,7 +103,7 @@ const getAllCommunities = async (req: Request, res: Response, next: NextFunction
     } catch (error) {
         res.status(500).json({
             status: "error",
-            message: "Erreur lors de la récupération des communautés",
+            message: "Failed to load communities",
         });
     }
 }
@@ -123,7 +123,7 @@ const getCommunityById = async (req: Request, res: Response, next: NextFunction)
         if (!community) {
             return res.status(404).json({
                 status: "error",
-                message: "Communauté non trouvée",
+                message: "Community not found",
             });
         }
 
@@ -134,7 +134,7 @@ const getCommunityById = async (req: Request, res: Response, next: NextFunction)
     } catch (error) {
         res.status(500).json({
             status: "error",
-            message: "Erreur lors de la récupération de la communauté",
+            message: "Failed to load the community",
         });
     }
 }
@@ -169,13 +169,13 @@ const modifyCommunity = async (req: Request, res: Response, next: NextFunction) 
         if (error.code === 'P2025') {
             return res.status(404).json({
                 status: "error",
-                message: "Communauté non trouvée",
+                message: "Community not found",
             });
         }
         
         res.status(500).json({
             status: "error",
-            message: "Erreur lors de la modification de la communauté",
+            message: "Failed to update the community",
         });
     }
 }
@@ -189,12 +189,12 @@ const deleteCommunity = async (req: Request, res: Response, next: NextFunction) 
 
         res.status(200).json({
             status: "success",
-            message: "Communauté supprimée avec succès",
+            message: "Community deleted",
         });
     } catch (error) {
         res.status(500).json({
             status: "error",
-            message: "Erreur lors de la suppression de la communauté",
+            message: "Failed to delete the community",
         });
     }
 }

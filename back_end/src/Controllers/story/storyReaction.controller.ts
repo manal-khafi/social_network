@@ -5,7 +5,7 @@ import { AppError } from "../../util/error";
 export class StoryReactionController {
   /** POST /stories/:id/reactions  body: { emoji } */
   static async react(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
     const reaction = await StoryReactionService.react(
       req.params.id as string,
       req.user.id,
@@ -16,7 +16,7 @@ export class StoryReactionController {
 
   /** DELETE /stories/:id/reactions */
   static async removeReaction(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
     const result = await StoryReactionService.removeReaction(
       req.params.id as string,
       req.user.id
@@ -26,7 +26,7 @@ export class StoryReactionController {
 
   /** GET /stories/:id/reactions  (author only) */
   static async getStoryReactions(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
     const data = await StoryReactionService.getStoryReactions(
       req.params.id as string,
       req.user.id

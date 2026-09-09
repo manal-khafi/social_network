@@ -64,7 +64,7 @@ export class MusicService {
   static async search(query: string, limit = 24): Promise<MusicTrack[]> {
     const term = query.trim();
     if (term.length < 2) {
-      throw new AppError("La recherche doit contenir au moins 2 caractères", 400);
+      throw new AppError("Search must be at least 2 characters", 400);
     }
 
     const key = `${term.toLowerCase()}:${limit}`;
@@ -82,7 +82,7 @@ export class MusicService {
       try {
         results = await searchDeezer(term, limit);
       } catch {
-        throw new AppError("Service de musique indisponible, réessayez", 503);
+        throw new AppError("Music service unavailable, please try again", 503);
       }
     }
 

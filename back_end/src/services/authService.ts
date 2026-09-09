@@ -44,7 +44,7 @@ export const resetPassword = async (token: string, newPassword: string) => {
   try {
     payload = jwt.verify(token, RESET_SECRET) as { userId: string };
   } catch {
-    throw new Error("Token invalide ou expiré");
+    throw new Error("Invalid or expired token");
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, 10);

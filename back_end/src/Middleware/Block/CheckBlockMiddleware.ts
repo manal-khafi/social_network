@@ -27,7 +27,7 @@ export const checkBlockMiddleware = async (req: Request, res: Response, next: Ne
     if (blocked) {
       return res.status(403).json({
         success: false,
-        message: "Action non autorisée en raison d'un blocage",
+        message: "Action not allowed due to a block",
       });
     }
 

@@ -271,7 +271,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
       setMembers(Array.isArray(membersData) ? membersData : []);
 
       // Show success message
-      toast.success("Demande acceptée avec succès!");
+      toast.success("Request accepted");
     } catch (error) {
       console.error("Failed to approve request:", error);
       toast.error("Erreur lors de l'approbation de la demande");
@@ -282,7 +282,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
     try {
       await rejectJoinRequest(communityId, requestId, userId);
       setJoinRequests(joinRequests.filter(req => req.id !== requestId));
-      toast.success("Demande rejetée");
+      toast.success("Request rejected");
     } catch (error) {
       console.error("Failed to reject request:", error);
       toast.error("Erreur lors du rejet de la demande");
@@ -292,14 +292,14 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
   const handleJoinLeave = async () => {
     try {
       if (!authUserId) {
-        toast.error("Vous devez être connecté pour effectuer cette action");
+        toast.error("You must be signed in to do that");
         return;
       }
 
       if (isJoined) {
         await leaveCommunity(communityId, authUserId);
         setIsJoined(false);
-        toast.success("Vous avez quitté la communauté");
+        toast.success("You left the community");
 
         const membersRes = await getCommunityMembers(communityId);
         const membersData =
@@ -318,7 +318,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
   const handleSubmitJoinRequest = async () => {
     try {
       if (!authUserId) {
-        toast.error("Vous devez être connecté pour effectuer cette action");
+        toast.error("You must be signed in to do that");
         return;
       }
 
@@ -326,7 +326,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
 
       setShowJoinDialog(false);
       setJoinMessage("");
-      toast.success("Demande d'adhésion envoyée avec succès!");
+      toast.success("Join request sent");
     } catch (error: any) {
       console.error("Failed to send join request:", error);
       const msg =
@@ -348,10 +348,10 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
         setRules([...rules, newRule]);
         setNewRuleTitle("");
         setNewRuleDescription("");
-        toast.success("Règle ajoutée avec succès!");
+        toast.success("Rule added");
       } catch (error) {
         console.error("Failed to create rule:", error);
-        toast.error("Erreur lors de l'ajout de la règle");
+        toast.error("Failed to add the rule");
       }
     }
   };
@@ -360,10 +360,10 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
     try {
       await deleteCommunityRule(communityId, ruleId);
       setRules(rules.filter(rule => rule.id !== ruleId));
-      toast.success("Règle supprimée avec succès!");
+      toast.success("Rule deleted");
     } catch (error) {
       console.error("Failed to delete rule:", error);
-      toast.error("Erreur lors de la suppression de la règle");
+      toast.error("Failed to delete the rule");
     }
   };
 
@@ -383,10 +383,10 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
         rule.id === ruleId ? updatedRule : rule
       ));
       setEditingRuleId(null);
-      toast.success("Règle mise à jour avec succès!");
+      toast.success("Rule updated");
     } catch (error) {
       console.error("Failed to update rule:", error);
-      toast.error("Erreur lors de la mise à jour de la règle");
+      toast.error("Failed to update the rule");
     }
   };
 
@@ -445,10 +445,10 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
       setCoverImagePreview("");
       setLogoImagePreview("");
 
-      toast.success("Communauté mise à jour avec succès!");
+      toast.success("Community updated");
     } catch (error) {
       console.error("Failed to update community:", error);
-      toast.error("Erreur lors de la mise à jour de la communauté");
+      toast.error("Failed to update the community");
     } finally {
       setIsSaving(false);
     }
@@ -512,7 +512,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                         <h1 className="text-xl sm:text-3xl font-bold text-gray-900 truncate">{community.name}</h1>
                         <Badge variant="secondary" className="bg-[#feeaa1] text-[#18534f] border-[#feeaa1] text-xs">
                           <Hash className="h-3 w-3 mr-1" />
-                          {community.type || "Sin Catégorie"}
+                          {community.type || "No category"}
                         </Badge>
                       </div>
                       <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-4 line-clamp-2">{community.bio || community.description}</p>
@@ -572,7 +572,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
             </DialogHeader>
             <div className="py-4">
               <Textarea
-                placeholder="Pourquoi souhaitez-vous rejoindre cette communauté?"
+                placeholder="Why do you want to join this community?"
                 value={joinMessage}
                 onChange={(e) => setJoinMessage(e.target.value)}
                 rows={4}
@@ -729,7 +729,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                           <div className="flex items-center gap-3">
                             <Hash className="h-8 w-8 text-[#18534f]" />
                             <div>
-                              <p className="text-2xl font-bold text-[#18534f]">{community.type || "Sin Catégorie"}</p>
+                              <p className="text-2xl font-bold text-[#18534f]">{community.type || "No category"}</p>
                               <p className="text-sm text-[#226d68]">Catégorie</p>
                             </div>
                           </div>
@@ -893,7 +893,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                           <Textarea
                             value={newRuleDescription}
                             onChange={(e) => setNewRuleDescription(e.target.value)}
-                            placeholder="Décrivez la règle en détail..."
+                            placeholder="Describe the rule in detail..."
                             className="border-2 border-[#226d68]/30 focus:border-[#18534f] min-h-[80px]"
                           />
                         </div>
@@ -982,7 +982,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                         id="edit-name"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        placeholder="Nom de votre communauté"
+                        placeholder="Your community name"
                         className="h-10 border-2 focus:border-[#226d68]"
                       />
                     </div>
@@ -993,7 +993,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                         id="edit-description"
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
-                        placeholder="Décrivez votre communauté..."
+                        placeholder="Describe your community..."
                         rows={3}
                         className="border-2 focus:border-[#226d68] resize-none"
                       />
@@ -1004,7 +1004,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                       <Label htmlFor="edit-category" className="text-sm text-gray-700">Catégorie</Label>
                       <Select value={editCategory} onValueChange={setEditCategory}>
                         <SelectTrigger className="h-10 border-2 focus:border-[#226d68]">
-                          <SelectValue placeholder="Sélectionner une catégorie" />
+                          <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent className="bg-white">
                           <SelectItem value="tech">Tech</SelectItem>
@@ -1190,7 +1190,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                               <h4 className="font-semibold text-gray-900">{editName}</h4>
                               <Badge variant="secondary" className="bg-[#feeaa1] text-[#18534f] text-xs">
                                 <Hash className="h-3 w-3 mr-1" />
-                                {editCategory || "Sin Catégorie"}
+                                {editCategory || "No category"}
                               </Badge>
                             </div>
                             <p className="text-sm text-gray-600">{editDescription}</p>

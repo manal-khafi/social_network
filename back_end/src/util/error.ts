@@ -27,16 +27,16 @@ export const errorHandler = (
     });
   }
 
-  // Erreur Prisma
+  // Prisma error
   if (err.name === 'PrismaClientKnownRequestError') {
     return res.status(400).json({
       success: false,
-      message: 'Erreur de base de données',
+      message: 'Database error',
       ...(process.env.NODE_ENV === 'development' && { details: err.message }),
     });
   }
 
-  // Erreur de validation
+  // Validation error
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       success: false,
@@ -44,11 +44,11 @@ export const errorHandler = (
     });
   }
 
-  // Erreur par défaut
+  // Default
   logger.error({ err, path: req.originalUrl, method: req.method }, 'unhandled error');
   return res.status(500).json({
     success: false,
-    message: 'Une erreur interne est survenue',
+    message: 'An internal error occurred',
     ...(process.env.NODE_ENV === 'development' && { error: err.message }),
   });
 };

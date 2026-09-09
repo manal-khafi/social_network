@@ -56,7 +56,7 @@ export class StoryCommentService {
     });
 
     if (!story) {
-      throw new AppError('Story non trouvée', 404);
+      throw new AppError('Story not found', 404);
     }
 
     const comments = await prisma.storyComment.findMany({
@@ -91,11 +91,11 @@ export class StoryCommentService {
     });
 
     if (!comment) {
-      throw new AppError('Commentaire non trouvé', 404);
+      throw new AppError('Comment not found', 404);
     }
 
     if (comment.user_id !== userId) {
-      throw new AppError('Vous n\'êtes pas autorisé à supprimer ce commentaire', 403);
+      throw new AppError('You are not allowed to delete this comment', 403);
     }
 
     await prisma.storyComment.update({
@@ -103,7 +103,7 @@ export class StoryCommentService {
       data: { is_deleted: true },
     });
 
-    return { message: 'Commentaire supprimé avec succès' };
+    return { message: 'Comment deleted' };
   }
 }
 

@@ -3,7 +3,7 @@ import { ConversationService } from "../services/conversation.service";
 import { AppError } from "../util/error";
 
 const uid = (req: Request) => {
-  if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+  if (!req.user) throw new AppError("Not authenticated", 401);
   return req.user.id;
 };
 

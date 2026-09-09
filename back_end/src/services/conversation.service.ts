@@ -19,15 +19,15 @@ export class ConversationService {
     const p = await prisma.conversationParticipant.findUnique({
       where: { conversation_id_user_id: { conversation_id: conversationId, user_id: userId } },
     });
-    if (!p) throw new AppError('Conversation introuvable', 404);
+    if (!p) throw new AppError('Conversation not found', 404);
     return p;
   }
 
   /** Direct conversation with another user (created on first use). */
   static async openDirect(userId: string, otherUserId: string) {
-    if (otherUserId === userId) throw new AppError('Destinataire invalide', 400);
+    if (otherUserId === userId) throw new AppError('Invalid recipient', 400);
     const other = await prisma.user.findUnique({ where: { id: otherUserId }, select: { id: true } });
-    if (!other) throw new AppError('Utilisateur introuvable', 404);
+    if (!other) throw new AppError('User not found', 404);
 
     const conv = await getOrCreateDirectConversation(userId, otherUserId);
     return this.getOne(conv.id, userId);
@@ -85,7 +85,7 @@ export class ConversationService {
       where: { id: conversationId },
       include: { participants: { include: { user: { select: userSelect } } } },
     });
-    if (!conv) throw new AppError('Conversation introuvable', 404);
+    if (!conv) throw new AppError('Conversation not found', 404);
     const other = conv.participants.find((p) => p.user_id !== userId)?.user ?? null;
     return {
       id: conv.id,
@@ -120,7 +120,7 @@ export class ConversationService {
   ) {
     await this.assertParticipant(conversationId, userId);
     const content = (data.content ?? '').trim();
-    if (!content) throw new AppError('Message vide', 400);
+    if (!content) throw new AppError('Message is empty', 400);
 
     const type = data.message_type === 'image' ? 'image' : 'text';
 

@@ -80,7 +80,7 @@ export function CommunityList({}: CommunityListProps) {
           <div className="relative mt-6">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
-              placeholder="Rechercher une communauté..."
+              placeholder="Search communities..."
               className="pl-10 h-12 bg-white border-gray-200 focus:border-[#226d68]"
             />
           </div>

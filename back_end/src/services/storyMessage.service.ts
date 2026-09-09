@@ -22,10 +22,10 @@ export class StoryMessageService {
     const target = recipientId || story.user_id;
 
     if (target !== story.user_id) {
-      throw new AppError('Le destinataire doit être le créateur de la story', 400);
+      throw new AppError('The recipient must be the story author', 400);
     }
     if (senderId === target) {
-      throw new AppError('Vous ne pouvez pas répondre à votre propre story', 400);
+      throw new AppError('You cannot reply to your own story', 400);
     }
 
     const conversation = await getOrCreateDirectConversation(senderId, target);
@@ -69,9 +69,9 @@ export class StoryMessageService {
 
   static async getStoryMessages(storyId: string, userId: string) {
     const story = await prisma.story.findUnique({ where: { id: storyId } });
-    if (!story) throw new AppError('Story non trouvée', 404);
+    if (!story) throw new AppError('Story not found', 404);
     if (story.user_id !== userId) {
-      throw new AppError("Vous n'êtes pas autorisé à voir les messages de cette story", 403);
+      throw new AppError("You are not allowed to see this story's messages", 403);
     }
 
     return prisma.message.findMany({

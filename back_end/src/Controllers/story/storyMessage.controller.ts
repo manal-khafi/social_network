@@ -9,7 +9,7 @@ export class StoryMessageController {
    */
   static async sendMessageToStory(req: Request, res: Response) {
     if (!req.user) {
-      throw new AppError("Utilisateur non authentifié", 401);
+      throw new AppError("Not authenticated", 401);
     }
 
     const { recipient_id, content } = req.body;
@@ -23,7 +23,7 @@ export class StoryMessageController {
 
     return res.status(201).json({
       success: true,
-      message: "Message envoyé avec succès",
+      message: "Message sent",
       data: message,
     });
   }
@@ -34,7 +34,7 @@ export class StoryMessageController {
    */
   static async getStoryMessages(req: Request, res: Response) {
     if (!req.user) {
-      throw new AppError("Utilisateur non authentifié", 401);
+      throw new AppError("Not authenticated", 401);
     }
 
     const messages = await StoryMessageService.getStoryMessages(

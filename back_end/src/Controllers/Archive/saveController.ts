@@ -21,7 +21,7 @@ export const getArchivedPosts = async (req: AuthRequest, res: Response) => {
     if (!userId) {
       return res.status(401).json({ 
         success: false,
-        message: "Non authentifié" 
+        message: "Not authenticated" 
       });
     }
 
@@ -70,7 +70,7 @@ export const getArchivedPosts = async (req: AuthRequest, res: Response) => {
     console.error("Erreur Archived Posts:", error);
     return res.status(500).json({ 
       success: false,
-      message: "Erreur serveur lors de la récupération des archives" 
+      message: "Server error while loading archives" 
     });
   }
 };

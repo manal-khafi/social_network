@@ -37,7 +37,7 @@ const fetchBlockedList = async () => {
   } catch (err: any) {
     if (!err.response) {
       // Pas de réponse du tout = Serveur éteint ou Mauvaise URL
-      setError("Le serveur ne répond pas (Vérifiez qu'il est lancé sur le port 3500)");
+      setError("The server is not responding");
     } else {
       // Le serveur a répondu mais avec une erreur (401, 404, 500)
       setError(`Erreur ${err.response.status}: ${err.response.data.message}`);
@@ -57,11 +57,11 @@ const fetchBlockedList = async () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      toast.success(`@${username} a été débloqué`);
+      toast.success(`@${username} unblocked`);
       // Mettre à jour la liste locale après succès
       setBlockedUsers(prev => prev.filter(user => user.id !== userId));
     } catch (err) {
-      toast.error("Erreur lors du déblocage");
+      toast.error("Failed to unblock");
     }
   };
 

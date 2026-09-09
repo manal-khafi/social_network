@@ -28,7 +28,7 @@ export default function LikedPostsSettingsView() {
         setLikedPosts(response.data);
       } catch (err: any) {
         console.error("Erreur API:", err);
-        setError(err.response?.data?.message || "Impossible de charger les posts aimés");
+        setError(err.response?.data?.message || "Could not load liked posts");
       } finally {
         setLoading(false);
       }
@@ -37,7 +37,7 @@ export default function LikedPostsSettingsView() {
     if (token) {
       getLikedPosts();
     } else {
-      setError("Vous devez être connecté pour voir vos mentions J'aime");
+      setError("You must be signed in to see your liked posts");
       setLoading(false);
     }
   }, [token]);
