@@ -7,7 +7,7 @@ const MAX_MEDIA = 10;
 export const updatePost = async (req: Request, res: Response) => {
   try {
     if (!req.user?.id) {
-      return res.status(401).json({ message: "Non authentifié" });
+      return res.status(401).json({ message: "Not authenticated" });
     }
 
     const { postId } = req.params as { [key: string]: string };

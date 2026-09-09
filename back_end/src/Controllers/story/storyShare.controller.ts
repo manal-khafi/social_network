@@ -5,7 +5,7 @@ import { AppError } from "../../util/error";
 export class StoryShareController {
   /** POST /stories/:id/share  body: { recipient_ids: string[], note?: string } */
   static async shareToUsers(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
 
     const { recipient_ids, note } = req.body;
     const result = await StoryShareService.shareToUsers(
@@ -17,7 +17,7 @@ export class StoryShareController {
 
     return res.status(201).json({
       success: true,
-      message: `Story partagée à ${result.shared_count} personne(s)`,
+      message: `Story shared with ${result.shared_count} ${result.shared_count === 1 ? "person" : "people"}`,
       data: result,
     });
   }

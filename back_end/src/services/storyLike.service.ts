@@ -22,7 +22,7 @@ export class StoryLikeService {
     });
 
     if (existingLike) {
-      throw new AppError('Vous avez déjà aimé cette story', 400);
+      throw new AppError('You already liked this story', 400);
     }
 
     // Créer le like
@@ -69,7 +69,7 @@ export class StoryLikeService {
     });
 
     if (!like) {
-      throw new AppError('Vous n\'avez pas aimé cette story', 400);
+      throw new AppError('You have not liked this story', 400);
     }
 
     await prisma.storyLike.delete({
@@ -81,7 +81,7 @@ export class StoryLikeService {
       },
     });
 
-    return { message: 'Like retiré avec succès' };
+    return { message: 'Like removed' };
   }
 
   /**
@@ -93,7 +93,7 @@ export class StoryLikeService {
     });
 
     if (!story) {
-      throw new AppError('Story non trouvée', 404);
+      throw new AppError('Story not found', 404);
     }
 
     const likes = await prisma.storyLike.findMany({

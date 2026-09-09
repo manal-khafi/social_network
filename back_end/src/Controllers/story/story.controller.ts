@@ -4,20 +4,20 @@ import { AppError } from "../../util/error";
 
 export class StoryController {
   static async createStory(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
 
     const story = await StoryService.createStory(req.user.id, req.body);
 
     return res.status(201).json({
       success: true,
-      message: "Story créée avec succès",
+      message: "Story created",
       data: story,
     });
   }
 
   /** GET /stories -> Instagram-style grouped feed (one entry per author). */
   static async getStoriesFeed(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
 
     const groups = await StoryService.getStoriesFeed(req.user.id);
 
@@ -26,7 +26,7 @@ export class StoryController {
 
   /** GET /stories/flat -> flat list (backwards compatible). */
   static async getVisibleStories(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
 
     const stories = await StoryService.getVisibleStories(req.user.id);
 
@@ -34,7 +34,7 @@ export class StoryController {
   }
 
   static async getStoryById(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
 
     const story = await StoryService.getStoryById(req.params.id as string, req.user.id);
 
@@ -42,7 +42,7 @@ export class StoryController {
   }
 
   static async getUserStories(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
 
     const stories = await StoryService.getUserStories(
       req.params.userId as string,
@@ -53,7 +53,7 @@ export class StoryController {
   }
 
   static async deleteStory(req: Request, res: Response) {
-    if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+    if (!req.user) throw new AppError("Not authenticated", 401);
 
     const result = await StoryService.deleteStory(req.params.id as string, req.user.id);
 

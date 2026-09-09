@@ -96,7 +96,7 @@ function readVideoMeta(file: File): Promise<{ duration: number; width: number; h
 
     video.onerror = () => {
       cleanup();
-      reject(new Error("Impossible de lire cette vidéo"));
+      reject(new Error("Could not read this video"));
     };
   });
 }
@@ -133,7 +133,7 @@ export async function uploadMedia(
 
   const isVideo = file.type.startsWith("video/");
   const isImage = file.type.startsWith("image/");
-  if (!isVideo && !isImage) throw new Error("Choisissez une image ou une vidéo");
+  if (!isVideo && !isImage) throw new Error("Choose an image or a video");
   if (isImage && file.size > MAX_IMAGE_BYTES) throw new Error("Image trop lourde (max 25 Mo)");
   if (isVideo && file.size > MAX_VIDEO_BYTES) throw new Error("Vidéo trop lourde (max 100 Mo)");
 
@@ -152,7 +152,7 @@ export async function uploadMedia(
   const meta = await readVideoMeta(file);
   if (meta.duration && meta.duration > MAX_VIDEO_SEC) {
     throw new Error(
-      `Vidéo trop longue (${Math.round(meta.duration)}s, max ${MAX_VIDEO_SEC}s). Raccourcissez-la puis réessayez.`
+      `Video is too long (${Math.round(meta.duration)}s, max ${MAX_VIDEO_SEC}s). Trim it and try again.`
     );
   }
 

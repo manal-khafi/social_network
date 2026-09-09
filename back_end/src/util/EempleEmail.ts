@@ -38,24 +38,24 @@ export const sendVerificationEmail = async (email: string, username: string, tok
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #4F46E5;">Vérification de votre adresse email</h2>
-      <p>Bonjour ${username},</p>
-      <p>Pour activer votre compte, cliquez sur le lien ci-dessous :</p>
+      <h2 style="color: #4F46E5;">Verify your email address</h2>
+      <p>Hi ${username},</p>
+      <p>To activate your account, click the link below:</p>
       <p style="text-align:center;margin:24px 0;">
         <a href="${verificationLink}" style="background:#4F46E5;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:bold;">
-          Vérifier mon email
+          Verify my email
         </a>
       </p>
       <p style="background:#f3f3f3;padding:10px;border-radius:6px;word-break:break-all;">${verificationLink}</p>
-      <p><strong>Ce lien expire dans 24h.</strong></p>
-      <p>Si ce n’était pas vous, ignorez cet email.</p>
-      <p>L'équipe ${process.env.APP_NAME || ""}</p>
+      <p><strong>This link expires in 24 hours.</strong></p>
+      <p>If this wasn't you, you can ignore this email.</p>
+      <p>The ${process.env.APP_NAME || ""} team</p>
     </div>
   `;
 
   return sendEmail({
     to: email,
-    subject: "Vérifiez votre adresse email",
+    subject: "Verify your email address",
     html,
   });
 };
@@ -65,24 +65,24 @@ export const sendResetPasswordEmail = async (email: string, token: string) => {
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #4F46E5;">Réinitialisation de votre mot de passe</h2>
-      <p>Bonjour,</p>
-      <p>Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :</p>
+      <h2 style="color: #4F46E5;">Reset your password</h2>
+      <p>Hi,</p>
+      <p>You asked to reset your password. Click the link below to set a new one:</p>
       <p style="text-align:center;margin:24px 0;">
         <a href="${resetLink}" style="background:#4F46E5;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:bold;">
-          Réinitialiser mon mot de passe
+          Reset my password
         </a>
       </p>
       <p style="background:#f3f3f3;padding:10px;border-radius:6px;word-break:break-all;">${resetLink}</p>
-      <p><strong>Ce lien expire dans 1 heure.</strong></p>
-      <p>Si vous n’avez pas demandé cette réinitialisation, ignorez cet email.</p>
-      <p>L'équipe ${process.env.APP_NAME || ""}</p>
+      <p><strong>This link expires in 1 hour.</strong></p>
+      <p>If you didn't request this, you can ignore this email.</p>
+      <p>The ${process.env.APP_NAME || ""} team</p>
     </div>
   `;
 
   return sendEmail({
     to: email,
-    subject: "Réinitialisez votre mot de passe",
+    subject: "Reset your password",
     html,
   });
 };

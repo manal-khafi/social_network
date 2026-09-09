@@ -18,7 +18,7 @@ const validateMedia = (media_urls: unknown): string | null => {
 export const createPost = async (req: Request, res: Response) => {
   try {
     if (!req.user?.id) {
-      return res.status(401).json({ message: "Non authentifié" });
+      return res.status(401).json({ message: "Not authenticated" });
     }
 
     const { content, media_urls, visibility } = req.body;

@@ -35,21 +35,21 @@ export const Login = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "Utilisateur introuvable",
+        message: "User not found",
       });
     }
 
     if (!user.is_verified) {
       return res.status(403).json({
         success: false,
-        message: "Veuillez vérifier votre email avant de vous connecter.",
+        message: "Please verify your email before signing in.",
       });
     }
 
     if (!user.password_hash) {
       return res.status(400).json({
         success: false,
-        message: "Identifiants incorrects",
+        message: "Incorrect credentials",
       });
     }
 
@@ -61,7 +61,7 @@ export const Login = async (req: Request, res: Response) => {
     if (!isValidPassword) {
       return res.status(400).json({
         success: false,
-        message: "Identifiants incorrects",
+        message: "Incorrect credentials",
       });
     }
     const permissions =
@@ -96,7 +96,7 @@ export const Login = async (req: Request, res: Response) => {
     
     return res.status(200).json({
       success: true,
-      message: "Connexion réussie",
+      message: "Signed in successfully",
       token,
       user: {
         id: user.id,
@@ -108,10 +108,10 @@ export const Login = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error("Erreur Authentication :", error);
+    console.error("login failed:", error);
     return res.status(500).json({
       success: false,
-      message: "Erreur serveur lors de la connexion",
+      message: "Server error during sign-in",
     });
   }
 };

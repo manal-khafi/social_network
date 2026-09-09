@@ -18,10 +18,10 @@ export class StoryShareService {
   ) {
     const uniqueRecipients = [...new Set(recipientIds)].filter((id) => id && id !== senderId);
     if (uniqueRecipients.length === 0) {
-      throw new AppError('Aucun destinataire valide', 400);
+      throw new AppError('No valid recipient', 400);
     }
     if (uniqueRecipients.length > 25) {
-      throw new AppError('Trop de destinataires (max 25)', 400);
+      throw new AppError('Too many recipients (max 25)', 400);
     }
 
     // Confirms the story exists, is live and visible to the sender.

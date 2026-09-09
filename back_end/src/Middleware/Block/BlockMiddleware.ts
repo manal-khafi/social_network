@@ -13,7 +13,7 @@ export const checkBlockMiddleware: RequestHandler = async (req, res, next) => {
     if (blocked) {
       return res.status(403).json({
         success: false,
-        message: "Action non autorisée en raison d'un blocage",
+        message: "Action not allowed due to a block",
       });
     }
 

@@ -21,7 +21,7 @@ const getCommunityRules = async (req: Request, res: Response, next: NextFunction
     console.error("Error fetching community rules:", error);
     res.status(500).json({
       status: "error",
-      message: "Erreur lors de la récupération des règles",
+      message: "Failed to load rules",
     });
   }
 };
@@ -56,7 +56,7 @@ const createCommunityRule = async (req: Request, res: Response, next: NextFuncti
     console.error("Error creating community rule:", error);
     res.status(500).json({
       status: "error",
-      message: "Erreur lors de la création de la règle",
+      message: "Failed to create the rule",
     });
   }
 };
@@ -83,7 +83,7 @@ const updateCommunityRule = async (req: Request, res: Response, next: NextFuncti
     if (updatedRule.count === 0) {
       return res.status(404).json({
         status: "error",
-        message: "Règle non trouvée",
+        message: "Rule not found",
       });
     }
 
@@ -100,7 +100,7 @@ const updateCommunityRule = async (req: Request, res: Response, next: NextFuncti
     console.error("Error updating community rule:", error);
     res.status(500).json({
       status: "error",
-      message: "Erreur lors de la mise à jour de la règle",
+      message: "Failed to update the rule",
     });
   }
 };
@@ -120,19 +120,19 @@ const deleteCommunityRule = async (req: Request, res: Response, next: NextFuncti
     if (deletedRule.count === 0) {
       return res.status(404).json({
         status: "error",
-        message: "Règle non trouvée",
+        message: "Rule not found",
       });
     }
 
     res.status(200).json({
       status: "success",
-      message: "Règle supprimée avec succès",
+      message: "Rule deleted",
     });
   } catch (error) {
     console.error("Error deleting community rule:", error);
     res.status(500).json({
       status: "error",
-      message: "Erreur lors de la suppression de la règle",
+      message: "Failed to delete the rule",
     });
   }
 };

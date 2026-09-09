@@ -22,7 +22,7 @@ export class StoryReactionService {
   static async react(storyId: string, userId: string, emoji: string) {
     const trimmed = (emoji ?? '').trim();
     if (!trimmed || [...trimmed].length > 4) {
-      throw new AppError('Emoji de réaction invalide', 400);
+      throw new AppError('Invalid reaction emoji', 400);
     }
 
     // Ensures the story exists, is not expired and is visible to this user.
@@ -65,12 +65,12 @@ export class StoryReactionService {
       where: { user_id_story_id: { user_id: userId, story_id: storyId } },
     });
     if (!existing) {
-      throw new AppError("Vous n'avez pas réagi à cette story", 400);
+      throw new AppError("You haven't reacted to this story", 400);
     }
     await prisma.storyReaction.delete({
       where: { user_id_story_id: { user_id: userId, story_id: storyId } },
     });
-    return { message: 'Réaction retirée' };
+    return { message: 'Reaction removed' };
   }
 
   /**
@@ -79,9 +79,9 @@ export class StoryReactionService {
    */
   static async getStoryReactions(storyId: string, userId: string) {
     const story = await prisma.story.findUnique({ where: { id: storyId } });
-    if (!story) throw new AppError('Story non trouvée', 404);
+    if (!story) throw new AppError('Story not found', 404);
     if (story.user_id !== userId) {
-      throw new AppError("Vous n'êtes pas autorisé à voir les réactions de cette story", 403);
+      throw new AppError("You are not allowed to see this story's reactions", 403);
     }
 
     const reactions = await prisma.storyReaction.findMany({

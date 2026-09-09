@@ -20,7 +20,7 @@ export class GiphyService {
   static async search(query: string, limit = 24): Promise<GifResult[]> {
     const key = process.env.GIPHY_API_KEY;
     if (!key) {
-      throw new AppError("La recherche de GIF n'est pas configurée (GIPHY_API_KEY)", 503);
+      throw new AppError("GIF search is not configured (GIPHY_API_KEY)", 503);
     }
     const term = query.trim();
     if (term.length < 1) return [];
@@ -36,7 +36,7 @@ export class GiphyService {
         timeout: 6000,
       }));
     } catch {
-      throw new AppError("Service GIF indisponible, réessayez", 503);
+      throw new AppError("GIF service unavailable, please try again", 503);
     }
 
     const results: GifResult[] = (data?.data ?? [])

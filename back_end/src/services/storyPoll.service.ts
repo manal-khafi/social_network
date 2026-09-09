@@ -20,13 +20,13 @@ export class StoryPollService {
     const story = await StoryService.getStoryById(storyId, userId);
 
     const poll = this.findPoll(story.overlays, overlayId);
-    if (!poll) throw new AppError('Sondage introuvable', 404);
+    if (!poll) throw new AppError('Poll not found', 404);
     if (story.user_id === userId) {
-      throw new AppError('Vous ne pouvez pas voter sur votre propre sondage', 400);
+      throw new AppError('You cannot vote on your own poll', 400);
     }
     const optionCount = Array.isArray(poll.options) ? poll.options.length : 0;
     if (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex >= optionCount) {
-      throw new AppError('Option invalide', 400);
+      throw new AppError('Invalid option', 400);
     }
 
     await prisma.storyPollVote.upsert({
@@ -69,8 +69,8 @@ export class StoryPollService {
       where: { id: storyId },
       select: { user_id: true, overlays: true },
     });
-    if (!story) throw new AppError('Story non trouvée', 404);
-    if (!this.findPoll(story.overlays, overlayId)) throw new AppError('Sondage introuvable', 404);
+    if (!story) throw new AppError('Story not found', 404);
+    if (!this.findPoll(story.overlays, overlayId)) throw new AppError('Poll not found', 404);
 
     const result = await this.tally(storyId, overlayId, viewerId);
     const reveal = story.user_id === viewerId || result.my_choice !== null;

@@ -124,14 +124,14 @@ app.use("/api/communities", authMiddleware, communityRoutes);
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: 'Bienvenue sur l\'API Social Network',
+    message: 'Welcome to the Social Network API',
     version: '1.0.0',
   });
 });
 
 // Unknown route -> JSON 404 (instead of Express' default HTML page).
 app.use((_req, res) => {
-  res.status(404).json({ success: false, message: "Route introuvable" });
+  res.status(404).json({ success: false, message: "Route not found" });
 });
 
 // Centralised error handler. Must be registered last and keep its 4 arguments.

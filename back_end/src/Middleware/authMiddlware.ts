@@ -15,7 +15,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       const refreshToken = req.cookies?.refreshToken || req.headers["x-refresh-token"];
 
       if (!refreshToken) {
-        return res.status(401).json({ message: "Token manquant" });
+        return res.status(401).json({ message: "Missing token" });
       }
 
       const decodedRefresh = verifyRefreshToken(refreshToken as string) as {
@@ -84,12 +84,12 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     } catch (err: unknown) {
       // expired -> try refresh (your existing logic)
       if (err instanceof Error && err.name !== "TokenExpiredError") {
-        return res.status(401).json({ message: "Token invalide" });
+        return res.status(401).json({ message: "Invalid token" });
       }
 
       const refreshToken = req.cookies?.refreshToken || req.headers["x-refresh-token"];
       if (!refreshToken) {
-        return res.status(401).json({ message: "Refresh token manquant" });
+        return res.status(401).json({ message: "Missing refresh token" });
       }
 
       const decodedRefresh = verifyRefreshToken(refreshToken as string) as {

@@ -30,7 +30,7 @@ export class HighlightService {
       select: { id: true, thumbnail_url: true, content_url: true, content_type: true },
     });
     if (stories.length !== new Set(storyIds).size) {
-      throw new AppError("Certaines stories sont introuvables ou ne vous appartiennent pas", 400);
+      throw new AppError("Some stories are missing or not yours", 400);
     }
     return stories;
   }
@@ -47,8 +47,8 @@ export class HighlightService {
     data: { title: string; cover_url?: string; story_ids?: string[] }
   ) {
     const title = (data.title ?? '').trim();
-    if (!title) throw new AppError('Le titre est requis', 400);
-    if (title.length > 60) throw new AppError('Titre trop long (max 60)', 400);
+    if (!title) throw new AppError('Title is required', 400);
+    if (title.length > 60) throw new AppError('Title is too long (max 60)', 400);
 
     const storyIds = [...new Set(data.story_ids ?? [])];
     const stories = await this.assertOwnedStories(userId, storyIds);
@@ -94,7 +94,7 @@ export class HighlightService {
         },
       },
     });
-    if (!highlight) throw new AppError('Highlight introuvable', 404);
+    if (!highlight) throw new AppError('Highlight not found', 404);
 
     return {
       id: highlight.id,
@@ -107,8 +107,8 @@ export class HighlightService {
 
   private static async assertOwner(id: string, userId: string) {
     const h = await prisma.highlight.findUnique({ where: { id }, select: { user_id: true } });
-    if (!h) throw new AppError('Highlight introuvable', 404);
-    if (h.user_id !== userId) throw new AppError('Action non autorisée', 403);
+    if (!h) throw new AppError('Highlight not found', 404);
+    if (h.user_id !== userId) throw new AppError('Not allowed', 403);
   }
 
   static async update(
@@ -132,7 +132,7 @@ export class HighlightService {
     const patch: Record<string, unknown> = {};
     if (typeof data.title === 'string') {
       const t = data.title.trim();
-      if (!t || t.length > 60) throw new AppError('Titre invalide', 400);
+      if (!t || t.length > 60) throw new AppError('Invalid title', 400);
       patch.title = t;
     }
     if (typeof data.cover_url === 'string') patch.cover_url = data.cover_url || null;
@@ -164,7 +164,7 @@ export class HighlightService {
       });
     }
     await prisma.highlight.update({ where: { id }, data: { updated_at: new Date() } });
-    return { message: 'Ajouté au highlight' };
+    return { message: 'Added to highlight' };
   }
 
   static async removeItem(id: string, userId: string, storyId: string) {
@@ -174,16 +174,16 @@ export class HighlightService {
     const remaining = await prisma.highlightItem.count({ where: { highlight_id: id } });
     if (remaining === 0) {
       await prisma.highlight.delete({ where: { id } });
-      return { message: 'Highlight supprimé (vide)', deleted: true };
+      return { message: 'Highlight deleted (was empty)', deleted: true };
     }
     await prisma.highlight.update({ where: { id }, data: { updated_at: new Date() } });
-    return { message: 'Retiré du highlight', deleted: false };
+    return { message: 'Removed from highlight', deleted: false };
   }
 
   static async remove(id: string, userId: string) {
     await this.assertOwner(id, userId);
     await prisma.highlightItem.deleteMany({ where: { highlight_id: id } });
     await prisma.highlight.delete({ where: { id } });
-    return { message: 'Highlight supprimé' };
+    return { message: 'Highlight deleted' };
   }
 }

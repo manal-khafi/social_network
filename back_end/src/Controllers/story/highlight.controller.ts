@@ -3,7 +3,7 @@ import { HighlightService } from "../../services/highlight.service";
 import { AppError } from "../../util/error";
 
 const requireUser = (req: Request) => {
-  if (!req.user) throw new AppError("Utilisateur non authentifié", 401);
+  if (!req.user) throw new AppError("Not authenticated", 401);
   return req.user.id;
 };
 
@@ -38,7 +38,7 @@ export class HighlightController {
   static async addItems(req: Request, res: Response) {
     const userId = requireUser(req);
     const storyIds = Array.isArray(req.body?.story_ids) ? req.body.story_ids : [];
-    if (storyIds.length === 0) throw new AppError("story_ids requis", 400);
+    if (storyIds.length === 0) throw new AppError("story_ids is required", 400);
     const result = await HighlightService.addItems(req.params.id as string, userId, storyIds);
     return res.status(201).json({ success: true, ...result });
   }

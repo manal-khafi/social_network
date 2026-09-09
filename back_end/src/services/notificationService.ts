@@ -26,8 +26,8 @@ export class NotificationService {
       typeNotification = await prisma.typeNotification.create({
         data: {
           code: 'story_view',
-          name: 'Vue de story',
-          description: 'Quelqu\'un a vu votre story',
+          name: 'Story view',
+          description: 'Someone viewed your story',
         },
       });
     }
@@ -43,8 +43,8 @@ export class NotificationService {
         type_notification_id: typeNotification.id,
         source_id: storyId,
         source_type: 'story',
-        title: 'Nouvelle vue sur votre story',
-        message: `${viewer?.display_name || viewer?.username || 'Quelqu\'un'} a vu votre story`,
+        title: 'New view on your story',
+        message: `${viewer?.display_name || viewer?.username || 'Someone'} viewed your story`,
         metadata: {
           viewer_id: viewerId,
           story_id: storyId,
@@ -69,8 +69,8 @@ export class NotificationService {
       typeNotification = await prisma.typeNotification.create({
         data: {
           code: 'story_like',
-          name: 'Like sur story',
-          description: 'Quelqu\'un a aimé votre story',
+          name: 'Story like',
+          description: 'Someone liked your story',
         },
       });
     }
@@ -86,8 +86,8 @@ export class NotificationService {
         type_notification_id: typeNotification.id,
         source_id: storyId,
         source_type: 'story',
-        title: 'Nouveau like sur votre story',
-        message: `${liker?.display_name || liker?.username || 'Quelqu\'un'} a aimé votre story`,
+        title: 'New like on your story',
+        message: `${liker?.display_name || liker?.username || 'Someone'} liked your story`,
         metadata: {
           liker_id: likerId,
           story_id: storyId,
@@ -113,8 +113,8 @@ export class NotificationService {
       typeNotification = await prisma.typeNotification.create({
         data: {
           code: 'story_comment',
-          name: 'Commentaire sur story',
-          description: 'Quelqu\'un a commenté votre story',
+          name: 'Story comment',
+          description: 'Someone commented on your story',
         },
       });
     }
@@ -130,8 +130,8 @@ export class NotificationService {
         type_notification_id: typeNotification.id,
         source_id: storyId,
         source_type: 'story',
-        title: 'Nouveau commentaire sur votre story',
-        message: `${commenter?.display_name || commenter?.username || 'Quelqu\'un'} a commenté votre story`,
+        title: 'New comment on your story',
+        message: `${commenter?.display_name || commenter?.username || 'Someone'} commented on your story`,
         metadata: {
           commenter_id: commenterId,
           story_id: storyId,
@@ -158,8 +158,8 @@ export class NotificationService {
       typeNotification = await prisma.typeNotification.create({
         data: {
           code: 'story_message',
-          name: 'Message sur story',
-          description: 'Quelqu\'un vous a envoyé un message en réponse à votre story',
+          name: 'Story message',
+          description: 'Someone replied to your story',
         },
       });
     }
@@ -175,8 +175,8 @@ export class NotificationService {
         type_notification_id: typeNotification.id,
         source_id: storyId,
         source_type: 'story',
-        title: 'Nouveau message sur votre story',
-        message: `${sender?.display_name || sender?.username || 'Quelqu\'un'} vous a envoyé un message`,
+        title: 'New message on your story',
+        message: `${sender?.display_name || sender?.username || 'Someone'} sent you a message`,
         metadata: {
           sender_id: senderId,
           story_id: storyId,
@@ -233,17 +233,17 @@ export class NotificationService {
       where: { id: actorId },
       select: { username: true, display_name: true },
     });
-    const name = actor?.display_name || actor?.username || 'Quelqu\'un';
+    const name = actor?.display_name || actor?.username || 'Someone';
     await this.notify(
       'story_reaction',
-      'Réaction sur story',
-      'Quelqu\'un a réagi à votre story',
+      'Story reaction',
+      'Someone reacted to your story',
       {
         recipientId: storyOwnerId,
         actorId,
         sourceId: storyId,
-        title: 'Nouvelle réaction sur votre story',
-        message: `${name} a réagi ${emoji} à votre story`,
+        title: 'New reaction on your story',
+        message: `${name} reacted ${emoji} to your story`,
         metadata: { emoji },
       }
     );
@@ -262,17 +262,17 @@ export class NotificationService {
       where: { id: actorId },
       select: { username: true, display_name: true },
     });
-    const name = actor?.display_name || actor?.username || 'Quelqu\'un';
+    const name = actor?.display_name || actor?.username || 'Someone';
     await this.notify(
       'story_share',
-      'Partage de story',
-      'Quelqu\'un a partagé votre story',
+      'Story share',
+      'Someone shared your story',
       {
         recipientId: storyOwnerId,
         actorId,
         sourceId: storyId,
-        title: 'Votre story a été partagée',
-        message: `${name} a partagé votre story`,
+        title: 'Your story was shared',
+        message: `${name} shared your story`,
       }
     );
   }
@@ -290,17 +290,17 @@ export class NotificationService {
       where: { id: actorId },
       select: { username: true, display_name: true },
     });
-    const name = actor?.display_name || actor?.username || 'Quelqu\'un';
+    const name = actor?.display_name || actor?.username || 'Someone';
     await this.notify(
       'story_reshare',
-      'Repartage en story',
-      'Quelqu\'un a repartagé votre contenu en story',
+      'Story reshare',
+      'Someone reshared your content to their story',
       {
         recipientId: originalOwnerId,
         actorId,
         sourceId: newStoryId,
-        title: 'Votre contenu a été repartagé en story',
-        message: `${name} a ajouté votre contenu à sa story`,
+        title: 'Your content was reshared to a story',
+        message: `${name} added your content to their story`,
       }
     );
   }

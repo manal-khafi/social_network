@@ -10,7 +10,7 @@ const validateBlockAction = (blockerId: string, blockedId: string) => {
   }
 
   if (blockerId === blockedId) {
-    throw new Error("Vous ne pouvez pas vous bloquer vous-même");
+    throw new Error("You cannot block yourself");
   }
 };
 /**
@@ -26,7 +26,7 @@ export const blockUser = async (blockerId: string, blockedId: string) => {
   });
 
   if (alredayBlocked) {
-    throw new Error("Cet utilisateur est déjà bloqué");
+    throw new Error("This user is already blocked");
   }
   return prisma.$transaction(async (tx: any) => {
     // 1. Créer le blocage
@@ -71,7 +71,7 @@ export const unblockUser = async (blockerId: string, blockedId: string) => {
     },
   });
   if (!block) {
-    throw new Error("Aucun blocage trouvé pour cet utilisateur");
+    throw new Error("No block found for this user");
   }
   await prisma.block.delete({
     where: {

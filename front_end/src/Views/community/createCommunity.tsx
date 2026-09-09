@@ -122,13 +122,13 @@ export function CreateCommunity() {
         return;
       }
 
-      toast.success("Communauté créée avec succès !");
+      toast.success("Community created!");
       navigate(`/home/community/${communityId}`, { replace: true });
     } catch (error: any) {
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          "Erreur lors de la création de la communauté"
+          "Failed to create the community"
       );
     } finally {
       setIsLoading(false);
@@ -217,7 +217,7 @@ export function CreateCommunity() {
                   {isLoading ? (
                     <Loader2 className="animate-spin h-4 w-4" />
                   ) : (
-                    "Créer la communauté"
+                    "Create community"
                   )}
                 </Button>
               </div>

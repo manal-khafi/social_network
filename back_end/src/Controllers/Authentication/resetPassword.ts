@@ -8,7 +8,7 @@ export const verifyResetTokenController = async (req: Request, res: Response) =>
   if (!token) return res.status(400).json({ success: false, message: "Token requis" });
 
   const user = await verifyResetToken(token as string);
-  if (!user) return res.status(400).json({ success: false, message: "Token invalide ou expiré" });
+  if (!user) return res.status(400).json({ success: false, message: "Invalid or expired token" });
 
   res.status(200).json({ success: true, message: "Token valide" });
 };
@@ -23,7 +23,7 @@ export const resetPasswordController = async (req: Request, res: Response) => {
 
   try {
     await resetPassword(token, newPassword);
-    res.status(200).json({ success: true, message: "Mot de passe mis à jour avec succès" });
+    res.status(200).json({ success: true, message: "Password updated successfully" });
   } catch (err: any) {
     res.status(400).json({ success: false, message: err.message });
   }
