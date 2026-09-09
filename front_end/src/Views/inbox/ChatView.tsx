@@ -7,6 +7,8 @@ import {
   archiveConversation,
   deleteConversation,
   fetchConversations,
+  fetchArchivedConversations,
+  fetchConversation,
   fetchMessages,
   markRead,
   openDirectByUserId,
@@ -44,8 +46,10 @@ export default function ChatView() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const myId = useAppSelector((state) => state.auth.user?.id);
-  const conversation = useAppSelector((state) =>
-    state.messages.conversations.find((c) => c.id === conversationId)
+  const conversation = useAppSelector(
+    (state) =>
+      state.messages.conversations.find((c) => c.id === conversationId) ??
+      state.messages.archivedConversations.find((c) => c.id === conversationId)
   );
   const messages = useAppSelector((state) => {
     if (!conversationId) return [];
@@ -56,19 +60,25 @@ export default function ChatView() {
 
   useEffect(() => {
     dispatch(fetchConversations());
+    dispatch(fetchArchivedConversations());
   }, [dispatch]);
 
-  // The route param may be a user id (e.g. "Message" from a profile) rather than
-  // a conversation id — resolve it to a real conversation and redirect.
+  // The route param is usually a conversation id, but can be a user id ("Message"
+  // from a profile). Try to load it as a conversation first; only if that 404s
+  // treat it as a user id and open/create the DM.
   useEffect(() => {
     if (!conversationId || conversation || convStatus !== 'succeeded') return;
-    dispatch(openDirectByUserId(conversationId))
+    dispatch(fetchConversation(conversationId))
       .unwrap()
-      .then((realId: string) => {
-        dispatch(fetchConversations());
-        if (realId !== conversationId) navigate(`/home/inbox/${realId}`, { replace: true });
-      })
-      .catch(() => navigate('/home/inbox', { replace: true }));
+      .catch(() => {
+        dispatch(openDirectByUserId(conversationId))
+          .unwrap()
+          .then((realId: string) => {
+            dispatch(fetchConversations());
+            if (realId !== conversationId) navigate(`/home/inbox/${realId}`, { replace: true });
+          })
+          .catch(() => navigate('/home/inbox', { replace: true }));
+      });
   }, [conversationId, conversation, convStatus, dispatch, navigate]);
 
   useEffect(() => {
@@ -303,7 +313,14 @@ export default function ChatView() {
     );
   };
 
-  if (!conversation) return null;
+  if (!conversation) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3 text-muted-foreground">
+        <div className="w-8 h-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
+        <p className="text-sm">Loading conversation…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-background z-50 flex flex-col">
@@ -314,17 +331,17 @@ export default function ChatView() {
         <div className="relative">
           <Avatar className="w-10 h-10">
             <AvatarImage src={conversation.avatar} />
-            <AvatarFallback>{conversation.username[0].toUpperCase()}</AvatarFallback>
+            <AvatarFallback>{conversation.username?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
           </Avatar>
-          <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card ${
-            conversation.isOnline ? 'bg-green-500' : 'bg-gray-400'
-          }`} />
+          {conversation.isOnline && (
+            <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card bg-green-500" />
+          )}
         </div>
-        <div className="flex-1">
-          <h2 className="font-semibold">{conversation.username}</h2>
-          <p className="text-xs text-muted-foreground">
-            {conversation.isOnline ? 'Online' : `Active ${conversation.lastSeen}`}
-          </p>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-semibold truncate">{conversation.username}</h2>
+          {conversation.isOnline && (
+            <p className="text-xs text-muted-foreground">Online</p>
+          )}
         </div>
         <button
           className="p-2 hover:bg-muted rounded-full disabled:opacity-40"

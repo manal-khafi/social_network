@@ -110,6 +110,26 @@ export const openDirectByUserId = createAsyncThunk(
   }
 );
 
+/** Fetch a single conversation (e.g. deep link / archived chat not in a list). */
+export const fetchConversation = createAsyncThunk(
+  "messages/fetchOne",
+  async (conversationId: string) => {
+    const c = await messagesApi.getConversation(conversationId);
+    const conv: Conversation = {
+      id: c.id,
+      userId: c.other_user?.id ?? "",
+      username: c.other_user?.username ?? "Unknown",
+      avatar: c.other_user?.avatar_url ?? undefined,
+      lastMessage: "",
+      timestamp: rel(c.last_message_at),
+      unreadCount: 0,
+      isArchived: false,
+      isOnline: false,
+    };
+    return conv;
+  }
+);
+
 export const sendMessage = createAsyncThunk(
   "messages/sendMessage",
   async (
@@ -225,6 +245,15 @@ const messagesSlice = createSlice({
       })
       .addCase(fetchArchivedConversations.fulfilled, (state, action) => {
         state.archivedConversations = action.payload;
+      })
+      .addCase(fetchConversation.fulfilled, (state, action) => {
+        const c = action.payload;
+        if (
+          !state.conversations.some((x) => x.id === c.id) &&
+          !state.archivedConversations.some((x) => x.id === c.id)
+        ) {
+          state.conversations = [c, ...state.conversations];
+        }
       })
       .addCase(archiveConversation.fulfilled, (state, action) => {
         const moved = state.conversations.find((c) => c.id === action.payload);

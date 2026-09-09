@@ -35,6 +35,13 @@ export const openDirectConversation = async (
   return res.data.data;
 };
 
+export const getConversation = async (
+  conversationId: string
+): Promise<{ id: string; is_group: boolean; other_user: StoryUser | null; last_message_at: string }> => {
+  const res = await api.get(`/conversations/${conversationId}`);
+  return res.data.data;
+};
+
 export const getMessages = async (
   conversationId: string,
   opts: { before?: string; limit?: number } = {}
