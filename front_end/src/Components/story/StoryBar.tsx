@@ -42,14 +42,18 @@ export default function StoryBar() {
   const groups = useAppSelector(selectStoryGroups);
   const status = useAppSelector((s) => s.stories.status);
   const currentUser = useAppSelector((s) => s.user.currentUser);
+  const authUser = useAppSelector((s) => s.auth.user);
+  const meId = currentUser?.id ?? authUser?.id;
+  const meName = currentUser?.username ?? authUser?.username;
+  const meAvatar = currentUser?.avatar_url ?? undefined;
   const [composerOpen, setComposerOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchStories());
   }, [dispatch]);
 
-  const myGroup = groups.find((g) => g.user.id === currentUser?.id);
-  const otherGroups = groups.filter((g) => g.user.id !== currentUser?.id);
+  const myGroup = groups.find((g) => g.user.id === meId);
+  const otherGroups = groups.filter((g) => g.user.id !== meId);
   const loading = status === "loading" && groups.length === 0;
 
   return (
@@ -59,24 +63,24 @@ export default function StoryBar() {
         <div className="flex flex-col items-center gap-1.5 flex-shrink-0 w-[76px]">
           <button
             onClick={() =>
-              myGroup ? navigate(`/home/stories/${currentUser?.id}`) : setComposerOpen(true)
+              myGroup ? navigate(`/home/stories/${meId}`) : setComposerOpen(true)
             }
             className="relative active:scale-95 transition-transform"
             aria-label={myGroup ? "View your story" : "Add to your story"}
           >
             {myGroup ? (
               <Ring
-                src={currentUser?.avatar_url}
-                fallback={currentUser?.username?.[0]?.toUpperCase() ?? "?"}
+                src={meAvatar}
+                fallback={meName?.[0]?.toUpperCase() ?? "?"}
                 unseen={myGroup.has_unseen}
               />
             ) : (
               <span className="inline-flex rounded-full p-[2.5px] bg-border">
                 <span className="rounded-full p-[2px] bg-card">
                   <Avatar className="w-[64px] h-[64px]">
-                    <AvatarImage src={currentUser?.avatar_url ?? undefined} />
+                    <AvatarImage src={meAvatar} />
                     <AvatarFallback className="text-lg">
-                      {currentUser?.username?.[0]?.toUpperCase() ?? "?"}
+                      {meName?.[0]?.toUpperCase() ?? "?"}
                     </AvatarFallback>
                   </Avatar>
                 </span>

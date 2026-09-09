@@ -18,6 +18,8 @@ export default function HighlightViewerView() {
   const { highlightId } = useParams();
   const navigate = useNavigate();
   const currentUser = useAppSelector((s) => s.user.currentUser);
+  const authUser = useAppSelector((s) => s.auth.user);
+  const myId = currentUser?.id ?? authUser?.id;
 
   const [highlight, setHighlight] = useState<Highlight | null>(null);
   const [idx, setIdx] = useState(0);
@@ -30,7 +32,7 @@ export default function HighlightViewerView() {
 
   const items = highlight?.items ?? [];
   const item = items[idx];
-  const isOwner = highlight?.user.id === currentUser?.id;
+  const isOwner = !!myId && highlight?.user.id === myId;
 
   useEffect(() => {
     if (!highlightId) return;

@@ -47,6 +47,8 @@ export default function StoryViewerView() {
   const { userId } = useParams();
   const groups = useAppSelector(selectStoryGroups);
   const currentUser = useAppSelector((s) => s.user.currentUser);
+  const authUser = useAppSelector((s) => s.auth.user);
+  const myId = currentUser?.id ?? authUser?.id;
 
   const reduceMotion = useReducedMotion();
   const [localGroup, setLocalGroup] = useState<{ user: StoryUser; items: Story[] } | null>(null);
@@ -72,7 +74,7 @@ export default function StoryViewerView() {
   const group = groupIdx >= 0 ? groups[groupIdx] : localGroup;
   const items = group?.items ?? [];
   const story = items[itemIdx];
-  const isOwn = story?.user_id === currentUser?.id;
+  const isOwn = !!myId && story?.user_id === myId;
   const anySheetOpen =
     showShare || showSeenBy || showReactions || showHighlight || !!questionSheet;
 
