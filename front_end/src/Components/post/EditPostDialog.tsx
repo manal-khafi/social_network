@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAppDispatch } from '../../hooks';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { updatePost } from '../../features/posts/postsSlice';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
-import { X, Image as ImageIcon, Smile } from 'lucide-react';
+import { X, Image as ImageIcon, Smile, Loader2 } from 'lucide-react';
+import { uploadPostMedia } from '../../utils/uploadStoryMedia';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import EmojiPicker from 'emoji-picker-react';
@@ -19,8 +20,10 @@ interface EditPostDialogProps {
 
 export default function EditPostDialog({ post, open, onOpenChange }: EditPostDialogProps) {
   const dispatch = useAppDispatch();
+  const authUser = useAppSelector((s) => s.auth.user);
   const [content, setContent] = useState(post.content);
   const [images, setImages] = useState<string[]>(post.images || []);
+  const [uploading, setUploading] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,21 +35,23 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
   }, [open, post]);
 
   const handleImageAdd = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const fileArray = Array.from(files);
-      const dataUrls = await Promise.all(
-        fileArray.map(
-          (file) =>
-            new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
-            })
-        )
-      );
-      setImages((prev) => [...prev, ...dataUrls]);
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    if (files.length === 0) return;
+    if (images.length + files.length > 10) {
+      toast.error('Up to 10 photos/videos per post');
+      return;
+    }
+    setUploading((n) => n + files.length);
+    for (const file of files) {
+      try {
+        const { url } = await uploadPostMedia(file, authUser?.id);
+        setImages((prev) => [...prev, url]);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Upload failed');
+      } finally {
+        setUploading((n) => n - 1);
+      }
     }
   };
 
@@ -55,8 +60,12 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
   };
 
   const handleSave = async () => {
-    if (!content.trim()) {
-      toast.error('Post content cannot be empty');
+    if (!content.trim() && images.length === 0) {
+      toast.error('Add text or media');
+      return;
+    }
+    if (uploading > 0) {
+      toast.error('Wait for uploads to finish');
       return;
     }
 
@@ -94,8 +103,13 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
             className="min-h-[150px] resize-none"
           />
 
-          {images.length > 0 && (
+          {(images.length > 0 || uploading > 0) && (
             <div className="grid grid-cols-2 gap-2">
+              {Array.from({ length: uploading }).map((_, i) => (
+                <div key={`up-${i}`} className="h-48 rounded-lg bg-muted grid place-items-center">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ))}
               {images.map((img, index) => (
                 <div key={index} className="relative group">
                   {isVideoUrl(img) ? (
@@ -163,7 +177,7 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={!content.trim() || isLoading}
+                disabled={(!content.trim() && images.length === 0) || isLoading || uploading > 0}
                 className="bg-[#d6955b] hover:bg-[#c58549]"
               >
                 {isLoading ? 'Saving...' : 'Save Changes'}

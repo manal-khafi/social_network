@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 
+const MAX_CONTENT = 5000;
+const MAX_MEDIA = 10;
+
 export const updatePost = async (req: Request, res: Response) => {
   try {
     if (!req.user?.id) {
@@ -8,7 +11,7 @@ export const updatePost = async (req: Request, res: Response) => {
     }
 
     const { postId } = req.params as { [key: string]: string };
-    const { content, media_urls } = req.body;
+    const { content, media_urls, visibility } = req.body;
 
     // Check if post exists and belongs to user
     const post = await prisma.post.findUnique({
@@ -23,12 +26,40 @@ export const updatePost = async (req: Request, res: Response) => {
       return res.status(403).json({ message: "You can only edit your own posts" });
     }
 
+    const text = content !== undefined ? String(content).trim() : undefined;
+    if (text !== undefined && text.length > MAX_CONTENT) {
+      return res.status(400).json({ message: `Content is too long (max ${MAX_CONTENT})` });
+    }
+
+    if (media_urls !== undefined) {
+      if (!Array.isArray(media_urls) || media_urls.length > MAX_MEDIA) {
+        return res.status(400).json({ message: `media_urls must be an array of up to ${MAX_MEDIA} strings` });
+      }
+      if (!media_urls.every((m: unknown) => typeof m === "string" && /^https?:\/\//i.test(m) && m.length <= 2048)) {
+        return res.status(400).json({ message: "Media URLs must be http(s) strings" });
+      }
+    }
+
+    const nextContent = text;
+    const nextMedia = media_urls;
+    const stillHasSomething =
+      (nextContent ?? post.content ?? "").trim().length > 0 ||
+      ((nextMedia ?? (post.media_urls as string[] | null)) ?? []).length > 0;
+    if (!stillHasSomething) {
+      return res.status(400).json({ message: "A post needs text or media" });
+    }
+
+    if (visibility && !["public", "private", "friends"].includes(visibility)) {
+      return res.status(400).json({ message: "Invalid visibility value" });
+    }
+
     // Update post
     const updatedPost = await prisma.post.update({
       where: { id: postId },
       data: {
-        content: content !== undefined ? content.trim() : undefined,
-        media_urls: media_urls !== undefined ? media_urls : undefined,
+        content: nextContent === undefined ? undefined : nextContent || null,
+        media_urls: nextMedia === undefined ? undefined : nextMedia,
+        visibility: visibility ?? undefined,
         updated_at: new Date(),
       },
       include: {
@@ -38,6 +69,7 @@ export const updatePost = async (req: Request, res: Response) => {
             username: true,
             display_name: true,
             avatar_url: true,
+            allow_comments: true,
           },
         },
         _count: {
@@ -68,7 +100,8 @@ export const updatePost = async (req: Request, res: Response) => {
       isArchived: false,
       isEdited: updatedPost.updated_at > updatedPost.created_at,
       timestamp: updatedPost.created_at.toISOString(),
-      commentsAllowed: true,
+      visibility: updatedPost.visibility,
+      commentsAllowed: updatedPost.user.allow_comments !== false,
       likesVisible: true,
     };
 
