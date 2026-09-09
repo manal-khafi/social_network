@@ -47,6 +47,7 @@ import EmojiPicker from "emoji-picker-react";
 import { toast } from "sonner";
 import ShareDialog from "./ShareDialog";
 import EditPostDialog from "./EditPostDialog";
+import ReportPostDialog from "./ReportPostDialog";
 import VideoPlayer from "./VideoPlayer";
 import { formatTime } from "../../utils/timeUtils";
 import { isVideoUrl } from "../../utils/mediaUtils";
@@ -331,6 +332,7 @@ export default function PostCard({ post }: PostCardProps) {
   const [showAllComments, setShowAllComments] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const handleToggleComments = () => {
@@ -370,8 +372,8 @@ export default function PostCard({ post }: PostCardProps) {
         await dispatch(blockUser(post.userId)).unwrap();
         toast.success(`Blocked @${post.username}`);
 
-        if (location.pathname === `/profile/${post.userId}`) {
-          navigate("/");
+        if (location.pathname.startsWith("/home/profile/")) {
+          navigate("/home/feed");
         }
       } catch (error) {
         toast.error("Failed to block user");
@@ -381,7 +383,7 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   const handleReport = () => {
-    toast.success("Post reported. We'll review it shortly.");
+    setShowReportDialog(true);
   };
 
   const handleArchive = () => {
@@ -703,6 +705,12 @@ export default function PostCard({ post }: PostCardProps) {
 
       <ShareDialog postId={post.id} open={showShareDialog} onOpenChange={setShowShareDialog} />
       <EditPostDialog post={post} open={showEditDialog} onOpenChange={setShowEditDialog} />
+      <ReportPostDialog
+        postId={post.id}
+        reportedUserId={post.userId}
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+      />
     </Card>
   );
 }

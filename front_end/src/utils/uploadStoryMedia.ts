@@ -118,11 +118,13 @@ function readImageSize(file: File): Promise<{ width: number; height: number }> {
 }
 
 /**
- * Uploads a story image or video to Firebase Storage and returns its URL plus
- * metadata (duration + a poster frame for videos).
+ * Uploads an image or video to Firebase Storage under users/<uid>/<folder>/…
+ * and returns its URL plus metadata (image downscaled to a sane size; videos
+ * get a poster frame + duration and are rejected past MAX_VIDEO_SEC).
  */
-export async function uploadStoryMedia(
+export async function uploadMedia(
   file: File,
+  folder: string,
   ownerId?: string
 ): Promise<UploadedStoryMedia> {
   // Email/password users authenticate via the backend JWT, not Firebase, so
@@ -135,7 +137,7 @@ export async function uploadStoryMedia(
   if (isImage && file.size > MAX_IMAGE_BYTES) throw new Error("Image trop lourde (max 25 Mo)");
   if (isVideo && file.size > MAX_VIDEO_BYTES) throw new Error("Vidéo trop lourde (max 100 Mo)");
 
-  const base = `users/${uid}/stories/${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const base = `users/${uid}/${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
   if (isImage) {
     const { width, height } = await readImageSize(file);
@@ -175,3 +177,11 @@ export async function uploadStoryMedia(
     height: meta.height,
   };
 }
+
+/** Story media (folder: stories). */
+export const uploadStoryMedia = (file: File, ownerId?: string) =>
+  uploadMedia(file, "stories", ownerId);
+
+/** Post media (folder: posts). */
+export const uploadPostMedia = (file: File, ownerId?: string) =>
+  uploadMedia(file, "posts", ownerId);

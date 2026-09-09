@@ -34,6 +34,7 @@ export interface Post {
   isArchived: boolean;
   isEdited?: boolean;
   timestamp: string;
+  visibility?: 'public' | 'private' | 'friends';
   commentsAllowed: boolean;
   likesVisible: boolean;
   originalPost?: {
@@ -178,7 +179,6 @@ export const createPost = createAsyncThunk(
   async (
     payload: {
       content: string;
-      authorId: string;
       media_urls?: string[];
       visibility?: 'public' | 'private' | 'friends';
     }
