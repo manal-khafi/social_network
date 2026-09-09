@@ -51,6 +51,14 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
   const [showEmoji, setShowEmoji] = useState(false);
   const [showMention, setShowMention] = useState(false);
   const [showGif, setShowGif] = useState(false);
+  const [stickerDraft, setStickerDraft] = useState<{
+    kind: "link" | "poll" | "question";
+    url: string;
+    label: string;
+    question: string;
+    options: string[];
+    prompt: string;
+  } | null>(null);
   const [showVisibility, setShowVisibility] = useState(false);
   const [textDraft, setTextDraft] = useState<{
     open: boolean;
@@ -70,7 +78,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     if (!previewAudioRef.current) previewAudioRef.current = new Audio();
     const audio = previewAudioRef.current;
     const editing =
-      open && (mode === "media" || mode === "text") && !showMusic && !showEmoji && !textDraft.open;
+      open && (mode === "media" || mode === "text") && !showMusic && !showEmoji && !textDraft.open && !stickerDraft;
     const preview = music?.preview_url;
     if (!preview || !editing) {
       audio.pause();
@@ -82,7 +90,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     audio.play().catch(() => {});
     return () => audio.pause();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, mode, showMusic, showEmoji, textDraft.open, music?.preview_url, music?.start_sec]);
+  }, [open, mode, showMusic, showEmoji, textDraft.open, stickerDraft, music?.preview_url, music?.start_sec]);
 
   const reset = () => {
     setMode(sharedPost ? "text" : "choose");
@@ -183,42 +191,59 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     setShowEmoji(false);
   };
 
-  const addLink = () => {
-    const url = window.prompt("Link URL (https://…)")?.trim();
-    if (!url) return;
-    if (!/^https?:\/\//i.test(url)) {
-      toast.error("Link must start with http:// or https://");
-      return;
-    }
-    const label = window.prompt("Label (optional)")?.trim() || undefined;
-    setOverlays((prev) => [
-      ...prev,
-      { id: uid(), type: "link", url, label, x: 0.5, y: 0.72, rotation: 0, scale: 1 },
-    ]);
-  };
+  const openSticker = (kind: "link" | "poll" | "question") =>
+    setStickerDraft({ kind, url: "", label: "", question: "", options: ["", ""], prompt: "" });
 
-  const addPoll = () => {
-    const question = window.prompt("Poll question")?.trim();
-    if (!question) return;
-    const a = window.prompt("Option 1")?.trim();
-    const b = window.prompt("Option 2")?.trim();
-    if (!a || !b) {
-      toast.error("A poll needs two options");
-      return;
-    }
-    setOverlays((prev) => [
-      ...prev,
-      { id: uid(), type: "poll", question, options: [a, b], x: 0.5, y: 0.5, rotation: 0, scale: 1 },
-    ]);
-  };
+  const commitSticker = () => {
+    if (!stickerDraft) return;
+    const d = stickerDraft;
 
-  const addQuestion = () => {
-    const prompt = window.prompt("Ask your followers a question")?.trim();
-    if (!prompt) return;
-    setOverlays((prev) => [
-      ...prev,
-      { id: uid(), type: "question", prompt, x: 0.5, y: 0.5, rotation: 0, scale: 1 },
-    ]);
+    if (d.kind === "link") {
+      const url = d.url.trim();
+      if (!/^https?:\/\//i.test(url)) {
+        toast.error("Link must start with http:// or https://");
+        return;
+      }
+      setOverlays((prev) => [
+        ...prev,
+        {
+          id: uid(),
+          type: "link",
+          url,
+          label: d.label.trim() || undefined,
+          x: 0.5,
+          y: 0.72,
+          rotation: 0,
+          scale: 1,
+        },
+      ]);
+    } else if (d.kind === "poll") {
+      const question = d.question.trim();
+      const options = d.options.map((o) => o.trim()).filter(Boolean);
+      if (!question) return toast.error("Add a poll question");
+      if (options.length < 2) return toast.error("A poll needs at least two options");
+      setOverlays((prev) => [
+        ...prev,
+        {
+          id: uid(),
+          type: "poll",
+          question,
+          options: options.slice(0, 4),
+          x: 0.5,
+          y: 0.5,
+          rotation: 0,
+          scale: 1,
+        },
+      ]);
+    } else {
+      const prompt = d.prompt.trim();
+      if (!prompt) return toast.error("Type your question");
+      setOverlays((prev) => [
+        ...prev,
+        { id: uid(), type: "question", prompt, x: 0.5, y: 0.5, rotation: 0, scale: 1 },
+      ]);
+    }
+    setStickerDraft(null);
   };
 
   const addGif = (gif: { url: string; width: number; height: number }) => {
@@ -432,9 +457,9 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
           <ToolButton icon={<Smile className="w-5 h-5" />} label="Sticker" onClick={() => setShowEmoji(true)} />
           <ToolButton icon={<Sticker className="w-5 h-5" />} label="GIF" onClick={() => setShowGif(true)} />
           <ToolButton icon={<AtSign className="w-5 h-5" />} label="Mention" onClick={() => setShowMention(true)} />
-          <ToolButton icon={<Link2 className="w-5 h-5" />} label="Link" onClick={addLink} />
-          <ToolButton icon={<BarChart3 className="w-5 h-5" />} label="Poll" onClick={addPoll} />
-          <ToolButton icon={<HelpCircle className="w-5 h-5" />} label="Question" onClick={addQuestion} />
+          <ToolButton icon={<Link2 className="w-5 h-5" />} label="Link" onClick={() => openSticker("link")} />
+          <ToolButton icon={<BarChart3 className="w-5 h-5" />} label="Poll" onClick={() => openSticker("poll")} />
+          <ToolButton icon={<HelpCircle className="w-5 h-5" />} label="Question" onClick={() => openSticker("question")} />
           <ToolButton
             icon={<Music2 className="w-5 h-5" />}
             label={music ? "Music ✓" : "Music"}
@@ -574,6 +599,129 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
             className="mt-2 rounded-full bg-white text-black font-semibold py-2"
           >
             Done
+          </button>
+        </div>
+      )}
+
+      {stickerDraft && (
+        <div className="absolute inset-0 z-40 bg-black/85 flex flex-col text-white">
+          <div className="flex items-center justify-between p-3 border-b border-white/10">
+            <button onClick={() => setStickerDraft(null)} aria-label="Cancel">
+              <X className="w-6 h-6" />
+            </button>
+            <span className="font-semibold capitalize">{stickerDraft.kind} sticker</span>
+            <button
+              onClick={commitSticker}
+              className="text-sm font-semibold text-sky-400 px-2"
+            >
+              Add
+            </button>
+          </div>
+
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div className="w-full max-w-sm space-y-3">
+              {stickerDraft.kind === "link" && (
+                <>
+                  <input
+                    autoFocus
+                    value={stickerDraft.url}
+                    onChange={(e) =>
+                      setStickerDraft((d) => (d ? { ...d, url: e.target.value } : d))
+                    }
+                    placeholder="https://example.com"
+                    inputMode="url"
+                    className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40"
+                  />
+                  <input
+                    value={stickerDraft.label}
+                    onChange={(e) =>
+                      setStickerDraft((d) => (d ? { ...d, label: e.target.value } : d))
+                    }
+                    placeholder="Button text (optional)"
+                    maxLength={30}
+                    className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40"
+                  />
+                </>
+              )}
+
+              {stickerDraft.kind === "poll" && (
+                <>
+                  <input
+                    autoFocus
+                    value={stickerDraft.question}
+                    onChange={(e) =>
+                      setStickerDraft((d) => (d ? { ...d, question: e.target.value } : d))
+                    }
+                    placeholder="Ask a question…"
+                    maxLength={120}
+                    className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm font-semibold outline-none placeholder:text-white/40"
+                  />
+                  {stickerDraft.options.map((opt, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <input
+                        value={opt}
+                        onChange={(e) =>
+                          setStickerDraft((d) =>
+                            d
+                              ? {
+                                  ...d,
+                                  options: d.options.map((o, j) => (j === i ? e.target.value : o)),
+                                }
+                              : d
+                          )
+                        }
+                        placeholder={`Option ${i + 1}`}
+                        maxLength={40}
+                        className="flex-1 rounded-xl bg-white/10 px-4 py-2.5 text-sm outline-none placeholder:text-white/40"
+                      />
+                      {stickerDraft.options.length > 2 && (
+                        <button
+                          onClick={() =>
+                            setStickerDraft((d) =>
+                              d ? { ...d, options: d.options.filter((_, j) => j !== i) } : d
+                            )
+                          }
+                          className="p-2 text-white/60"
+                          aria-label="Remove option"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {stickerDraft.options.length < 4 && (
+                    <button
+                      onClick={() =>
+                        setStickerDraft((d) => (d ? { ...d, options: [...d.options, ""] } : d))
+                      }
+                      className="text-xs text-sky-400"
+                    >
+                      + Add option
+                    </button>
+                  )}
+                </>
+              )}
+
+              {stickerDraft.kind === "question" && (
+                <textarea
+                  autoFocus
+                  value={stickerDraft.prompt}
+                  onChange={(e) =>
+                    setStickerDraft((d) => (d ? { ...d, prompt: e.target.value } : d))
+                  }
+                  placeholder="Ask your followers something…"
+                  maxLength={200}
+                  className="w-full rounded-xl bg-white/10 px-4 py-3 text-base font-semibold outline-none placeholder:text-white/40 resize-none min-h-[96px]"
+                />
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={commitSticker}
+            className="m-4 rounded-full bg-white text-black font-semibold py-2.5"
+          >
+            Add to story
           </button>
         </div>
       )}
