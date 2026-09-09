@@ -1,6 +1,11 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { archiveConversation, deleteConversation } from '../../features/messages/messagesSlice';
+import {
+  archiveConversation,
+  deleteConversation,
+  fetchConversations,
+} from '../../features/messages/messagesSlice';
 import { Card } from '../../Components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { Badge } from '../../Components/ui/badge';
@@ -10,6 +15,10 @@ import { Archive, MoreVertical, Trash2 } from 'lucide-react';
 export default function InboxView() {
   const dispatch = useAppDispatch();
   const { conversations } = useAppSelector((state) => state.messages);
+
+  useEffect(() => {
+    dispatch(fetchConversations());
+  }, [dispatch]);
 
   const handleArchive = (e: React.MouseEvent, convId: string) => {
     e.preventDefault();

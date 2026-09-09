@@ -1,9 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { sendMessage, setCurrentConversation, archiveConversation, deleteConversation } from '../../features/messages/messagesSlice';
+import {
+  sendMessage,
+  setCurrentConversation,
+  archiveConversation,
+  deleteConversation,
+  fetchConversations,
+  fetchMessages,
+  markRead,
+  openDirectByUserId,
+} from '../../features/messages/messagesSlice';
 import { blockUser } from '../../features/user/userSlice';
-import type { Message} from '../../features/messages/messagesSlice';
+import type { Message } from '../../features/messages/messagesSlice';
+import { useCall } from '../../features/call/CallProvider';
 import { 
   ArrowLeft, Send, Smile, Image as ImageIcon, Mic, Paperclip, 
   Phone, Video, MoreVertical, CheckCheck, Check, MapPin, 
@@ -33,6 +43,7 @@ export default function ChatView() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  const myId = useAppSelector((state) => state.auth.user?.id);
   const conversation = useAppSelector((state) =>
     state.messages.conversations.find((c) => c.id === conversationId)
   );
@@ -40,10 +51,31 @@ export default function ChatView() {
     if (!conversationId) return [];
     return state.messages.messages[conversationId] || [];
   });
+  const convStatus = useAppSelector((state) => state.messages.status);
+  const { startCall } = useCall();
+
+  useEffect(() => {
+    dispatch(fetchConversations());
+  }, [dispatch]);
+
+  // The route param may be a user id (e.g. "Message" from a profile) rather than
+  // a conversation id — resolve it to a real conversation and redirect.
+  useEffect(() => {
+    if (!conversationId || conversation || convStatus !== 'succeeded') return;
+    dispatch(openDirectByUserId(conversationId))
+      .unwrap()
+      .then((realId: string) => {
+        dispatch(fetchConversations());
+        if (realId !== conversationId) navigate(`/home/inbox/${realId}`, { replace: true });
+      })
+      .catch(() => navigate('/home/inbox', { replace: true }));
+  }, [conversationId, conversation, convStatus, dispatch, navigate]);
 
   useEffect(() => {
     if (conversationId) {
       dispatch(setCurrentConversation(conversationId));
+      dispatch(fetchMessages(conversationId));
+      dispatch(markRead(conversationId));
     }
     return () => {
       dispatch(setCurrentConversation(null));
@@ -151,8 +183,29 @@ export default function ChatView() {
   };
 
   const renderMessage = (msg: Message) => {
-    const isSender = msg.senderId === '1';
-    
+    const isSender = msg.senderId === myId;
+
+    if (msg.type === 'call') {
+      const cm = msg.callMeta;
+      const kind = cm?.callType === 'video' ? 'Video call' : 'Voice call';
+      const detail =
+        cm?.status === 'missed'
+          ? 'Missed'
+          : cm?.status === 'declined'
+          ? 'Declined'
+          : cm?.durationSec
+          ? `${Math.floor(cm.durationSec / 60)}:${String(cm.durationSec % 60).padStart(2, '0')}`
+          : 'Ended';
+      return (
+        <div key={msg.id} className="flex justify-center my-2">
+          <span className="text-xs text-muted-foreground bg-muted rounded-full px-3 py-1 flex items-center gap-1">
+            <Phone className="w-3 h-3" />
+            {kind} · {detail}
+          </span>
+        </div>
+      );
+    }
+
     return (
       <div
         key={msg.id}
@@ -273,10 +326,32 @@ export default function ChatView() {
             {conversation.isOnline ? 'Online' : `Active ${conversation.lastSeen}`}
           </p>
         </div>
-        <button className="p-2 hover:bg-muted rounded-full">
+        <button
+          className="p-2 hover:bg-muted rounded-full disabled:opacity-40"
+          disabled={!conversation?.userId}
+          onClick={() =>
+            conversation?.userId &&
+            startCall(
+              { id: conversation.userId, username: conversation.username, avatar: conversation.avatar },
+              'audio'
+            )
+          }
+          aria-label="Voice call"
+        >
           <Phone className="w-5 h-5 text-primary" />
         </button>
-        <button className="p-2 hover:bg-muted rounded-full">
+        <button
+          className="p-2 hover:bg-muted rounded-full disabled:opacity-40"
+          disabled={!conversation?.userId}
+          onClick={() =>
+            conversation?.userId &&
+            startCall(
+              { id: conversation.userId, username: conversation.username, avatar: conversation.avatar },
+              'video'
+            )
+          }
+          aria-label="Video call"
+        >
           <Video className="w-5 h-5 text-primary" />
         </button>
         <DropdownMenu>

@@ -3,7 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { fetchUserProfile, toggleFollow, fetchFollowers, fetchFollowing } from '../../features/user/userSlice';
 import { fetchUserPosts, fetchUserReposts } from '../../features/posts/postsSlice';
-import { MessageCircle, Lock } from 'lucide-react';
+import { MessageCircle, Lock, Phone } from 'lucide-react';
+import { useCall } from '../../features/call/CallProvider';
 import { Button } from '../../Components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../Components/ui/tabs';
 import { toast } from 'sonner';
@@ -17,6 +18,7 @@ import { Card } from '../../Components/ui/card';
 export default function UserProfileView() {
   const { userId: username } = useParams();
   const dispatch = useAppDispatch();
+  const { startCall } = useCall();
   const { viewedUser: user, status, followers, following } = useAppSelector((state) => state.user);
   const { userPosts, userReposts } = useAppSelector((state) => state.posts);
   const authUser = useAppSelector((state) => state.auth.user);
@@ -182,6 +184,19 @@ export default function UserProfileView() {
                   Message
                 </Button>
               </Link>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Call"
+                onClick={() =>
+                  startCall(
+                    { id: user.id, username: user.username, avatar: user.avatar_url ?? undefined },
+                    'audio'
+                  )
+                }
+              >
+                <Phone className="w-4 h-4" />
+              </Button>
             </>
           )
         }
