@@ -271,6 +271,13 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
 
   const background = STORY_BACKGROUNDS[bgIndex];
 
+  // emoji-picker-react needs an explicit pixel height — "100%" collapses it to
+  // zero inside the flex column, which made the sticker panel look empty/broken.
+  const emojiPickerHeight = Math.min(
+    Math.max(typeof window !== "undefined" ? window.innerHeight - 140 : 480, 320),
+    560
+  );
+
   const share = async () => {
     if (!canShare || posting) return;
     setPosting(true);
@@ -544,14 +551,16 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
             <button onClick={() => setShowEmoji(false)}><X className="w-6 h-6" /></button>
             <span className="font-semibold">Add a sticker</span>
           </div>
-          <div className="flex-1 overflow-hidden">
-            <EmojiPicker
-              theme={"dark" as never}
-              width="100%"
-              height="100%"
-              onEmojiClick={(d: { emoji: string }) => addEmoji(d.emoji)}
-              lazyLoadEmojis
-            />
+          <div className="flex-1 min-h-0 flex justify-center overflow-y-auto p-3">
+            <div className="w-full max-w-[420px]">
+              <EmojiPicker
+                theme={"dark" as never}
+                width="100%"
+                height={emojiPickerHeight}
+                onEmojiClick={(d: { emoji: string }) => addEmoji(d.emoji)}
+                lazyLoadEmojis
+              />
+            </div>
           </div>
         </div>
       )}
