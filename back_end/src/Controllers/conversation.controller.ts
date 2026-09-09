@@ -8,9 +8,11 @@ const uid = (req: Request) => {
 };
 
 export class ConversationController {
-  /** GET /conversations */
+  /** GET /conversations?archived=true */
   static async list(req: Request, res: Response) {
-    const data = await ConversationService.list(uid(req));
+    const data = await ConversationService.list(uid(req), {
+      archived: req.query.archived === "true",
+    });
     return res.json({ success: true, data });
   }
 

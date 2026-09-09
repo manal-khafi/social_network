@@ -33,9 +33,9 @@ export class ConversationService {
     return this.getOne(conv.id, userId);
   }
 
-  static async list(userId: string) {
+  static async list(userId: string, opts: { archived?: boolean } = {}) {
     const parts = await prisma.conversationParticipant.findMany({
-      where: { user_id: userId, is_archived: false },
+      where: { user_id: userId, is_archived: opts.archived === true },
       include: {
         conversation: {
           include: {

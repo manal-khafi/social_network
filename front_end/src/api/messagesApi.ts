@@ -23,8 +23,8 @@ export interface ApiConversation {
   is_archived: boolean;
 }
 
-export const listConversations = async (): Promise<ApiConversation[]> => {
-  const res = await api.get("/conversations");
+export const listConversations = async (archived = false): Promise<ApiConversation[]> => {
+  const res = await api.get("/conversations", archived ? { params: { archived: true } } : undefined);
   return res.data.data;
 };
 

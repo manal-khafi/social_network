@@ -32,6 +32,7 @@ export interface Conversation {
 
 interface MessagesState {
   conversations: Conversation[];
+  archivedConversations: Conversation[];
   messages: { [conversationId: string]: Message[] };
   currentConversation: string | null;
   status: "idle" | "loading" | "succeeded" | "failed";
@@ -39,6 +40,7 @@ interface MessagesState {
 
 const initialState: MessagesState = {
   conversations: [],
+  archivedConversations: [],
   messages: {},
   currentConversation: null,
   status: "idle",
@@ -121,6 +123,14 @@ export const sendMessage = createAsyncThunk(
   }
 );
 
+export const fetchArchivedConversations = createAsyncThunk(
+  "messages/fetchArchived",
+  async () => {
+    const list = await messagesApi.listConversations(true);
+    return list.map(mapConversation);
+  }
+);
+
 export const markRead = createAsyncThunk("messages/markRead", async (conversationId: string) => {
   await messagesApi.markConversationRead(conversationId);
   return conversationId;
@@ -142,7 +152,15 @@ export const unarchiveConversation = createAsyncThunk(
   }
 );
 
-export const deleteConversation = archiveConversation; // no hard delete server-side
+// No hard delete server-side: archive it and drop it from local lists so it
+// disappears from the UI (returns only on a full refetch).
+export const deleteConversation = createAsyncThunk(
+  "messages/delete",
+  async (conversationId: string) => {
+    await messagesApi.setConversationArchived(conversationId, true);
+    return conversationId;
+  }
+);
 
 const messagesSlice = createSlice({
   name: "messages",
@@ -205,12 +223,31 @@ const messagesSlice = createSlice({
         const c = state.conversations.find((x) => x.id === action.payload);
         if (c) c.unreadCount = 0;
       })
+      .addCase(fetchArchivedConversations.fulfilled, (state, action) => {
+        state.archivedConversations = action.payload;
+      })
       .addCase(archiveConversation.fulfilled, (state, action) => {
+        const moved = state.conversations.find((c) => c.id === action.payload);
         state.conversations = state.conversations.filter((c) => c.id !== action.payload);
+        if (moved && !state.archivedConversations.some((c) => c.id === moved.id)) {
+          state.archivedConversations = [{ ...moved, isArchived: true }, ...state.archivedConversations];
+        }
       })
       .addCase(unarchiveConversation.fulfilled, (state, action) => {
-        const c = state.conversations.find((x) => x.id === action.payload);
-        if (c) c.isArchived = false;
+        const moved = state.archivedConversations.find((c) => c.id === action.payload);
+        state.archivedConversations = state.archivedConversations.filter(
+          (c) => c.id !== action.payload
+        );
+        if (moved && !state.conversations.some((c) => c.id === moved.id)) {
+          state.conversations = [{ ...moved, isArchived: false }, ...state.conversations];
+        }
+      })
+      .addCase(deleteConversation.fulfilled, (state, action) => {
+        state.conversations = state.conversations.filter((c) => c.id !== action.payload);
+        state.archivedConversations = state.archivedConversations.filter(
+          (c) => c.id !== action.payload
+        );
+        delete state.messages[action.payload];
       });
   },
 });
