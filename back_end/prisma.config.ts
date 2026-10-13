@@ -4,6 +4,12 @@
 import "dotenv/config";
 import { defineConfig, env } from "prisma/config";
 
+// Migrations must not go through a connection pooler (Neon's pooled host,
+// PgBouncer): DIRECT_URL is the direct connection. Where there is no pooler
+// (local Postgres, the Docker stack) it defaults to DATABASE_URL, so setting it
+// is optional. This also satisfies `directUrl = env("DIRECT_URL")` in the schema.
+process.env.DIRECT_URL ||= process.env.DATABASE_URL;
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
@@ -12,5 +18,6 @@ export default defineConfig({
   engine: "classic",
   datasource: {
     url: env("DATABASE_URL"),
+    directUrl: env("DIRECT_URL"),
   },
 });

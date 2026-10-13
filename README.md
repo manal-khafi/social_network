@@ -165,6 +165,7 @@ Docker, and `front_end/.env.example` the `VITE_*` ones.
 | `POSTGRES_PASSWORD` | **yes** | Postgres password; Compose refuses to start without it |
 | `POSTGRES_DB` | no (default `socielle_network`) | Database name |
 | `DATABASE_URL` | **yes** | Prisma connection string. Host is `db` in Docker, `localhost` otherwise; must match the values above |
+| `DIRECT_URL` | no (defaults to `DATABASE_URL`) | Direct, non-pooled connection used by `prisma migrate`. Needed only when `DATABASE_URL` goes through a pooler (e.g. Neon) |
 
 ### Backend runtime
 
