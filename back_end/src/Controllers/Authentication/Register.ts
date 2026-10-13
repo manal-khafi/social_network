@@ -92,7 +92,7 @@ export const Register = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // 9. Email verification is REQUIRED by default. AUTH_AUTO_VERIFY=true skips it
-    // and is a development convenience only (e.g. no SMTP configured locally).
+    // and is a development convenience only (e.g. no email provider configured locally).
     const autoVerify = process.env.AUTH_AUTO_VERIFY === "true";
 
     // 10. Create the user

@@ -17,7 +17,7 @@ const prismaMock = vi.hoisted(() => ({
 }));
 vi.mock("../config/prismaClient", () => ({ default: prismaMock }));
 
-// No real SMTP either.
+// No real emails either.
 const emailMock = vi.hoisted(() => ({
   sendEmail: vi.fn(),
   sendVerificationEmail: vi.fn(),

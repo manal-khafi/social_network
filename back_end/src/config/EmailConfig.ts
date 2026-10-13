@@ -1,35 +1,45 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import dotenv from "dotenv";
 import { logger } from "../util/logger";
 
 dotenv.config();
 
-let transporter: nodemailer.Transporter | null = null;
+// Emails go out through Resend's HTTPS API rather than SMTP: hosts such as
+// Render's free tier block outbound SMTP ports, HTTPS always works.
 
+/**
+ * Sender shown on outgoing emails. Resend's shared "onboarding@resend.dev"
+ * address needs no domain setup but only delivers to the Resend account's own
+ * email address; set EMAIL_FROM to an address on a domain verified in Resend to
+ * email real users.
+ */
+export const EMAIL_FROM = process.env.EMAIL_FROM?.trim() || "Anmougar <onboarding@resend.dev>";
+
+let client: Resend | null = null;
+let initialized = false;
+
+/**
+ * Creates the Resend client. Without RESEND_API_KEY the API still starts:
+ * email sending is disabled and sendEmail() fails with a clear error.
+ */
 export const initializeEmailService = async () => {
-  if (transporter) return transporter;
+  if (initialized) return client;
+  initialized = true;
 
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,          // ✅ from env
-    port: Number(process.env.SMTP_PORT),  // ✅ from env
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER!,
-      pass: process.env.SMTP_PASS!,
-    },
-  });
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) {
+    logger.warn("RESEND_API_KEY is not set: email sending is disabled");
+    return client;
+  }
 
-  // ✅ DO NOT crash app if SMTP fails
-  transporter.verify()
-    .then(() => logger.info("SMTP ready"))
-    .catch(err => logger.warn({ err: err.message }, "SMTP not available"));
-
-  return transporter;
+  client = new Resend(apiKey);
+  // What emails will be sent with (never the key itself).
+  logger.info({ provider: "resend", from: EMAIL_FROM }, "Email service ready");
+  return client;
 };
 
-export const getTransporter = async () => {
-  if (!transporter) {
-    await initializeEmailService();
-  }
-  return transporter!;
+/** The Resend client, or null when email sending is disabled. */
+export const getEmailClient = async () => {
+  if (!initialized) await initializeEmailService();
+  return client;
 };

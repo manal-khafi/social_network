@@ -72,7 +72,7 @@ Edit `.env`. At minimum:
 
 - for a local run, set `ALLOWED_ORIGINS=http://localhost` and
   `FRONTEND_URL=http://localhost`
-- either fill in the `SMTP_*` values, or set `AUTH_AUTO_VERIFY=true` so new
+- either set `RESEND_API_KEY`, or set `AUTH_AUTO_VERIFY=true` so new
   accounts do not need a verification email (development only)
 
 Then:
@@ -197,14 +197,15 @@ Docker, and `front_end/.env.example` the `VITE_*` ones.
 | `TWO_FACTOR_ENCRYPTION_KEY` | for 2FA | Encrypts stored TOTP secrets; 2FA setup fails without it |
 | `AUTH_AUTO_VERIFY` | no (default `false`) | `true` marks new accounts verified without sending an email. Development only |
 
-### Email (SMTP)
+### Email (Resend)
+
+Emails are sent through [Resend](https://resend.com)'s HTTPS API (hosts such as
+Render's free tier block SMTP).
 
 | Variable | Required | Description |
 |---|---|---|
-| `SMTP_HOST` | for email | SMTP server (e.g. `smtp.gmail.com`) |
-| `SMTP_PORT` | for email | SMTP port (e.g. `587`) |
-| `SMTP_USER` | for email | SMTP username |
-| `SMTP_PASS` | for email | SMTP password or app password |
+| `RESEND_API_KEY` | for email | Resend API key. Without it emails are disabled |
+| `EMAIL_FROM` | no (default `Anmougar <onboarding@resend.dev>`) | Sender. The default only delivers to the Resend account owner's address; use a verified domain to email real users |
 
 Email is needed for sign-up verification (unless `AUTH_AUTO_VERIFY=true`) and
 for password reset.
@@ -341,8 +342,8 @@ Migrations are applied when the backend container starts. Set up TLS (section
   WHERE email = 'you@example.com';
   ```
 
-- **Email verification needs SMTP.** Sign-up fails with 503 if the verification
-  email cannot be sent. Configure `SMTP_*`, or set `AUTH_AUTO_VERIFY=true` in
+- **Email verification needs Resend.** Sign-up fails with 503 if the verification
+  email cannot be sent. Set `RESEND_API_KEY`, or set `AUTH_AUTO_VERIFY=true` in
   development.
 - **Secrets in git history.** Earlier commits contain a Firebase service-account
   key and, per `DEPLOYMENT.md`, a Gmail app password, a JWT secret and a

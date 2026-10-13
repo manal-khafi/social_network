@@ -29,7 +29,7 @@ Fill in `.env`:
 | `TWO_FACTOR_ENCRYPTION_KEY` | 32-byte hex; required for 2FA |
 | `ALLOWED_ORIGINS` | public site URL(s), comma-separated |
 | `FRONTEND_URL` | public site URL – used in verification / reset emails |
-| `SMTP_*` | mail credentials |
+| `RESEND_API_KEY` | Resend API key for outgoing email (`EMAIL_FROM` to set the sender) |
 | `VITE_API_URL` | leave `/api` for the single-server setup |
 | `VITE_FIREBASE_*` | optional; falls back to the bundled project values |
 

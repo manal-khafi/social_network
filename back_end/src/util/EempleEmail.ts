@@ -1,4 +1,5 @@
-import { getTransporter } from "../config/EmailConfig";
+import { EMAIL_FROM, getEmailClient } from "../config/EmailConfig";
+import { logger } from "./logger";
 
 // Public base URL of the frontend, used to build links inside outgoing emails.
 // Falls back to the local dev server so nothing breaks when running locally.
@@ -12,25 +13,31 @@ interface EmailOptions {
 }
 
 export const sendEmail = async (options: EmailOptions) => {
-  try {
-    const transporter = await getTransporter();
-
-    return await transporter.sendMail({
-      from: `"ANMOUGAR" <${process.env.SMTP_USER}>`,
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      text: options.text || options.html.replace(/<[^>]*>/g, ""),
-    });
-  } catch (error) {
-    console.error("❌ Email error:", error);
-    throw error;
+  const client = await getEmailClient();
+  if (!client) {
+    logger.error({ to: options.to }, "Email not sent: RESEND_API_KEY is not set");
+    throw new Error("Email service is not configured");
   }
+
+  // The Resend SDK reports failures in `error` instead of throwing.
+  const { data, error } = await client.emails.send({
+    from: EMAIL_FROM,
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+    text: options.text || options.html.replace(/<[^>]*>/g, ""),
+  });
+
+  if (error) {
+    logger.error(
+      { email: { name: error.name, message: error.message }, from: EMAIL_FROM, to: options.to },
+      "Email could not be sent"
+    );
+    throw new Error(`Email could not be sent: ${error.message}`);
+  }
+
+  return data;
 };
-
-
-
-
 
 export const sendVerificationEmail = async (email: string, username: string, token: string) => {
   const verificationLink = `${FRONTEND_URL}/verify-email?token=${token}`;
