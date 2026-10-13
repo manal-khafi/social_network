@@ -16,6 +16,7 @@ import { Card } from "../ui/card";
 import { Repeat } from "lucide-react";
 import type { Post } from "../../features/posts/postsSlice";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import ShareDialog from "./ShareDialog";
 import EditPostDialog from "./EditPostDialog";
 import ReportPostDialog from "./ReportPostDialog";
@@ -33,6 +34,7 @@ export default function PostCard({ post }: PostCardProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const authUser = useAppSelector((state) => state.auth.user);
   const isOwnPost = authUser?.id === post.userId;
@@ -62,7 +64,7 @@ export default function PostCard({ post }: PostCardProps) {
 
   const handleComment = async () => {
     if (!post.commentsAllowed) {
-      toast.error("Comments are disabled for this post");
+      toast.error(t("posts.commentsDisabled"));
       return;
     }
     const text = comment.trim();
@@ -72,31 +74,31 @@ export default function PostCard({ post }: PostCardProps) {
       await dispatch(createComment({ postId: post.id, content: text })).unwrap();
       setComment("");
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Failed to create comment");
+      toast.error(typeof err === "string" ? err : t("posts.commentCreateFailed"));
     }
   };
 
   const handleRepost = () => {
     dispatch(togglePostRepost(post.id));
-    toast.success(post.isReposted ? "Repost removed" : "Post reposted!");
+    toast.success(post.isReposted ? t("posts.repostRemoved") : t("posts.reposted"));
   };
 
   const handleSave = () => {
     dispatch(togglePostSave(post.id));
-    toast.success(post.isSaved ? "Post unsaved!" : "Post saved!");
+    toast.success(post.isSaved ? t("posts.unsaved") : t("posts.saved"));
   };
 
   const handleBlock = async () => {
-    if (confirm(`Block @${post.username}?`)) {
+    if (confirm(t("posts.blockConfirm", { username: post.username }))) {
       try {
         await dispatch(blockUser(post.userId)).unwrap();
-        toast.success(`Blocked @${post.username}`);
+        toast.success(t("posts.blocked", { username: post.username }));
 
         if (location.pathname.startsWith("/home/profile/")) {
           navigate("/home/feed");
         }
       } catch (error) {
-        toast.error("Failed to block user");
+        toast.error(t("posts.blockFailed"));
         console.error("Error blocking user:", error);
       }
     }
@@ -108,12 +110,12 @@ export default function PostCard({ post }: PostCardProps) {
 
   const handleArchive = () => {
     dispatch(archivePost(post.id));
-    toast.success("Post archived");
+    toast.success(t("posts.archived"));
   };
 
   const handleUnarchive = () => {
     dispatch(unarchivePost(post.id));
-    toast.success("Post unarchived");
+    toast.success(t("posts.unarchived"));
   };
 
   const handleEdit = () => {
@@ -123,7 +125,7 @@ export default function PostCard({ post }: PostCardProps) {
   const handleDeletePost = async () => {
     try {
       await dispatch(deletePost(post.id)).unwrap();
-      toast.success("Post deleted successfully");
+      toast.success(t("posts.deleted"));
     } catch (error: unknown) {
       const message =
         (error &&
@@ -136,7 +138,7 @@ export default function PostCard({ post }: PostCardProps) {
           typeof (error as any).response.data === "object" &&
           "message" in (error as any).response.data)
           ? String((error as any).response.data.message)
-          : "Failed to delete post";
+          : t("posts.deleteFailed");
       toast.error(message);
     }
   };
@@ -179,7 +181,7 @@ export default function PostCard({ post }: PostCardProps) {
         {post.originalPost && (
           <div className="mb-2 text-sm text-muted-foreground flex items-center gap-1">
             <Repeat className="w-4 h-4" />
-            Reposted from @{post.originalPost.username}
+            {t("posts.repostedFrom", { username: post.originalPost.username })}
           </div>
         )}
 

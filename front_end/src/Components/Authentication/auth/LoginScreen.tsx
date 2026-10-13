@@ -14,6 +14,7 @@ import { SocialButton } from "./SocialButton";
 import { handleSocialAuth } from "./socialAuth";
 import { Logo } from "./Logo";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface LoginScreenProps {
   onSwitchToRegister: () => void;
@@ -26,6 +27,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -59,7 +61,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       const data = response.data;
 
       if (!data?.success) {
-        const msg = data?.message || "Login failed";
+        const msg = data?.message || t("auth.loginFailed");
         toast.error(msg);
         dispatch(setAuthError(msg));
         return;
@@ -73,13 +75,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       }
 
       if (!data.token) {
-        const msg = "Login succeeded but missing token in response.";
+        const msg = t("auth.missingToken");
         toast.error(msg);
         dispatch(setAuthError(msg));
         return;
       }
 
-      toast.success(data.message || "Logged in successfully!");
+      toast.success(data.message || t("auth.loginSuccess"));
 
       // ✅ Store BACKEND JWT only. Firebase user is not involved in password login.
       dispatch(setAuth({ token: data.token, user: data.user ?? null }));
@@ -87,7 +89,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       goNextAfterAuth(data.user, data.redirectTo);
     } catch (error: any) {
       const errorMsg =
-        error.response?.data?.message || "Server error. Please try again later.";
+        error.response?.data?.message || t("auth.serverError");
       toast.error(errorMsg);
       dispatch(setAuthError(errorMsg));
     } finally {
@@ -116,18 +118,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       const data = response.data;
 
       if (!data?.success || !data.token) {
-        const msg = data?.message || "Login failed";
+        const msg = data?.message || t("auth.loginFailed");
         toast.error(msg);
         dispatch(setAuthError(msg));
         return;
       }
 
-      toast.success(data.message || "Logged in successfully!");
+      toast.success(data.message || t("auth.loginSuccess"));
       dispatch(setAuth({ token: data.token, user: data.user ?? null }));
       goNextAfterAuth(data.user, data.redirectTo);
     } catch (error: any) {
       const errorMsg =
-        error.response?.data?.message || "Server error. Please try again later.";
+        error.response?.data?.message || t("auth.serverError");
       toast.error(errorMsg);
       dispatch(setAuthError(errorMsg));
       setTwoFactorCode("");
@@ -146,14 +148,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       const data = await handleSocialAuth(provider);
 
       if (!data?.success) {
-        const msg = data?.message || "Social login failed";
+        const msg = data?.message || t("auth.socialLoginFailed");
         toast.error(msg);
         dispatch(setAuthError(msg));
         return;
       }
 
       if (!data.token) {
-        const msg = "Social login succeeded but missing token in response.";
+        const msg = t("auth.socialMissingToken");
         toast.error(msg);
         dispatch(setAuthError(msg));
         return;
@@ -163,10 +165,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       dispatch(setAuth({ token: data.token, user: data.user ?? null }));
 
       goNextAfterAuth(data.user, data.redirectTo);
-      toast.success(`Successfully logged in with ${provider}`);
+      toast.success(t("auth.socialLoginSuccess", { provider }));
     } catch (error: any) {
       const msg =
-        error.response?.data?.message || error.message || "Social login failed";
+        error.response?.data?.message || error.message || t("auth.socialLoginFailed");
       toast.error(msg);
       dispatch(setAuthError(msg));
     } finally {
@@ -186,13 +188,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         <div className="text-center mb-8">
           <Logo />
           <p className="text-gray-600">
-            Enter the 6-digit code from your authenticator app.
+            {t("auth.twoFactorPrompt")}
           </p>
         </div>
 
         <form onSubmit={handleTwoFactorSubmit} className="space-y-5">
           <AuthInput
-            label="Authentication code"
+            label={t("auth.twoFactorCode")}
             type="text"
             inputMode="numeric"
             autoComplete="one-time-code"
@@ -208,7 +210,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           />
 
           <AuthButton variant="primary" isLoading={isLoading} type="submit">
-            Verify
+            {t("auth.verify")}
           </AuthButton>
         </form>
 
@@ -218,7 +220,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             className="text-sm text-[#226d68] hover:text-[#18534f] transition-colors"
             type="button"
           >
-            Back to login
+            {t("auth.backToLogin")}
           </button>
         </div>
       </motion.div>
@@ -241,15 +243,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           transition={{ delay: 0.2 }}
           className="text-gray-600"
         >
-          Welcome back! Please login to your account.
+          {t("auth.welcomeBack")}
         </motion.p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <AuthInput
-          label="Email or Username"
+          label={t("auth.emailOrUsername")}
           type="text"
-          placeholder="Enter your email or username"
+          placeholder={t("auth.emailOrUsernamePlaceholder")}
           value={formData.emailOrUsername}
           onChange={(e) =>
             setFormData({ ...formData, emailOrUsername: e.target.value })
@@ -258,9 +260,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         />
 
         <AuthInput
-          label="Password"
+          label={t("auth.password")}
           type="password"
-          placeholder="Enter your password"
+          placeholder={t("auth.passwordPlaceholder")}
           value={formData.password}
           onChange={(e) =>
             setFormData({ ...formData, password: e.target.value })
@@ -274,18 +276,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             onClick={onSwitchToForgotPassword}
             className="text-sm text-[#226d68] hover:text-[#18534f] transition-colors"
           >
-            Forgot password?
+            {t("auth.forgotPassword")}
           </button>
         </div>
 
         <AuthButton variant="primary" isLoading={isLoading} type="submit">
-          Login
+          {t("auth.login")}
         </AuthButton>
       </form>
 
       <div className="my-6 flex items-center gap-4">
         <div className="flex-1 h-px bg-gray-300" />
-        <span className="text-sm text-gray-500">or</span>
+        <span className="text-sm text-gray-500">{t("auth.or")}</span>
         <div className="flex-1 h-px bg-gray-300" />
       </div>
 
@@ -299,13 +301,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
       <div className="mt-6 text-center">
         <p className="text-gray-600">
-          Don't have an account?{" "}
+          {t("auth.noAccount")}{" "}
           <button
             onClick={onSwitchToRegister}
             className="text-[#d6955b] hover:text-[#c8864d] transition-colors"
             type="button"
           >
-            Sign up
+            {t("auth.signUp")}
           </button>
         </p>
       </div>

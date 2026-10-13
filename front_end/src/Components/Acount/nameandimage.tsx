@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, User, Camera, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface SetupProfileProps {
   onUpdate: (data: { username: string; profileImage: string | null; imageFile: File | null }) => void;
@@ -13,6 +14,7 @@ interface SetupProfileProps {
 }
 
 const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, initialData }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState(initialData?.username || '');
   const [profileImage, setProfileImage] = useState<string | null>(initialData?.profileImage || null);
@@ -35,11 +37,11 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError("The image is too large (max 5MB)");
+        setError(t("onboarding.theImageIsTooLargeMax"));
         return;
       }
       if (!file.type.startsWith('image/')) {
-        setError('Please select an image file');
+        setError(t("onboarding.pleaseSelectAnImageFile"));
         return;
       }
 
@@ -63,12 +65,12 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
     e.preventDefault();
 
     if (!username.trim()) {
-      setError('Choose a username');
+      setError(t("onboarding.chooseAUsername"));
       return;
     }
 
     if (username.length < 3) {
-      setError('Username must be at least 3 characters');
+      setError(t("onboarding.usernameMustBeAtLeast3"));
       return;
     }
 
@@ -79,7 +81,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
       // Data is sent through the onUpdate callback
       onSkip(); // Move to next step
     } catch (error) {
-      setError('Something went wrong, try again!');
+      setError(t("onboarding.somethingWentWrongTryAgain"));
     } finally {
       setLoading(false);
     }
@@ -102,13 +104,13 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
                     <>
                       <img
                         src={profileImage}
-                        alt="Profile preview"
+                        alt={t("onboarding.profilePreview")}
                         className="w-full h-full object-cover"
                       />
                       <button
                         type="button"
                         onClick={handleRemoveImage}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition"
+                        className="absolute top-1 end-1 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition"
                       >
                         ✕
                       </button>
@@ -119,7 +121,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
                 </div>
 
                 {!profileImage && (
-                  <div className="absolute -bottom-2 -right-2 bg-[#18534F] text-white rounded-full p-3 shadow-lg">
+                  <div className="absolute -bottom-2 -end-2 bg-[#18534F] text-white rounded-full p-3 shadow-lg">
                     <Camera className="w-5 h-5" />
                   </div>
                 )}
@@ -131,7 +133,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
                   hover:shadow-lg transition flex items-center gap-2"
                 >
                   <Upload className="w-4 h-4" />
-                  {profileImage ? 'Change photo' : 'Upload a photo'}
+                  {profileImage ? t("profile.changePhoto") : t("onboarding.uploadAPhoto")}
                 </div>
                 <input
                   type="file"
@@ -147,7 +149,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
           <div className="bg-white rounded-xl p-6 border border-[#718197]/10 shadow-sm">
             <h3 className="font-semibold text-[#18534F] mb-4 flex items-center gap-2">
               <User className="w-5 h-5" />
-              Your username
+              {t("onboarding.yourUsername")}
             </h3>
 
             <div className="space-y-3">
@@ -161,7 +163,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
                   }
                 }}
                 readOnly={!!initialData?.username}
-                placeholder="e.g. alex_2024"
+                placeholder={t("onboarding.eGAlex2024")}
                 className={`w-full px-4 py-3 border border-[#718197]/20 rounded-lg 
                   focus:outline-none focus:ring-2 focus:ring-[#18534F]/30 focus:border-[#18534F]
                   placeholder:text-[#718197]/40 ${
@@ -196,7 +198,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
                 hover:bg-white/50 transition flex items-center justify-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back
+              {t("actions.back")}
             </button>
 
             <button
@@ -205,7 +207,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
               className="flex-1 py-3 border border-[#718197]/30 text-[#718197] rounded-lg 
                 hover:bg-white/50 transition"
             >
-              Skip
+              {t("onboarding.skip")}
             </button>
 
             <button
@@ -222,7 +224,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
                 </>
               ) : (
                 <>
-                  Next
+                  {t("actions.next")}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

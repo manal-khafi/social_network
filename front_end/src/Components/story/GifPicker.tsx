@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { X, Search, Loader2 } from "lucide-react";
 import { searchGifs, type GifResult } from "../../api/storiesApi";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   onPick: (gif: GifResult) => void;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function GifPicker({ onPick, onClose }: Props) {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [gifs, setGifs] = useState<GifResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,14 +35,13 @@ export default function GifPicker({ onPick, onClose }: Props) {
   return (
     <div className="absolute inset-0 z-40 bg-black/95 flex flex-col text-white">
       <div className="flex items-center gap-2 p-3 border-b border-white/10">
-        <button onClick={onClose} aria-label="Close"><X className="w-6 h-6" /></button>
-        <span className="font-semibold">GIF</span>
+        <button onClick={onClose} aria-label={t("actions.close")}><X className="w-6 h-6" /></button>
+        <span className="font-semibold">{t("stories.gif")}</span>
       </div>
 
       {!configured ? (
         <div className="flex-1 grid place-items-center p-6 text-center text-sm text-white/60">
-          GIF search isn’t configured. Set <code className="text-white">GIPHY_API_KEY</code> in the
-          backend environment to enable it.
+          {t("stories.gifNotConfigured")}
         </div>
       ) : (
         <>
@@ -51,7 +52,7 @@ export default function GifPicker({ onPick, onClose }: Props) {
                 autoFocus
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search GIPHY"
+                placeholder={t("stories.searchGiphy")}
                 className="flex-1 bg-transparent outline-none text-sm placeholder:text-white/40"
               />
               {loading && <Loader2 className="w-4 h-4 animate-spin text-white/50" />}
@@ -73,7 +74,7 @@ export default function GifPicker({ onPick, onClose }: Props) {
               </button>
             ))}
             {!loading && gifs.length === 0 && (
-              <p className="col-span-3 text-center text-sm text-white/50 py-8">No GIFs</p>
+              <p className="col-span-3 text-center text-sm text-white/50 py-8">{t("stories.noGifs")}</p>
             )}
           </div>
         </>

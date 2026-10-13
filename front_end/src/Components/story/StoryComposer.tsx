@@ -18,6 +18,7 @@ import EmojiStickerPanel from "./components/EmojiStickerPanel";
 import TextOverlayEditor from "./components/TextOverlayEditor";
 import StickerEditor from "./components/StickerEditor";
 import type { Mode } from "./components/types";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   open: boolean;
@@ -29,6 +30,7 @@ interface Props {
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 export default function StoryComposer({ open, onClose, sharedPost = null }: Props) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -123,7 +125,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
       });
       setMode("media");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Upload failed");
+      toast.error(e instanceof Error ? e.message : t("errors.uploadFailed"));
     } finally {
       setUploading(false);
     }
@@ -200,7 +202,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     if (d.kind === "link") {
       const url = d.url.trim();
       if (!/^https?:\/\//i.test(url)) {
-        toast.error("Link must start with http:// or https://");
+        toast.error(t("stories.linkMustStartWithHttpOr"));
         return;
       }
       setOverlays((prev) => [
@@ -219,8 +221,8 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     } else if (d.kind === "poll") {
       const question = d.question.trim();
       const options = d.options.map((o) => o.trim()).filter(Boolean);
-      if (!question) return toast.error("Add a poll question");
-      if (options.length < 2) return toast.error("A poll needs at least two options");
+      if (!question) return toast.error(t("stories.addAPollQuestion"));
+      if (options.length < 2) return toast.error(t("stories.aPollNeedsAtLeastTwo"));
       setOverlays((prev) => [
         ...prev,
         {
@@ -236,7 +238,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
       ]);
     } else {
       const prompt = d.prompt.trim();
-      if (!prompt) return toast.error("Type your question");
+      if (!prompt) return toast.error(t("stories.typeYourQuestion"));
       setOverlays((prev) => [
         ...prev,
         { id: uid(), type: "question", prompt, x: 0.5, y: 0.5, rotation: 0, scale: 1 },
@@ -303,10 +305,10 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
         shared_post_id: sharedPost?.id,
       };
       await dispatch(createStory(payload)).unwrap();
-      toast.success("Story shared");
+      toast.success(t("stories.storyShared"));
       close();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not share story");
+      toast.error(e instanceof Error ? e.message : t("stories.couldNotShareStory"));
     } finally {
       setPosting(false);
     }
@@ -328,8 +330,8 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     <div className="fixed inset-0 z-[100] bg-black text-white flex flex-col">
       {/* top bar */}
       <div className="flex items-center justify-between p-3">
-        <button onClick={close} aria-label="Close"><X className="w-6 h-6" /></button>
-        <span className="text-sm font-semibold">Create story</span>
+        <button onClick={close} aria-label={t("actions.close")}><X className="w-6 h-6" /></button>
+        <span className="text-sm font-semibold">{t("stories.createStory")}</span>
         <div className="w-6" />
       </div>
 

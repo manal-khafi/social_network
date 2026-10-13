@@ -8,7 +8,11 @@ import { Button } from '../../Components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { toast } from 'sonner';
 
+
+import { useTranslation } from 'react-i18next';
+
 export default function BlockedContactsView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   
   // États locaux pour gérer les données et le chargement
@@ -28,10 +32,10 @@ const fetchBlockedList = async () => {
   } catch (err: any) {
     if (!err.response) {
       // Pas de réponse du tout = Serveur éteint ou Mauvaise URL
-      setError("The server is not responding");
+      setError(t("errors.network"));
     } else {
       // Le serveur a répondu mais avec une erreur (401, 404, 500)
-      setError(`Error ${err.response.status}: ${err.response.data.message}`);
+      setError(t("errors.withStatus", { status: err.response.status, message: err.response.data.message }));
     }
     console.error("Error details:", err);
   } finally {
@@ -47,11 +51,11 @@ const fetchBlockedList = async () => {
         data: { blockedUserId: userId },
       });
       
-      toast.success(`@${username} unblocked`);
+      toast.success(t("settings.userUnblocked", { username }));
       // Mettre à jour la liste locale après succès
       setBlockedUsers(prev => prev.filter(user => user.id !== userId));
     } catch (err) {
-      toast.error("Failed to unblock");
+      toast.error(t("settings.failedToUnblock"));
     }
   };
 
@@ -66,16 +70,16 @@ const fetchBlockedList = async () => {
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-bold">Blocked Contacts</h1>
+        <h1 className="text-xl font-bold">{t("settings.blocked")}</h1>
       </div>
 
       <div className="p-4 space-y-4 max-w-2xl mx-auto pb-24">
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold flex items-center gap-2 text-lg">
             <UserX className="w-5 h-5" />
-            Blocked Accounts
+            {t("settings.blockedAccounts")}
             {!loading && (
-              <span className="ml-auto text-sm bg-muted px-2 py-0.5 rounded-full">
+              <span className="ms-auto text-sm bg-muted px-2 py-0.5 rounded-full">
                 {blockedUsers.length}
               </span>
             )}
@@ -89,7 +93,7 @@ const fetchBlockedList = async () => {
               <AlertCircle /> {error}
             </div>
           ) : blockedUsers.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">No blocked accounts found.</p>
+            <p className="text-sm text-muted-foreground text-center py-6">{t("settings.noBlockedAccountsFound")}</p>
           ) : (
             <div className="space-y-3">
               {blockedUsers.map((user) => (
@@ -110,7 +114,7 @@ const fetchBlockedList = async () => {
                     className="hover:bg-destructive hover:text-destructive-foreground"
                     onClick={() => handleUnblock(user.id, user.username)}
                   >
-                    Unblock
+                    {t("settings.unblock")}
                   </Button>
                 </div>
               ))}

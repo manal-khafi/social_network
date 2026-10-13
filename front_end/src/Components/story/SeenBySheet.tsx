@@ -7,6 +7,7 @@ import {
   type StoryReactionEntry,
 } from "../../api/storiesApi";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   storyId: string;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function SeenBySheet({ storyId, viewCount, onClose }: Props) {
+  const { t } = useTranslation();
   const [views, setViews] = useState<StoryViewEntry[]>([]);
   const [reactionByUser, setReactionByUser] = useState<Record<string, string>>({});
   const [summary, setSummary] = useState<Record<string, number>>({});
@@ -45,7 +47,7 @@ export default function SeenBySheet({ storyId, viewCount, onClose }: Props) {
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <div className="flex items-center gap-2">
             <Eye className="w-4 h-4" />
-            <span className="font-semibold">{viewCount} views</span>
+            <span className="font-semibold">{t("stories.viewsCount", { count: viewCount })}</span>
             {Object.entries(summary).map(([emoji, n]) => (
               <span key={emoji} className="text-sm text-white/70">
                 {emoji} {n}
@@ -62,7 +64,7 @@ export default function SeenBySheet({ storyId, viewCount, onClose }: Props) {
             </div>
           )}
           {!loading && views.length === 0 && (
-            <p className="text-center text-sm text-white/50 py-10">No views yet</p>
+            <p className="text-center text-sm text-white/50 py-10">{t("stories.noViewers")}</p>
           )}
           {views.map((v) => (
             <div key={v.id} className="flex items-center gap-3 p-2">

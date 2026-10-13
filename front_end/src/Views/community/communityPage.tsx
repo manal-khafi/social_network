@@ -11,6 +11,7 @@ import { AboutTab } from "./components/AboutTab";
 import { JoinRequestsSection } from "./components/JoinRequestsSection";
 import { RulesManager } from "./components/RulesManager";
 import { SettingsTab } from "./components/SettingsTab";
+import { useTranslation } from "react-i18next";
 
 interface CommunityPageProps {
   communityId: string | number;
@@ -20,13 +21,14 @@ interface CommunityPageProps {
 // Shell of the community page: data and actions come from useCommunityPage,
 // each visual section lives in ./components.
 export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
+  const { t } = useTranslation();
   const page = useCommunityPage(communityId);
   const { community } = page;
 
   if (page.loading) {
     return (
       <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
-        <p className="text-gray-600">Loading community...</p>
+        <p className="text-gray-600">{t("communities.loadingCommunity")}</p>
       </div>
     );
   }
@@ -35,10 +37,10 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
     return (
       <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Community not found</p>
+          <p className="text-gray-600 mb-4">{t("communities.notFound")}</p>
           <Button onClick={onBack} className="bg-[#d6955b] hover:bg-[#c5844a] text-white">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            <ArrowLeft className="me-2 h-4 w-4" />
+            {t("actions.back")}
           </Button>
         </div>
       </div>
@@ -51,7 +53,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
       <CommunityBanner community={community} />
 
       {/* Community Info */}
-      <div className="px-3 sm:px-4 lg:px-8 py-8 pl-[70px] pr-[70px]">
+      <div className="px-3 sm:px-4 lg:px-8 py-8 ps-[70px] pe-[70px]">
         <CommunityInfoCard
           community={community}
           members={page.members}
@@ -73,23 +75,23 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
         <Tabs defaultValue="members" className="pb-12">
           <TabsList className={`w-full h-11 sm:h-12 bg-white border-2 shadow-sm grid ${page.isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="members" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
-              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Members
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
+              {t("communities.members")}
             </TabsTrigger>
             <TabsTrigger value="about" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
-              <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              About
+              <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
+              {t("communities.about")}
             </TabsTrigger>
             {page.isAdmin && (
               <TabsTrigger value="admin" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
-                <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                Admin
+                <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
+                {t("communities.admin")}
               </TabsTrigger>
             )}
             {page.isAdmin && (
               <TabsTrigger value="settings" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
-                <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                Settings
+                <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
+                {t("nav.settings")}
               </TabsTrigger>
             )}
           </TabsList>
@@ -166,6 +168,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
 
 // Wrapper component to read route params and provide a fallback back-navigation
 export function CommunityPageWrapper({ onBack }: { onBack?: () => void }) {
+  const { t } = useTranslation();
   const { communityId } = useParams<{ communityId: string }>();
   const navigate = useNavigate();
 
@@ -173,10 +176,10 @@ export function CommunityPageWrapper({ onBack }: { onBack?: () => void }) {
     return (
       <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Community not found</p>
+          <p className="text-gray-600 mb-4">{t("communities.notFound")}</p>
           <Button onClick={() => navigate('/community/list')} className="bg-[#d6955b] hover:bg-[#c5844a] text-white">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to communities
+            <ArrowLeft className="me-2 h-4 w-4" />
+            {t("communities.backToCommunities")}
           </Button>
         </div>
       </div>

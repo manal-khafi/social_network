@@ -8,9 +8,11 @@ import { PATHS } from '../../routes/paths';
 import { Skeleton } from '../ui/skeleton';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
+import { useTranslation } from 'react-i18next';
 
 export default function DesktopSidebar() {
   const location = useLocation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useAppDispatch();
@@ -24,12 +26,12 @@ export default function DesktopSidebar() {
   const user = currentUser ?? authUser;
 
   const navItems = [
-    { path: PATHS.FEED, icon: Home, label: 'Home' },
-    { path: PATHS.COMMUNITY, icon: Users, label: 'Community' },
-    { path: PATHS.CREATE_POST, icon: PlusCircle, label: 'Create' },
-    { path: PATHS.INBOX, icon: Mail, label: 'Inbox', badge: unreadConversations },
-    { path: PATHS.NOTIFICATIONS, icon: Heart, label: 'Notifications', badge: unreadCount },
-    { path: PATHS.PROFILE_ME, icon: User, label: 'Profile' },
+    { path: PATHS.FEED, icon: Home, label: t('nav.home') },
+    { path: PATHS.COMMUNITY, icon: Users, label: t('nav.community') },
+    { path: PATHS.CREATE_POST, icon: PlusCircle, label: t('nav.create') },
+    { path: PATHS.INBOX, icon: Mail, label: t('nav.inbox'), badge: unreadConversations },
+    { path: PATHS.NOTIFICATIONS, icon: Heart, label: t('nav.notifications'), badge: unreadCount },
+    { path: PATHS.PROFILE_ME, icon: User, label: t('nav.profile') },
   ];
 
   const handleLogout = () => {
@@ -53,7 +55,7 @@ export default function DesktopSidebar() {
 
   return (
     <aside
-      className="group hidden lg:flex h-screen w-20 flex-col border-r border-border bg-card sticky top-0 transition-all duration-200 hover:w-80"
+      className="group hidden lg:flex h-screen w-20 flex-col border-e border-border bg-card sticky top-0 transition-all duration-200 hover:w-80"
     >
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-center group-hover:justify-between">
@@ -95,15 +97,15 @@ export default function DesktopSidebar() {
       {/* Search Bar */}
       <div className="hidden p-3 group-hover:block">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={query}
             onFocus={() => {
               if (!isSearchPage) navigate(PATHS.SEARCH);
             }}
             onChange={(event) => handleSearchChange(event.target.value)}
-            placeholder="Search"
-            className="h-9 rounded-full pl-9 bg-muted/60 border-none focus-visible:ring-0"
+            placeholder={t('nav.search')}
+            className="h-9 rounded-full ps-9 bg-muted/60 border-none focus-visible:ring-0"
           />
         </div>
       </div>
@@ -129,7 +131,7 @@ export default function DesktopSidebar() {
                 <div className="relative">
                   <Icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} />
                   {item.badge > 0 && (
-                     <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">
+                     <Badge className="absolute -top-1 -end-1 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">
                        {item.badge > 9 ? '9+' : item.badge}
                      </Badge>
                   )}
@@ -144,7 +146,7 @@ export default function DesktopSidebar() {
         <div className="mt-6 pt-6 border-t border-border space-y-2">
           <Link
             to={PATHS.SETTINGS}
-            title="Settings"
+            title={t('nav.settings')}
             className={`flex items-center justify-center px-2 py-3 rounded-lg transition-all group-hover:justify-start group-hover:gap-4 group-hover:px-4 ${
               location.pathname.startsWith(PATHS.SETTINGS)
                 ? 'bg-primary text-primary-foreground'
@@ -152,16 +154,16 @@ export default function DesktopSidebar() {
             }`}
           >
             <Settings className={`w-6 h-6 ${location.pathname.startsWith(PATHS.SETTINGS) ? 'fill-current' : ''}`} />
-            <span className="hidden font-medium group-hover:inline">Settings</span>
+            <span className="hidden font-medium group-hover:inline">{t('nav.settings')}</span>
           </Link>
 
           <button
             onClick={handleLogout}
-            title="Log out"
+            title={t('nav.logout')}
             className="w-full flex items-center justify-center px-2 py-3 rounded-lg transition-all hover:bg-muted text-foreground group-hover:justify-start group-hover:gap-4 group-hover:px-4"
           >
             <LogOut className="w-6 h-6" />
-            <span className="hidden font-medium group-hover:inline">Log out</span>
+            <span className="hidden font-medium group-hover:inline">{t('nav.logout')}</span>
           </button>
         </div>
       </nav>
@@ -170,8 +172,8 @@ export default function DesktopSidebar() {
       <div className="hidden p-4 border-t border-border group-hover:block">
         {user ? (
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>{Number(user.followersCount ?? 0).toLocaleString()} Followers</span>
-            <span>{Number(user.followingCount ?? 0).toLocaleString()} Following</span>
+            <span>{Number(user.followersCount ?? 0).toLocaleString()} {t('nav.followers')}</span>
+            <span>{Number(user.followingCount ?? 0).toLocaleString()} {t('nav.following')}</span>
           </div>
         ) : (
           <div className="flex items-center justify-between">

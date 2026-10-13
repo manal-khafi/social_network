@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { formatTime } from "../../../utils/timeUtils";
 import { useTimeTicker } from "../../../hooks/useTimeTicker";
 import { PATHS } from "../../../routes/paths";
+import { useTranslation } from "react-i18next";
 
 interface CommentItemProps {
   comment: Comment;
@@ -37,6 +38,7 @@ export default function CommentItem({
   commentsAllowed,
 }: CommentItemProps) {
   useTimeTicker();
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { user: authUser } = useAppSelector((state) => state.auth);
 
@@ -64,7 +66,7 @@ export default function CommentItem({
 
   const handleReply = () => {
     if (!commentsAllowed) {
-      toast.error("Comments are disabled for this post");
+      toast.error(t("posts.commentsDisabled"));
       return;
     }
     if (replyText.trim()) {
@@ -83,11 +85,11 @@ export default function CommentItem({
   const handleDelete = async () => {
     if (!canDelete) return;
 
-    if (window.confirm("Are you sure you want to delete this comment?")) {
+    if (window.confirm(t("posts.deleteCommentConfirm"))) {
       try {
         await dispatch(deleteComment({ postId, commentId: comment.id })).unwrap();
       } catch (err) {
-        toast.error(typeof err === "string" ? err : "Failed to delete comment");
+        toast.error(typeof err === "string" ? err : t("posts.commentDeleteFailed"));
       }
     }
   };
@@ -97,7 +99,7 @@ export default function CommentItem({
 
     const next = editText.trim();
     if (!next) {
-      toast.error("Comment can't be empty");
+      toast.error(t("posts.commentEmpty"));
       return;
     }
 
@@ -111,7 +113,7 @@ export default function CommentItem({
       await dispatch(updateComment({ postId, commentId: comment.id, content: next })).unwrap();
       setIsEditing(false);
     } catch (err) {
-      toast.error(typeof err === "string" ? err : "Failed to update comment");
+      toast.error(typeof err === "string" ? err : t("posts.commentUpdateFailed"));
     }
   };
 
@@ -121,7 +123,7 @@ export default function CommentItem({
   };
 
   return (
-    <div className={isReply ? "ml-12" : ""}>
+    <div className={isReply ? "ms-12" : ""}>
       <div className="flex gap-3 py-3">
         <Link to={profilePath}>
           <Avatar className="w-8 h-8">
@@ -147,10 +149,10 @@ export default function CommentItem({
               />
               <div className="flex gap-2 mt-2">
                 <Button onClick={handleSaveEdit} size="sm">
-                  Save
+                  {t("actions.save")}
                 </Button>
                 <Button onClick={handleCancelEdit} size="sm" variant="outline">
-                  Cancel
+                  {t("actions.cancel")}
                 </Button>
               </div>
             </div>
@@ -175,7 +177,7 @@ export default function CommentItem({
                   onClick={handleLike}
                   className="text-xs text-muted-foreground hover:text-red-500 transition-colors"
                 >
-                  {comment.isLiked ? "Liked" : "Like"}
+                  {comment.isLiked ? t("posts.liked") : t("posts.like")}
                   {comment.likes > 0 && ` · ${comment.likes}`}
                 </button>
 
@@ -184,7 +186,7 @@ export default function CommentItem({
                     onClick={() => setShowReplyInput((v) => !v)}
                     className="text-xs text-muted-foreground hover:text-primary transition-colors"
                   >
-                    Reply
+                    {t("posts.reply")}
                   </button>
                 )}
 
@@ -193,7 +195,7 @@ export default function CommentItem({
                     onClick={() => setIsEditing(true)}
                     className="text-xs text-muted-foreground hover:text-primary transition-colors"
                   >
-                    Edit
+                    {t("actions.edit")}
                   </button>
                 )}
 
@@ -202,7 +204,7 @@ export default function CommentItem({
                     onClick={handleDelete}
                     className="text-xs text-muted-foreground hover:text-destructive transition-colors"
                   >
-                    Delete
+                    {t("actions.delete")}
                   </button>
                 )}
               </div>
@@ -216,14 +218,14 @@ export default function CommentItem({
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleReply()}
-                  placeholder={`Reply to ${comment.username}...`}
-                  className="h-8 text-sm pr-10"
+                  placeholder={t("posts.replyTo", { username: comment.username })}
+                  className="h-8 text-sm pe-10"
                   autoFocus
                 />
 
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full">
+                    <button className="absolute end-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full">
                       <Smile className="w-3 h-3 text-muted-foreground" />
                     </button>
                   </PopoverTrigger>
@@ -244,7 +246,7 @@ export default function CommentItem({
                 size="sm"
                 className="bg-[#d6955b] hover:bg-[#c58549] h-8"
               >
-                Reply
+                {t("posts.reply")}
               </Button>
             </div>
           )}

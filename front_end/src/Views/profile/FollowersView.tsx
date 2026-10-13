@@ -6,6 +6,7 @@ import { Card } from "../../Components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "../../Components/ui/avatar";
 import { Button } from "../../Components/ui/button";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface FollowersViewProps {
   type: "followers" | "following";
@@ -15,6 +16,7 @@ export default function FollowersView({ type }: FollowersViewProps) {
   const dispatch = useAppDispatch();
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { followers, following } = useAppSelector((state) => state.user);
   const authUser = useAppSelector((state) => state.auth.user);
   const myUserId = authUser?.id;
@@ -38,23 +40,23 @@ export default function FollowersView({ type }: FollowersViewProps) {
       const result = await dispatch(toggleFollow(targetUserId)).unwrap();
 
       if (result.followRequestPending || (isPrivate && !result.isFollowing)) {
-        toast.success("Follow request sent");
+        toast.success(t("profile.followRequestSent"));
       } else if (result.isFollowing) {
-        toast.success("Following user");
+        toast.success(t("profile.followingUser"));
       } else {
-        toast.success("Unfollowed user");
+        toast.success(t("profile.unfollowedUser"));
       }
 
       refreshList();
     } catch (e: any) {
-      toast.error(typeof e === "string" ? e : "Failed to update follow");
+      toast.error(typeof e === "string" ? e : t("profile.followUpdateFailed"));
     }
   };
 
   const getButtonLabel = (u: any) => {
-    if (u.followRequestPending) return "Requested";
-    if (u.isFollowing) return "Unfollow";
-    return "Follow";
+    if (u.followRequestPending) return t("profile.requested");
+    if (u.isFollowing) return t("profile.unfollow");
+    return t("profile.follow");
   };
 
   const isDisabled = (u: any) => !!u.followRequestPending;
@@ -62,7 +64,7 @@ export default function FollowersView({ type }: FollowersViewProps) {
   return (
     <div className="p-4">
       <h2 className="text-xl font-semibold mb-4">
-        {type === "followers" ? "Followers" : "Following"}
+        {type === "followers" ? t("profile.followers") : t("profile.following")}
       </h2>
 
       <div className="space-y-2">

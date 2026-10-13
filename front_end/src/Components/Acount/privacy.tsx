@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, Globe, Lock, Sparkles } from 'lucide-react';
+import { Trans, useTranslation } from 'react-i18next';
 
 interface PrivacySettingsProps {
   onSelect: (privacy: {
@@ -24,6 +25,7 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
   onComplete,
   selectedValue,
 }) => {
+  const { t } = useTranslation();
   const [privacyType, setPrivacyType] = useState<'public' | 'private' | null>(
     selectedValue?.type || null
   );
@@ -32,9 +34,9 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
   const privacyOptions = [
     {
       id: 'public',
-      label: 'Public Account',
+      label: t("onboarding.publicAccount"),
       icon: <Globe className="w-7 h-7" />,
-      description: 'Anyone can see your profile and posts',
+      description: t("onboarding.anyoneCanSeeYourProfileAnd"),
       color: 'from-[#18534F] to-[#718197]',
       bgColor: 'bg-gradient-to-br from-[#ECF8F6] to-blue-50',
       borderColor: 'border-[#18534F]/30',
@@ -47,9 +49,9 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
     },
     {
       id: 'private',
-      label: 'Private Account',
+      label: t("privacy.privateAccount"),
       icon: <Lock className="w-7 h-7" />,
-      description: 'Only approved followers can see your posts',
+      description: t("onboarding.onlyApprovedFollowersCanSeeYour"),
       color: 'from-[#D6955B] to-[#FEEAA1]',
       bgColor: 'bg-gradient-to-br from-amber-50 to-[#FEEAA1]/30',
       borderColor: 'border-[#D6955B]/40',
@@ -118,10 +120,10 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-2xl font-bold text-[#18534F] mb-3">
-            Account Privacy
+            {t("onboarding.accountPrivacy")}
           </h1>
           <p className="text-[#718197]">
-            Choose who can see your information and posts
+            {t("onboarding.chooseWhoCanSeeYourInformation")}
           </p>
         </div>
 
@@ -137,7 +139,7 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
                   : 'border-[#718197]/20 hover:border-[#18534F]/40 hover:shadow-lg'
               } ${option.bgColor}`}
             >
-              <div className="text-left h-full flex flex-col">
+              <div className="text-start h-full flex flex-col">
                 {/* Icon + title */}
                 <div className="flex items-start justify-between mb-4">
                   <div
@@ -181,7 +183,7 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
                   {option.features.map((feature, index) => (
                     <div key={index} className="flex items-center">
                       <div
-                        className={`w-2 h-2 rounded-full mr-3 ${
+                        className={`w-2 h-2 rounded-full me-3 ${
                           option.id === 'public'
                             ? 'bg-[#18534F]'
                             : 'bg-[#D6955B]'
@@ -199,7 +201,7 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
                       : 'bg-white/50 text-[#718197]'
                   }`}
                 >
-                  {privacyType === option.id ? '✓ Selected' : 'Select'}
+                  {privacyType === option.id ? '✓ Selected' : t("onboarding.select")}
                 </div>
               </div>
             </button>
@@ -214,14 +216,16 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
             </div>
             <div>
               <h4 className="font-medium text-[#18534F] mb-1">
-                Our recommendation
+                {t("onboarding.ourRecommendation")}
               </h4>
               <p className="text-sm text-[#718197]">
-                Start with a{' '}
-                <span className="font-bold text-[#18534F]">Public</span> account
-                to make friends easily. You can switch to{' '}
-                <span className="font-bold text-[#D6955B]">Private</span> anytime
-                in your settings.
+                <Trans
+                  i18nKey="onboarding.privacyRecommendation"
+                  components={{
+                    pub: <span className="font-bold text-[#18534F]" />,
+                    priv: <span className="font-bold text-[#D6955B]" />,
+                  }}
+                />
               </p>
             </div>
           </div>
@@ -235,7 +239,7 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
               hover:bg-white/50 transition flex items-center justify-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            {t("actions.back")}
           </button>
 
           <button
@@ -257,7 +261,7 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
               'Processing...'
             ) : (
               <>
-                Next
+                {t("actions.next")}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

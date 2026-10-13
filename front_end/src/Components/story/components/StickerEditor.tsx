@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { X, Trash2 } from "lucide-react";
 import type { StickerDraft } from "./types";
+import { useTranslation } from "react-i18next";
 
 interface StickerEditorProps {
   stickerDraft: StickerDraft;
@@ -14,18 +15,19 @@ export default function StickerEditor({
   setStickerDraft,
   commitSticker,
 }: StickerEditorProps) {
+  const { t } = useTranslation();
   return (
     <div className="absolute inset-0 z-40 bg-black/85 flex flex-col text-white">
       <div className="flex items-center justify-between p-3 border-b border-white/10">
-        <button onClick={() => setStickerDraft(null)} aria-label="Cancel">
+        <button onClick={() => setStickerDraft(null)} aria-label={t("actions.cancel")}>
           <X className="w-6 h-6" />
         </button>
-        <span className="font-semibold capitalize">{stickerDraft.kind} sticker</span>
+        <span className="font-semibold">{t(`stories.stickerKind.${stickerDraft.kind}`)}</span>
         <button
           onClick={commitSticker}
           className="text-sm font-semibold text-sky-400 px-2"
         >
-          Add
+          {t("actions.add")}
         </button>
       </div>
 
@@ -48,7 +50,7 @@ export default function StickerEditor({
                 onChange={(e) =>
                   setStickerDraft((d) => (d ? { ...d, label: e.target.value } : d))
                 }
-                placeholder="Button text (optional)"
+                placeholder={t("stories.buttonTextOptional")}
                 maxLength={30}
                 className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40"
               />
@@ -63,7 +65,7 @@ export default function StickerEditor({
                 onChange={(e) =>
                   setStickerDraft((d) => (d ? { ...d, question: e.target.value } : d))
                 }
-                placeholder="Ask a question…"
+                placeholder={t("stories.askAQuestion")}
                 maxLength={120}
                 className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm font-semibold outline-none placeholder:text-white/40"
               />
@@ -81,7 +83,7 @@ export default function StickerEditor({
                           : d
                       )
                     }
-                    placeholder={`Option ${i + 1}`}
+                    placeholder={t("stories.optionN", { n: i + 1 })}
                     maxLength={40}
                     className="flex-1 rounded-xl bg-white/10 px-4 py-2.5 text-sm outline-none placeholder:text-white/40"
                   />
@@ -93,7 +95,7 @@ export default function StickerEditor({
                         )
                       }
                       className="p-2 text-white/60"
-                      aria-label="Remove option"
+                      aria-label={t("stories.removeOption")}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -120,7 +122,7 @@ export default function StickerEditor({
               onChange={(e) =>
                 setStickerDraft((d) => (d ? { ...d, prompt: e.target.value } : d))
               }
-              placeholder="Ask your followers something…"
+              placeholder={t("stories.askYourFollowersSomething")}
               maxLength={200}
               className="w-full rounded-xl bg-white/10 px-4 py-3 text-base font-semibold outline-none placeholder:text-white/40 resize-none min-h-[96px]"
             />
@@ -132,7 +134,7 @@ export default function StickerEditor({
         onClick={commitSticker}
         className="m-4 rounded-full bg-white text-black font-semibold py-2.5"
       >
-        Add to story
+        {t("stories.addToStory")}
       </button>
     </div>
   );

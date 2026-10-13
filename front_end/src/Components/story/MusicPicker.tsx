@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, Play, Pause, Loader2, Music2, X } from "lucide-react";
 import { searchMusic, type MusicTrack } from "../../api/storiesApi";
+import { useTranslation } from "react-i18next";
 
 export interface SelectedMusic extends MusicTrack {
   start_sec: number;
@@ -15,6 +16,7 @@ interface Props {
 const CLIP_LENGTH = 15; // seconds shown on a story
 
 export default function MusicPicker({ value, onChange, onClose }: Props) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MusicTrack[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,16 +32,16 @@ export default function MusicPicker({ value, onChange, onClose }: Props) {
     }
     setLoading(true);
     setError(null);
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
         setResults(await searchMusic(term));
       } catch {
-        setError("Music search failed, try again");
+        setError(t("stories.musicSearchFailedTryAgain"));
       } finally {
         setLoading(false);
       }
     }, 350);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [query]);
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export default function MusicPicker({ value, onChange, onClose }: Props) {
     audio.currentTime = fromSec;
     audio.play().then(
       () => setPreviewingId(track.track_id),
-      () => setError("Preview unavailable")
+      () => setError(t("stories.previewUnavailable"))
     );
     audio.onended = () => setPreviewingId(null);
   };
@@ -78,7 +80,7 @@ export default function MusicPicker({ value, onChange, onClose }: Props) {
     <div className="absolute inset-0 z-40 flex flex-col bg-black/95 text-white">
       <div className="flex items-center gap-2 p-3 border-b border-white/10">
         <button onClick={onClose} className="p-1"><X className="w-6 h-6" /></button>
-        <span className="font-semibold">Music</span>
+        <span className="font-semibold">{t("stories.music")}</span>
       </div>
 
       {value ? (
@@ -123,13 +125,13 @@ export default function MusicPicker({ value, onChange, onClose }: Props) {
               onClick={() => onChange(null)}
               className="flex-1 py-2 rounded-lg bg-white/10 text-sm"
             >
-              Remove
+              {t("actions.remove")}
             </button>
             <button
               onClick={onClose}
               className="flex-1 py-2 rounded-lg bg-white text-black font-semibold text-sm"
             >
-              Done
+              {t("actions.done")}
             </button>
           </div>
         </div>
@@ -142,7 +144,7 @@ export default function MusicPicker({ value, onChange, onClose }: Props) {
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search songs & artists"
+            placeholder={t("stories.searchSongsArtists")}
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-white/50"
           />
           {loading && <Loader2 className="w-4 h-4 animate-spin text-white/60" />}
@@ -171,14 +173,14 @@ export default function MusicPicker({ value, onChange, onClose }: Props) {
                 )}
               </span>
             </button>
-            <button onClick={() => pick(track)} className="min-w-0 flex-1 text-left">
+            <button onClick={() => pick(track)} className="min-w-0 flex-1 text-start">
               <p className="text-sm font-medium truncate">{track.title}</p>
               <p className="text-xs text-white/55 truncate">{track.artist}</p>
             </button>
           </div>
         ))}
         {!loading && query.trim().length >= 2 && results.length === 0 && !error && (
-          <p className="text-center text-sm text-white/50 mt-8">No results</p>
+          <p className="text-center text-sm text-white/50 mt-8">{t("stories.noResults")}</p>
         )}
       </div>
     </div>

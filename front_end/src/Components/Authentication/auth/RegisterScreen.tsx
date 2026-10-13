@@ -10,6 +10,7 @@ import { SocialButton } from "./SocialButton";
 import { handleSocialAuth } from "./socialAuth";
 import { Logo } from "./Logo";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface RegisterScreenProps {
   onSwitchToLogin: () => void;
@@ -18,6 +19,7 @@ interface RegisterScreenProps {
 export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -37,11 +39,11 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
     const newErrors: Record<string, string> = {};
 
     if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+      newErrors.password = t("auth.passwordTooShort");
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = t("auth.passwordsDontMatch");
     }
 
     setErrors(newErrors);
@@ -68,22 +70,21 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
       const data = response.data;
 
       if (!data?.success) {
-        const msg = data?.message || "Registration failed. Please try again.";
+        const msg = data?.message || t("auth.registrationFailed");
         toast.error(msg);
         dispatch(setAuthError(msg));
         return;
       }
 
       toast.success(
-        data.message ||
-          "Account created successfully! Please check your email to verify your account."
+        data.message || t("auth.registrationSuccess")
       );
 
       // Registration flow: you may require email verification then login
       onSwitchToLogin();
     } catch (error: any) {
       const errorMsg =
-        error.response?.data?.message || "Server error. Please try again later.";
+        error.response?.data?.message || t("auth.serverError");
       toast.error(errorMsg);
       dispatch(setAuthError(errorMsg));
       console.error("Registration error:", error);
@@ -100,14 +101,14 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
       const data = await handleSocialAuth(provider);
 
       if (!data?.success) {
-        const msg = "Social registration failed";
+        const msg = t("auth.socialRegistrationFailed");
         toast.error(msg);
         dispatch(setAuthError(msg));
         return;
       }
 
       if (!data.token) {
-        const msg = "Social auth succeeded but missing token in response.";
+        const msg = t("auth.socialMissingToken");
         toast.error(msg);
         dispatch(setAuthError(msg));
         return;
@@ -117,10 +118,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
       dispatch(setAuth({ token: data.token, user: data.user ?? null }));
 
       goNextAfterAuth(data.user);
-      toast.success(`Successfully signed up with ${provider}`);
+      toast.success(t("auth.socialSignupSuccess", { provider }));
     } catch (error: any) {
       const msg =
-        error.response?.data?.message || error.message || "Social registration failed";
+        error.response?.data?.message || error.message || t("auth.socialRegistrationFailed");
       toast.error(msg);
       dispatch(setAuthError(msg));
     } finally {
@@ -144,15 +145,15 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
           transition={{ delay: 0.2 }}
           className="text-gray-600"
         >
-          Join our community today!
+          {t("auth.joinCommunity")}
         </motion.p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <AuthInput
-          label="Username (Unique)"
+          label={t("auth.usernameUnique")}
           type="text"
-          placeholder="Choose a unique username"
+          placeholder={t("auth.usernamePlaceholder")}
           value={formData.username}
           onChange={(e) =>
             setFormData({
@@ -164,9 +165,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
         />
 
         <AuthInput
-          label="Full Name"
+          label={t("auth.fullName")}
           type="text"
-          placeholder="Enter your full name"
+          placeholder={t("auth.fullNamePlaceholder")}
           value={formData.display_name}
           onChange={(e) =>
             setFormData({ ...formData, display_name: e.target.value })
@@ -175,18 +176,18 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
         />
 
         <AuthInput
-          label="Email"
+          label={t("auth.email")}
           type="email"
-          placeholder="Enter your email"
+          placeholder={t("auth.emailPlaceholder")}
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           required
         />
 
         <AuthInput
-          label="Password"
+          label={t("auth.password")}
           type="password"
-          placeholder="Create a password"
+          placeholder={t("auth.createPasswordPlaceholder")}
           value={formData.password}
           onChange={(e) => {
             setFormData({ ...formData, password: e.target.value });
@@ -197,9 +198,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
         />
 
         <AuthInput
-          label="Confirm Password"
+          label={t("auth.confirmPassword")}
           type="password"
-          placeholder="Confirm your password"
+          placeholder={t("auth.confirmPasswordPlaceholder")}
           value={formData.confirmPassword}
           onChange={(e) => {
             setFormData({ ...formData, confirmPassword: e.target.value });
@@ -212,18 +213,18 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
         />
 
         <AuthInput
-          label="Address"
+          label={t("auth.address")}
           type="text"
-          placeholder="Enter your address"
+          placeholder={t("auth.addressPlaceholder")}
           value={formData.adresse}
           onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
           required
         />
 
         <AuthInput
-          label="Date of birth"
+          label={t("auth.dateOfBirth")}
           type="date"
-          placeholder="Enter your date of birth"
+          placeholder={t("auth.dateOfBirthPlaceholder")}
           value={formData.date_of_birth}
           onChange={(e) =>
             setFormData({ ...formData, date_of_birth: e.target.value })
@@ -232,13 +233,13 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
         />
 
         <AuthButton variant="primary" isLoading={isLoading} type="submit">
-          Create Account
+          {t("auth.register")}
         </AuthButton>
       </form>
 
       <div className="my-6 flex items-center gap-4">
         <div className="flex-1 h-px bg-gray-300" />
-        <span className="text-sm text-gray-500">or</span>
+        <span className="text-sm text-gray-500">{t("auth.or")}</span>
         <div className="flex-1 h-px bg-gray-300" />
       </div>
 
@@ -249,13 +250,13 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
 
       <div className="mt-6 text-center">
         <p className="text-gray-600">
-          Already have an account?{" "}
+          {t("auth.haveAccount")}{" "}
           <button
             onClick={onSwitchToLogin}
             className="text-[#d6955b] hover:text-[#c8864d] transition-colors"
             type="button"
           >
-            Login
+            {t("auth.login")}
           </button>
         </p>
       </div>

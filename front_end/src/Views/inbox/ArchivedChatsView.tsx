@@ -3,8 +3,10 @@ import { useAppSelector } from '../../hooks';
 import { Card } from '../../Components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { Archive } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function ArchivedChatsView() {
+  const { t } = useTranslation();
   const { conversations } = useAppSelector((state) => state.messages);
   const archivedChats = conversations.filter(c => c.isArchived);
 
@@ -12,13 +14,13 @@ export default function ArchivedChatsView() {
     <div className="p-4 space-y-4 max-w-2xl mx-auto pb-24">
       <div className="flex items-center gap-3 mb-4">
         <Archive className="w-6 h-6" />
-        <h1 className="text-2xl font-bold">Archived Chats</h1>
+        <h1 className="text-2xl font-bold">{t("messages.archivedChats")}</h1>
       </div>
 
       {archivedChats.length === 0 ? (
         <Card className="p-8 text-center">
           <Archive className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-          <p className="text-muted-foreground">No archived chats</p>
+          <p className="text-muted-foreground">{t("messages.noArchivedChats")}</p>
         </Card>
       ) : (
         <div className="space-y-2">

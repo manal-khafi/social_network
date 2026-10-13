@@ -6,6 +6,7 @@ import { useAppSelector } from "./hooks";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useRealtime } from "./realtime/useRealtime";
 import i18n from "./i18n/i18n";
+import { DirectionProvider } from "@radix-ui/react-direction";
 import MainLayout from "./layouts/MainLayout";
 import RequireAuth from "./guards/RequireAuth";
 import PersonalizeGuard from "./guards/PersonalizeGuard";
@@ -18,6 +19,7 @@ import AuthView from "./Views/authentification";
 import VerifyEmail from "./Components/Authentication/auth/verifyEmil";
 import { ForgotPasswordScreen } from "./Components/Authentication/auth/ForgotPasswordScreen";
 import { ResetPasswordScreen } from "./Components/Authentication/auth/resetPassword";
+import { useTranslation } from "react-i18next";
 
 // Every other page is its own chunk, fetched the first time its route is opened.
 const FeedView = lazy(() => import("./Views/feed/FeedView"));
@@ -63,6 +65,7 @@ const CreateCommunity = lazy(() =>
 );
 
 function AppContent() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isSessionLoading } = useAuthSession();
   useRealtime();
@@ -70,7 +73,7 @@ function AppContent() {
   if (isSessionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        Loading session...
+        {t("auth.loadingSession")}
       </div>
     );
   }
@@ -207,12 +210,19 @@ function App() {
   }, [density]);
 
   const { language } = useAppSelector((state) => state.settings);
+  const dir = language === "ar" ? "rtl" : "ltr";
   useEffect(() => {
     i18n.changeLanguage(language);
-    document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
-  }, [language]);
+    document.documentElement.dir = dir;
+    document.documentElement.lang = language;
+  }, [language, dir]);
 
-  return <AppContent />;
+  // Radix primitives (menus, tabs, sliders, switches...) read the direction from here.
+  return (
+    <DirectionProvider dir={dir}>
+      <AppContent />
+    </DirectionProvider>
+  );
 }
 
 export default function AppWrapper() {

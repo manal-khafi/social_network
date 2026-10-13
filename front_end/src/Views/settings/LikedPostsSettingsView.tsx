@@ -5,9 +5,11 @@ import { useAppSelector } from '../../hooks'; // Pour récupérer le token
 import { Card } from '../../Components/ui/card';
 import PostCard from '../../Components/post/PostCard';
 import { Heart, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function LikedPostsSettingsView() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   const [likedPosts, setLikedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,7 @@ export default function LikedPostsSettingsView() {
         setLikedPosts(response.data);
       } catch (err: any) {
         console.error("API error:", err);
-        setError(err.response?.data?.message || "Could not load liked posts");
+        setError(err.response?.data?.message || t('errors.likedPostsLoad'));
       } finally {
         setLoading(false);
       }
@@ -33,7 +35,7 @@ export default function LikedPostsSettingsView() {
     if (token) {
       getLikedPosts();
     } else {
-      setError("You must be signed in to see your liked posts");
+      setError(t('errors.likedPostsSignIn'));
       setLoading(false);
     }
   }, [token]);
@@ -45,7 +47,7 @@ export default function LikedPostsSettingsView() {
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-bold">Liked Posts</h1>
+        <h1 className="text-xl font-bold">{t('posts.likedPosts')}</h1>
       </div>
 
       <div className="p-4 space-y-4 max-w-2xl mx-auto pb-24">
@@ -53,7 +55,7 @@ export default function LikedPostsSettingsView() {
         {loading && (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-            <p className="text-muted-foreground">Loading your liked posts...</p>
+            <p className="text-muted-foreground">{t('posts.loadingLiked')}</p>
           </div>
         )}
 
@@ -66,7 +68,7 @@ export default function LikedPostsSettingsView() {
               onClick={() => window.location.reload()}
               className="mt-4 text-sm underline"
             >
-              Try again
+              {t('actions.retry')}
             </button>
           </Card>
         )}
@@ -75,9 +77,9 @@ export default function LikedPostsSettingsView() {
         {!loading && !error && likedPosts.length === 0 && (
           <Card className="p-8 text-center">
             <Heart className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-muted-foreground">No liked posts yet</p>
+            <p className="text-muted-foreground">{t('empty.likedPosts')}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              Posts you like will appear here.
+              {t('empty.likedPostsHint')}
             </p>
           </Card>
         )}

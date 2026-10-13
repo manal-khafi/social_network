@@ -7,6 +7,7 @@ import {
   addToHighlight,
   type HighlightSummary,
 } from "../../api/highlightsApi";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   storyId: string;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function AddToHighlightSheet({ storyId, ownerId, onClose }: Props) {
+  const { t } = useTranslation();
   const [highlights, setHighlights] = useState<HighlightSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -32,10 +34,10 @@ export default function AddToHighlightSheet({ storyId, ownerId, onClose }: Props
     setBusy(h.id);
     try {
       await addToHighlight(h.id, [storyId]);
-      toast.success(`Added to “${h.title}”`);
+      toast.success(t("stories.addedTo", { title: h.title }));
       onClose();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not add");
+      toast.error(e instanceof Error ? e.message : t("stories.couldNotAdd"));
     } finally {
       setBusy(null);
     }
@@ -47,10 +49,10 @@ export default function AddToHighlightSheet({ storyId, ownerId, onClose }: Props
     setBusy("__new");
     try {
       await createHighlight({ title, story_ids: [storyId] });
-      toast.success(`Highlight “${title}” created`);
+      toast.success(t("stories.highlightCreated", { title }));
       onClose();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not create");
+      toast.error(e instanceof Error ? e.message : t("stories.couldNotCreate"));
     } finally {
       setBusy(null);
     }
@@ -64,8 +66,8 @@ export default function AddToHighlightSheet({ storyId, ownerId, onClose }: Props
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-white/10">
-          <span className="font-semibold">Add to Highlight</span>
-          <button onClick={onClose} aria-label="Close"><X className="w-5 h-5" /></button>
+          <span className="font-semibold">{t("stories.addToHighlight2")}</span>
+          <button onClick={onClose} aria-label={t("actions.close")}><X className="w-5 h-5" /></button>
         </div>
 
         <div className="p-3">
@@ -76,7 +78,7 @@ export default function AddToHighlightSheet({ storyId, ownerId, onClose }: Props
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && create()}
-                placeholder="Highlight name"
+                placeholder={t("stories.highlightName")}
                 maxLength={60}
                 className="flex-1 rounded-full bg-white/10 px-4 py-2 text-sm outline-none"
               />
@@ -85,7 +87,7 @@ export default function AddToHighlightSheet({ storyId, ownerId, onClose }: Props
                 disabled={!newTitle.trim() || busy === "__new"}
                 className="rounded-full bg-white text-black text-sm font-semibold px-4 py-2 disabled:opacity-50"
               >
-                {busy === "__new" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create"}
+                {busy === "__new" ? <Loader2 className="w-4 h-4 animate-spin" /> : t("stories.create")}
               </button>
             </div>
           ) : (
@@ -96,7 +98,7 @@ export default function AddToHighlightSheet({ storyId, ownerId, onClose }: Props
               <span className="w-11 h-11 rounded-full border border-white/30 grid place-items-center">
                 <Plus className="w-5 h-5" />
               </span>
-              <span className="text-sm font-medium">New highlight</span>
+              <span className="text-sm font-medium">{t("stories.newHighlight")}</span>
             </button>
           )}
         </div>
@@ -121,9 +123,9 @@ export default function AddToHighlightSheet({ storyId, ownerId, onClose }: Props
                     <Check className="w-4 h-4" />
                   )}
                 </span>
-                <div className="min-w-0 flex-1 text-left">
+                <div className="min-w-0 flex-1 text-start">
                   <p className="text-sm font-medium truncate">{h.title}</p>
-                  <p className="text-xs text-white/50">{h.item_count} items</p>
+                  <p className="text-xs text-white/50">{t("stories.itemsCount", { count: h.item_count })}</p>
                 </div>
                 {busy === h.id && <Loader2 className="w-4 h-4 animate-spin" />}
               </button>

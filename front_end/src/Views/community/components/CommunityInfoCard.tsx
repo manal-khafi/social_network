@@ -4,6 +4,7 @@ import { Badge } from "../../../Components/Community/communityBadge";
 import { Card, CardContent } from "../../../Components/Community/communityCard";
 import { Avatar, AvatarImage, AvatarFallback } from "../../../Components/Community/communityAvatar";
 import type { Community, Member } from "../types";
+import { useTranslation } from "react-i18next";
 
 interface CommunityInfoCardProps {
   community: Community;
@@ -19,6 +20,7 @@ export function CommunityInfoCard({
   isJoined,
   handleJoinLeave,
 }: CommunityInfoCardProps) {
+  const { t } = useTranslation();
   return (
     <div className="mb-4 sm:mb-8">
       <Card className="border-2 shadow-xl">
@@ -36,8 +38,8 @@ export function CommunityInfoCard({
                   <div className="flex items-center gap-2 mb-1 sm:mb-2 flex-wrap">
                     <h1 className="text-xl sm:text-3xl font-bold text-gray-900 truncate">{community.name}</h1>
                     <Badge variant="secondary" className="bg-[#feeaa1] text-[#18534f] border-[#feeaa1] text-xs">
-                      <Hash className="h-3 w-3 mr-1" />
-                      {community.type || "No category"}
+                      <Hash className="h-3 w-3 me-1" />
+                      {community.type || t("communities.noCategory")}
                     </Badge>
                   </div>
                   <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-4 line-clamp-2">{community.bio || community.description}</p>
@@ -51,7 +53,7 @@ export function CommunityInfoCard({
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#d6955b]" />
-                      <span className="font-semibold text-gray-900">Trending</span>
+                      <span className="font-semibold text-gray-900">{t("communities.trending")}</span>
                     </div>
                   </div>
                 </div>
@@ -70,13 +72,13 @@ export function CommunityInfoCard({
               >
                 {isJoined ? (
                   <>
-                    <UserMinus className="mr-1 h-3 w-3" />
-                    Leave
+                    <UserMinus className="me-1 h-3 w-3" />
+                    {t("communities.leave")}
                   </>
                 ) : (
                   <>
-                    <UserPlus className="mr-1 h-3 w-3" />
-                    Join
+                    <UserPlus className="me-1 h-3 w-3" />
+                    {t("communities.join")}
                   </>
                 )}
               </Button>

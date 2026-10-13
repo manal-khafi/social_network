@@ -9,10 +9,12 @@ import { useAppDispatch, useAppSelector } from "../../hooks";
 import { fetchMe } from "../../features/auth/authSlice";
 import api from "../../api/axios";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type Step = "choice" | "profile" | "gender" | "privacy" | "summary";
 
 const PersonalizationWizard: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const token = useAppSelector((state) => state.auth.token);
@@ -151,7 +153,7 @@ const PersonalizationWizard: React.FC = () => {
       const finalUsername = allData.profile.username || authUsername || "";
 
       if (!finalUsername) {
-        throw new Error("Username is required");
+        throw new Error(t("onboarding.usernameIsRequired"));
       }
 
       const jsonData = {
@@ -325,10 +327,10 @@ const PersonalizationWizard: React.FC = () => {
                   <Sparkles className="w-10 h-10 text-[#18534F]" />
                 </div>
                 <h1 className="text-2xl font-bold text-[#18534F] mb-3">
-                  Summary
+                  {t("onboarding.summary")}
                 </h1>
                 <p className="text-[#718197]">
-                  Review your info before finishing
+                  {t("onboarding.reviewYourInfoBeforeFinishing")}
                 </p>
               </div>
 
@@ -340,14 +342,14 @@ const PersonalizationWizard: React.FC = () => {
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[#718197]">Username:</span>
+                      <span className="text-[#718197]">{t("onboarding.username")}</span>
                       <span className="font-medium text-[#18534F]">
                         @{allData.profile.username || authUsername || "not set"}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-[#718197]">Photo:</span>
+                      <span className="text-[#718197]">{t("onboarding.photo")}</span>
                       <span className="font-medium text-[#18534F]">
                         {allData.profile.profileImage &&
                         allData.profile.profileImage !== "default"
@@ -359,17 +361,17 @@ const PersonalizationWizard: React.FC = () => {
                 </div>
 
                 <div className="border border-[#718197]/20 rounded-xl p-4">
-                  <h3 className="font-semibold text-[#18534F] mb-3">⚧️ Gender</h3>
+                  <h3 className="font-semibold text-[#18534F] mb-3">{t("onboarding.gender")}</h3>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#718197]">Choice:</span>
+                    <span className="text-[#718197]">{t("onboarding.choice")}</span>
                     <span className="font-medium text-[#18534F]">
                       {allData.gender === "male"
-                        ? "Male ♂"
+                        ? t("onboarding.male2")
                         : allData.gender === "female"
-                        ? "Female ♀"
+                        ? t("onboarding.female2")
                         : allData.gender === "prefer_not_say"
-                        ? "Prefer not to say 🔒"
-                        : "Not specified"}
+                        ? t("onboarding.preferNotToSay2")
+                        : t("onboarding.notSpecified")}
                     </span>
                   </div>
                 </div>
@@ -379,7 +381,7 @@ const PersonalizationWizard: React.FC = () => {
                     🔒 Privacy
                   </h3>
                   <div className="flex items-center justify-between">
-                    <span className="text-[#718197]">Account type:</span>
+                    <span className="text-[#718197]">{t("onboarding.accountType")}</span>
                     <span
                       className={`font-medium ${
                         allData.privacy.type === "public"
@@ -388,8 +390,8 @@ const PersonalizationWizard: React.FC = () => {
                       }`}
                     >
                       {allData.privacy.type === "public"
-                        ? "Public 🌐"
-                        : "Private 🔒"}
+                        ? t("onboarding.public")
+                        : t("onboarding.private")}
                     </span>
                   </div>
                 </div>
@@ -406,11 +408,11 @@ const PersonalizationWizard: React.FC = () => {
                   {isSubmitting ? (
                     <>
                       <Loader className="w-5 h-5 animate-spin" />
-                      Creating account...
+                      {t("onboarding.creatingAccount")}
                     </>
                   ) : (
                     <>
-                      Create my account
+                      {t("onboarding.createMyAccount")}
                       <Check className="w-5 h-5" />
                     </>
                   )}
@@ -421,7 +423,7 @@ const PersonalizationWizard: React.FC = () => {
                   className="w-full py-3 border border-[#718197]/30 text-[#718197] rounded-lg 
                     hover:bg-gray-50 transition"
                 >
-                  Edit information
+                  {t("onboarding.editInformation")}
                 </button>
               </div>
 
@@ -443,11 +445,11 @@ const PersonalizationWizard: React.FC = () => {
 
   const ProgressBar = () => {
     const steps = [
-      { id: "choice", label: "Choice", icon: "⚡" },
-      { id: "profile", label: "Profile", icon: "👤" },
-      { id: "gender", label: "Gender", icon: "⚧️" },
-      { id: "privacy", label: "Privacy", icon: "🔒" },
-      { id: "summary", label: "Finish", icon: "🎯" },
+      { id: "choice", label: t("onboarding.choice2"), icon: "⚡" },
+      { id: "profile", label: t("nav.profile"), icon: "👤" },
+      { id: "gender", label: t("onboarding.gender2"), icon: "⚧️" },
+      { id: "privacy", label: t("settings.privacy"), icon: "🔒" },
+      { id: "summary", label: t("onboarding.finish"), icon: "🎯" },
     ];
 
     const currentIndex = steps.findIndex((step) => step.id === currentStep);

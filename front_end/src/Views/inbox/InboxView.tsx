@@ -31,6 +31,7 @@ import {
   CheckCheck,
 } from "lucide-react";
 import NewMessageDialog from "./NewMessageDialog";
+import { useTranslation } from "react-i18next";
 
 function ConversationRow({
   conv,
@@ -40,6 +41,7 @@ function ConversationRow({
   archived: boolean;
 }) {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const unread = conv.unreadCount > 0;
 
   return (
@@ -53,7 +55,7 @@ function ConversationRow({
           <AvatarFallback>{conv.username[0]?.toUpperCase()}</AvatarFallback>
         </Avatar>
         {conv.isOnline && (
-          <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-background" />
+          <span className="absolute bottom-0.5 end-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-background" />
         )}
       </div>
 
@@ -62,7 +64,7 @@ function ConversationRow({
           <span className={`truncate ${unread ? "font-semibold" : "font-medium"}`}>
             {conv.username}
           </span>
-          <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">
+          <span className="ms-auto shrink-0 text-[11px] text-muted-foreground">
             {conv.timestamp}
           </span>
         </div>
@@ -74,18 +76,18 @@ function ConversationRow({
           {conv.lastMessageFromMe &&
             conv.lastMessage &&
             (isSeenBy(conv.otherLastReadAt, conv.lastMessageAt) ? (
-              <CheckCheck className="w-4 h-4 shrink-0 text-primary" aria-label="Seen" />
+              <CheckCheck className="w-4 h-4 shrink-0 text-primary" aria-label={t("messages.seen")} />
             ) : (
-              <Check className="w-4 h-4 shrink-0" aria-label="Sent" />
+              <Check className="w-4 h-4 shrink-0" aria-label={t("messages.sent")} />
             ))}
-          <span className="truncate">{conv.lastMessage || "No messages yet"}</span>
+          <span className="truncate">{conv.lastMessage || t("messages.noMessages")}</span>
         </p>
       </div>
 
       {unread && (
         <span
           className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground"
-          aria-label={`${conv.unreadCount} unread messages`}
+          aria-label={t("messages.unreadCount", { count: conv.unreadCount })}
         >
           {conv.unreadCount > 9 ? "9+" : conv.unreadCount}
         </span>
@@ -95,7 +97,7 @@ function ConversationRow({
         <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
           <button
             className="p-2 rounded-full hover:bg-muted opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
-            aria-label="Conversation options"
+            aria-label={t("messages.conversationOptions")}
           >
             <MoreVertical className="w-4 h-4" />
           </button>
@@ -108,8 +110,8 @@ function ConversationRow({
                 dispatch(unarchiveConversation(conv.id));
               }}
             >
-              <ArchiveRestore className="w-4 h-4 mr-2" />
-              Unarchive
+              <ArchiveRestore className="w-4 h-4 me-2" />
+              {t("messages.unarchive")}
             </DropdownMenuItem>
           ) : (
             <DropdownMenuItem
@@ -118,21 +120,21 @@ function ConversationRow({
                 dispatch(archiveConversation(conv.id));
               }}
             >
-              <Archive className="w-4 h-4 mr-2" />
-              Archive
+              <Archive className="w-4 h-4 me-2" />
+              {t("messages.archive")}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem
             className="text-destructive"
             onClick={(e) => {
               e.preventDefault();
-              if (confirm("Delete this conversation?")) {
+              if (confirm(t("messages.deleteConfirm"))) {
                 dispatch(deleteConversation(conv.id));
               }
             }}
           >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete
+            <Trash2 className="w-4 h-4 me-2" />
+            {t("messages.deleteConversation")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -142,6 +144,7 @@ function ConversationRow({
 
 export default function InboxView() {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const { conversations, archivedConversations, status } = useAppSelector(
     (state) => state.messages
   );
@@ -176,20 +179,20 @@ export default function InboxView() {
           {showArchived ? (
             <button
               onClick={() => setShowArchived(false)}
-              className="flex items-center gap-2 -ml-2 p-2 rounded-lg hover:bg-muted"
+              className="flex items-center gap-2 -ms-2 p-2 rounded-lg hover:bg-muted"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="text-xl font-bold">Archived</span>
+              <span className="text-xl font-bold">{t("messages.archived")}</span>
             </button>
           ) : (
-            <h1 className="text-xl font-bold">Messages</h1>
+            <h1 className="text-xl font-bold">{t("messages.title")}</h1>
           )}
 
           {!showArchived && (
             <button
               onClick={() => setComposeOpen(true)}
               className="p-2 rounded-full hover:bg-muted"
-              aria-label="New message"
+              aria-label={t("messages.newMessage")}
             >
               <SquarePen className="w-5 h-5" />
             </button>
@@ -201,7 +204,7 @@ export default function InboxView() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={showArchived ? "Search archived" : "Search messages"}
+              placeholder={showArchived ? t("messages.searchArchived") : t("messages.searchMessages")}
               className="flex-1 bg-transparent text-sm outline-none"
             />
           </div>
@@ -219,7 +222,7 @@ export default function InboxView() {
             <span className="w-14 h-14 rounded-full bg-muted grid place-items-center shrink-0">
               <Archive className="w-6 h-6 text-muted-foreground" />
             </span>
-            <span className="font-medium flex-1 text-left">Archived</span>
+            <span className="font-medium flex-1 text-start">{t("messages.archived")}</span>
             <span className="text-sm text-muted-foreground">{archivedConversations.length}</span>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </button>
@@ -247,21 +250,21 @@ export default function InboxView() {
             </div>
             <p className="font-medium">
               {query
-                ? "No matches"
+                ? t("messages.noMatches")
                 : showArchived
-                ? "No archived chats"
-                : "No messages yet"}
+                ? t("messages.noArchivedChats")
+                : t("messages.noMessages")}
             </p>
             {!query && !showArchived && (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Start a conversation with someone you follow.
+                  {t("messages.startConversation")}
                 </p>
                 <button
                   onClick={() => setComposeOpen(true)}
                   className="mt-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold px-4 py-2"
                 >
-                  New message
+                  {t("messages.newMessage")}
                 </button>
               </>
             )}

@@ -21,7 +21,7 @@ export function CommunityBanner({
       }}
     >
       <div className="absolute inset-0 bg-black/20"></div>
-      <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+      <div className="absolute top-3 start-3 sm:top-4 sm:start-4">
         <Button variant="ghost" onClick={() => navigate('/community/list')} className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white h-9 w-9 p-0 sm:h-10 sm:w-10">
           <ArrowLeft className="h-5 w-5" />
         </Button>

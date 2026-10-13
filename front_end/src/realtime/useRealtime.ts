@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
+import i18n from "../i18n/i18n";
 import { useAppDispatch, useAppSelector } from "../hooks";
 import { connectSocket, disconnectSocket, getSocket } from "./socket";
 import {
@@ -68,7 +69,7 @@ export function useRealtime() {
         applyRemoteStoryStat({ storyId: p.story_id, reactions: p.reaction_count })
       );
       if (p?.user?.username && p?.emoji) {
-        toast(`${p.user.username} reacted ${p.emoji}`);
+        toast(i18n.t("stories.reacted", { username: p.user.username, emoji: p.emoji }));
       }
     };
 
@@ -77,8 +78,8 @@ export function useRealtime() {
     };
 
     const onStoryReply = (p: any) => {
-      const who = p?.sender?.username ? `@${p.sender.username}` : "Someone";
-      toast(`${who} replied to your story`);
+      const who = p?.sender?.username ? `@${p.sender.username}` : i18n.t("stories.someone");
+      toast(i18n.t("stories.repliedToYourStory", { who }));
     };
 
     const onStoryPoll = (p: any) => {
@@ -87,26 +88,26 @@ export function useRealtime() {
     };
 
     const onStoryQuestion = (p: any) => {
-      const who = p?.user?.username ? `@${p.user.username}` : "Someone";
-      toast(`${who} answered your question`);
+      const who = p?.user?.username ? `@${p.user.username}` : i18n.t("stories.someone");
+      toast(i18n.t("stories.answeredYourQuestion", { who }));
     };
 
     const onMessage = (m: any) => {
       if (m?.conversation_id) dispatch(receiveMessage(m));
-      const who = m?.sender?.username ? `@${m.sender.username}` : "New message";
+      const who = m?.sender?.username ? `@${m.sender.username}` : i18n.t("messages.newMessageFrom");
       if (m?.message_type === "call") return; // call log; the call UI already handled it
       // Image / video / location messages carry a URL or coordinates as content;
       // don't toast it.
       const media =
         m?.message_type === "image"
-          ? "a photo"
+          ? "messages.sentYouAPhoto"
           : m?.message_type === "video"
-          ? "a video"
+          ? "messages.sentYouAVideo"
           : isLocationContent(m?.content)
-          ? "a location"
+          ? "messages.sentYouALocation"
           : null;
-      if (media) return void toast(`${who} sent you ${media}`);
-      toast(m?.shared_story_id ? `${who} sent you a story` : `${who}: ${m?.content ?? ""}`);
+      if (media) return void toast(`${who} ${i18n.t(media)}`);
+      toast(m?.shared_story_id ? i18n.t("stories.sentYouAStory", { who }) : `${who}: ${m?.content ?? ""}`);
     };
 
     // Read receipt: moves the "Seen" indicator in the chat and the inbox ticks.

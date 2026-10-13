@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Check, SkipForward, ArrowRight, User, Settings } from 'lucide-react';
+import { Trans, useTranslation } from 'react-i18next';
 
 interface ChoixProps {
   onSelect: (choice: 'yes' | 'no' | 'skip') => void;
@@ -7,14 +8,15 @@ interface ChoixProps {
 }
 
 const Choix: React.FC<ChoixProps> = ({ onSelect, onSkip }) => {
+  const { t } = useTranslation();
   const [selectedOption, setSelectedOption] = useState<'yes' | 'no' | null>(null);
   const [loading, setLoading] = useState(false);
 
   const options = [
     {
       id: 'yes',
-      title: 'Create your style',
-      description: 'Customize your profile with your photo and personal info',
+      title: t("onboarding.createYourStyle"),
+      description: t("onboarding.customizeYourProfileWithYourPhoto"),
       icon: <User className="w-6 h-6" />,
       features: [
         'Profile picture',
@@ -25,8 +27,8 @@ const Choix: React.FC<ChoixProps> = ({ onSelect, onSkip }) => {
     },
     {
       id: 'no',
-      title: 'Later',
-      description: 'Start with the default settings',
+      title: t("onboarding.later"),
+      description: t("onboarding.startWithTheDefaultSettings"),
       icon: <Settings className="w-6 h-6" />,
       features: [
         'Default profile',
@@ -72,7 +74,7 @@ const Choix: React.FC<ChoixProps> = ({ onSelect, onSkip }) => {
         {/* Header */}
         <div className="text-center mb-8">
           <p className="text-[#718197]">
-            Would you like to create your profile now?
+            {t("onboarding.wouldYouLikeToCreateYour")}
           </p>
         </div>
 
@@ -88,7 +90,7 @@ const Choix: React.FC<ChoixProps> = ({ onSelect, onSkip }) => {
                   : 'border-[#718197]/20 bg-white/80 hover:border-[#18534F]/40'
               }`}
             >
-              <div className="text-left">
+              <div className="text-start">
                 <div className="flex items-center gap-3 mb-3">
                   <div
                     className={`p-2 rounded-lg ${
@@ -115,7 +117,7 @@ const Choix: React.FC<ChoixProps> = ({ onSelect, onSkip }) => {
                   {option.features.map((feature, index) => (
                     <div key={index} className="flex items-center text-sm">
                       <div
-                        className={`w-1.5 h-1.5 rounded-full mr-2 ${
+                        className={`w-1.5 h-1.5 rounded-full me-2 ${
                           selectedOption === option.id
                             ? 'bg-[#D6955B]'
                             : 'bg-gray-300'
@@ -133,8 +135,10 @@ const Choix: React.FC<ChoixProps> = ({ onSelect, onSkip }) => {
         {/* Simple stat */}
         <div className="mb-6 p-4 bg-white/70 rounded-lg border border-[#718197]/10">
           <p className="text-center text-sm text-[#718197]">
-            <span className="font-bold text-[#18534F]">80%</span> of members
-            customize their profile
+            <Trans
+              i18nKey="onboarding.memberStat"
+              components={{ b: <span className="font-bold text-[#18534F]" /> }}
+            />
           </p>
         </div>
 
@@ -146,7 +150,7 @@ const Choix: React.FC<ChoixProps> = ({ onSelect, onSkip }) => {
               hover:bg-white/50 transition flex items-center justify-center gap-2"
           >
             <SkipForward className="w-4 h-4" />
-            Skip
+            {t("onboarding.skip")}
           </button>
 
           <button
@@ -160,7 +164,7 @@ const Choix: React.FC<ChoixProps> = ({ onSelect, onSkip }) => {
               'Loading...'
             ) : (
               <>
-                Continue
+                {t("account.continue")}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -170,7 +174,7 @@ const Choix: React.FC<ChoixProps> = ({ onSelect, onSkip }) => {
         {/* Note */}
         <div className="mt-6 pt-4 border-t border-[#718197]/10">
           <p className="text-center text-xs text-[#718197]">
-            You can always change your settings later ⚡
+            {t("onboarding.youCanAlwaysChangeYourSettings")}
           </p>
         </div>
       </div>

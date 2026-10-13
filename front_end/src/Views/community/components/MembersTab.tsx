@@ -5,6 +5,7 @@ import { Card, CardContent } from "../../../Components/Community/communityCard";
 import { Avatar, AvatarImage, AvatarFallback } from "../../../Components/Community/communityAvatar";
 import { ScrollArea } from "../../../Components/Community/communityScrollArea";
 import type { Member } from "../types";
+import { useTranslation } from "react-i18next";
 
 interface MembersTabProps {
   members: Member[];
@@ -14,28 +15,29 @@ interface MembersTabProps {
 export function MembersTab({
   members,
 }: MembersTabProps) {
+  const { t, i18n } = useTranslation();
   return (
     <TabsContent value="members" className="mt-6">
       <Card className="border-2">
         <CardContent className="p-6">
           <div className="mb-6">
             <h3 className="text-xl font-semibold mb-2">
-              Members ({members.length})
+              {t("communities.membersTitle", { n: members.length })}
             </h3>
             <p className="text-sm text-gray-600">
-              Meet the members of this community
+              {t("communities.meetTheMembersOfThisCommunity")}
             </p>
           </div>
 
-          <ScrollArea className="h-[500px] pr-4">
+          <ScrollArea className="h-[500px] pe-4">
             {members.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-600">No members yet</p>
+                <p className="text-gray-600">{t("communities.noMembersYet")}</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {members.map((member) => {
-                  const userName = member.user?.display_name || member.user?.username || member.name || "User";
+                  const userName = member.user?.display_name || member.user?.username || member.name || t("communities.user");
                   const initials = userName.substring(0, 2).toUpperCase();
 
                   return (
@@ -56,20 +58,20 @@ export function MembersTab({
                                 </h4>
                                 {member.role === 'ADMIN' && (
                                   <Badge variant="secondary" className="h-5 px-1.5 bg-[#feeaa1] text-[#18534f] text-xs">
-                                    Admin
+                                    {t("communities.admin")}
                                   </Badge>
                                 )}
                               </div>
                               <p className="text-sm text-gray-600">{member.user?.username ? `@${member.user.username}` : member.username}</p>
                               {member.joinedAt && (
                                 <p className="text-xs text-gray-500 mt-1">
-                                  Member since {new Date(member.joinedAt).toLocaleDateString('en-US')}
+                                  {t("communities.memberSince", { date: new Date(member.joinedAt).toLocaleDateString(i18n.language) })}
                                 </p>
                               )}
                             </div>
                           </div>
                           <Button variant="outline" className="border-2 border-[#226d68] text-[#18534f] hover:bg-[#ecf8f6] hover:border-[#18534f]">
-                            Follow
+                            {t("profile.follow")}
                           </Button>
                         </div>
                       </CardContent>

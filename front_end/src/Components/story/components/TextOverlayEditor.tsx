@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { TEXT_COLORS, FONT_FAMILIES } from "../storyConfig";
 import type { TextDraft } from "./types";
+import { useTranslation } from "react-i18next";
 
 interface TextOverlayEditorProps {
   textDraft: TextDraft;
@@ -14,13 +15,14 @@ export default function TextOverlayEditor({
   setTextDraft,
   commitText,
 }: TextOverlayEditorProps) {
+  const { t } = useTranslation();
   return (
     <div className="absolute inset-0 z-40 bg-black/80 flex flex-col p-4">
       <textarea
         autoFocus
         value={textDraft.value}
         onChange={(e) => setTextDraft((d) => ({ ...d, value: e.target.value }))}
-        placeholder="Type…"
+        placeholder={t("stories.type")}
         className="flex-1 bg-transparent text-center text-3xl font-extrabold outline-none resize-none"
         style={{ color: textDraft.color, fontFamily: textDraft.font }}
       />
@@ -42,21 +44,21 @@ export default function TextOverlayEditor({
             className={`px-3 py-1 rounded-full text-xs ${textDraft.font === f.value ? "bg-white text-black" : "bg-white/10"}`}
             style={{ fontFamily: f.value }}
           >
-            {f.label}
+            {t(f.label)}
           </button>
         ))}
         <button
           onClick={() => setTextDraft((d) => ({ ...d, bg: !d.bg }))}
           className={`px-3 py-1 rounded-full text-xs ${textDraft.bg ? "bg-white text-black" : "bg-white/10"}`}
         >
-          BG
+          {t("stories.textBackground")}
         </button>
       </div>
       <button
         onClick={commitText}
         className="mt-2 rounded-full bg-white text-black font-semibold py-2"
       >
-        Done
+        {t("actions.done")}
       </button>
     </div>
   );

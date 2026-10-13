@@ -31,6 +31,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from 'sonner';
 import EmojiPicker from 'emoji-picker-react';
 import { uploadPostMedia } from '../../utils/uploadStoryMedia';
+import { useTranslation } from 'react-i18next';
 
 // The chat is a full-screen layer at z-[60]; portalled popovers, menus and
 // dialogs default to z-50 and would open behind it.
@@ -44,6 +45,7 @@ export default function ChatView() {
   const { conversationId } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -142,7 +144,7 @@ export default function ChatView() {
         ).unwrap();
         clearAttachment();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to send attachment');
+        toast.error(err instanceof Error ? err.message : t('messages.sendAttachmentFailed'));
         return;
       } finally {
         setIsSending(false);
@@ -180,7 +182,7 @@ export default function ChatView() {
     e.target.value = '';
     if (!file) return;
     if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-      toast.error('Choose an image or a video');
+      toast.error(t('messages.chooseImageOrVideo'));
       return;
     }
     clearAttachment();
@@ -191,7 +193,7 @@ export default function ChatView() {
     if (!conversationId) return;
     setShowMoreOptions(false);
     if (!navigator.geolocation) {
-      toast.error('Location is not available in this browser');
+      toast.error(t('messages.locationNotSupported'));
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -210,8 +212,8 @@ export default function ChatView() {
       (err) => {
         toast.error(
           err.code === err.PERMISSION_DENIED
-            ? 'Allow location access to share your location'
-            : 'Could not get your location'
+            ? t('messages.allowLocation')
+            : t('messages.locationFailed')
         );
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -273,15 +275,15 @@ export default function ChatView() {
 
     if (msg.type === 'call') {
       const cm = msg.callMeta;
-      const kind = cm?.callType === 'video' ? 'Video call' : 'Voice call';
+      const kind = cm?.callType === 'video' ? t('messages.videoCall') : t('messages.voiceCall');
       const detail =
         cm?.status === 'missed'
-          ? 'Missed'
+          ? t('messages.callMissed')
           : cm?.status === 'declined'
-          ? 'Declined'
+          ? t('messages.callDeclined')
           : cm?.durationSec
           ? `${Math.floor(cm.durationSec / 60)}:${String(cm.durationSec % 60).padStart(2, '0')}`
-          : 'Ended';
+          : t('messages.callEnded');
       return (
         <div key={msg.id} className="flex justify-center my-2">
           <span className="text-xs text-muted-foreground bg-muted rounded-full px-3 py-1 flex items-center gap-1">
@@ -312,7 +314,7 @@ export default function ChatView() {
           
           {msg.type === 'image' && msg.image && (
             <div>
-              <img src={msg.image} alt="Shared" className="rounded-lg max-w-full" />
+              <img src={msg.image} alt={t('messages.sharedImageAlt')} className="rounded-lg max-w-full" />
               {msg.content && <p className="mt-1 text-sm">{msg.content}</p>}
             </div>
           )}
@@ -328,7 +330,7 @@ export default function ChatView() {
                 {msg.poll.options.map(option => (
                   <button
                     key={option.id}
-                    className={`w-full text-left p-2 rounded ${
+                    className={`w-full text-start p-2 rounded ${
                       isSender ? 'bg-primary-foreground/20' : 'bg-background'
                     }`}
                   >
@@ -339,7 +341,7 @@ export default function ChatView() {
                   </button>
                 ))}
               </div>
-              <p className="text-xs mt-2 opacity-70">{msg.poll.totalVotes} votes</p>
+              <p className="text-xs mt-2 opacity-70">{t('messages.votes', { n: msg.poll.totalVotes })}</p>
             </div>
           )}
           
@@ -349,7 +351,7 @@ export default function ChatView() {
                 <Calendar className="w-4 h-4" />
                 <p className="font-semibold">{msg.event.title}</p>
               </div>
-              <p className="text-sm">{msg.event.date} at {msg.event.time}</p>
+              <p className="text-sm">{t('messages.eventAt', { date: msg.event.date, time: msg.event.time })}</p>
               {msg.event.location && (
                 <p className="text-sm mt-1 opacity-70">{msg.event.location}</p>
               )}
@@ -366,7 +368,7 @@ export default function ChatView() {
               <div className="flex-1 h-1 bg-primary-foreground/20 rounded-full">
                 <div className="h-full w-1/3 bg-primary-foreground/60 rounded-full" />
               </div>
-              <span className="text-sm">{msg.voiceDuration}s</span>
+              <span className="text-sm">{t('messages.secondsShort', { n: msg.voiceDuration })}</span>
             </div>
           )}
           
@@ -388,7 +390,7 @@ export default function ChatView() {
               <AvatarFallback />
             </Avatar>
           )}
-          <span>Seen</span>
+          <span>{t('messages.seen')}</span>
         </div>
       )}
       </Fragment>
@@ -399,7 +401,7 @@ export default function ChatView() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3 text-muted-foreground">
         <div className="w-8 h-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
-        <p className="text-sm">Loading conversation…</p>
+        <p className="text-sm">{t('messages.loadingConversation')}</p>
       </div>
     );
   }
@@ -416,13 +418,13 @@ export default function ChatView() {
             <AvatarFallback>{conversation.username?.[0]?.toUpperCase() ?? "?"}</AvatarFallback>
           </Avatar>
           {conversation.isOnline && (
-            <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card bg-green-500" />
+            <div className="absolute bottom-0 end-0 w-3 h-3 rounded-full border-2 border-card bg-green-500" />
           )}
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="font-semibold truncate">{conversation.username}</h2>
           {conversation.isOnline && (
-            <p className="text-xs text-muted-foreground">Online</p>
+            <p className="text-xs text-muted-foreground">{t('messages.online')}</p>
           )}
         </div>
         <button
@@ -435,7 +437,7 @@ export default function ChatView() {
               'audio'
             )
           }
-          aria-label="Voice call"
+          aria-label={t('messages.voiceCall')}
         >
           <Phone className="w-5 h-5 text-primary" />
         </button>
@@ -449,7 +451,7 @@ export default function ChatView() {
               'video'
             )
           }
-          aria-label="Video call"
+          aria-label={t('messages.videoCall')}
         >
           <Video className="w-5 h-5 text-primary" />
         </button>
@@ -464,40 +466,40 @@ export default function ChatView() {
               onClick={() => {
                 if (!conversationId) return;
                 dispatch(archiveConversation(conversationId));
-                toast.success('Conversation archived');
+                toast.success(t('messages.conversationArchived'));
               }}
             >
-              <Archive className="w-4 h-4 mr-2" />
-              Archive
+              <Archive className="w-4 h-4 me-2" />
+              {t('messages.archive')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
                 if (!conversationId) return;
                 dispatch(deleteConversation(conversationId));
-                toast.success('Conversation deleted');
+                toast.success(t('messages.conversationDeleted'));
                 navigate('/inbox');
               }}
             >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
+              <Trash2 className="w-4 h-4 me-2" />
+              {t('messages.deleteConversation')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
                 dispatch(blockUser(conversation.userId));
-                toast.success('User blocked');
+                toast.success(t('messages.userBlocked'));
               }}
             >
-              <Ban className="w-4 h-4 mr-2" />
-              Block
+              <Ban className="w-4 h-4 me-2" />
+              {t('messages.block')}
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link
                 to={`/home/profile/${encodeURIComponent(conversation.username || conversation.userId)}`}
                 className="flex items-center"
               >
-                <UserCircle className="w-4 h-4 mr-2" />
-                View Profile
+                <UserCircle className="w-4 h-4 me-2" />
+                {t('messages.viewProfile')}
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -513,7 +515,7 @@ export default function ChatView() {
         {isRecording && (
           <div className="mb-2 flex items-center gap-2 text-red-500 animate-pulse">
             <div className="w-2 h-2 bg-red-500 rounded-full" />
-            <span className="text-sm">Recording... {recordingTime}s</span>
+            <span className="text-sm">{t('messages.recording', { seconds: recordingTime })}</span>
           </div>
         )}
         
@@ -523,7 +525,7 @@ export default function ChatView() {
               {attachment.file.type.startsWith('video/') ? (
                 <video src={attachment.previewUrl} muted className="h-20 w-20 rounded-lg object-cover" />
               ) : (
-                <img src={attachment.previewUrl} alt="Attachment preview" className="h-20 w-20 rounded-lg object-cover" />
+                <img src={attachment.previewUrl} alt={t('messages.attachmentPreviewAlt')} className="h-20 w-20 rounded-lg object-cover" />
               )}
               {isSending ? (
                 <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40">
@@ -532,8 +534,8 @@ export default function ChatView() {
               ) : (
                 <button
                   onClick={clearAttachment}
-                  className="absolute -top-2 -right-2 rounded-full bg-foreground p-1 text-background"
-                  aria-label="Remove attachment"
+                  className="absolute -top-2 -end-2 rounded-full bg-foreground p-1 text-background"
+                  aria-label={t('messages.removeAttachment')}
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -567,7 +569,7 @@ export default function ChatView() {
                 variant="ghost"
                 size="icon"
                 className="text-muted-foreground hover:text-foreground shrink-0"
-                aria-label="Emoji"
+                aria-label={t('messages.emoji')}
               >
                 <Smile className="w-5 h-5" />
               </Button>
@@ -587,7 +589,7 @@ export default function ChatView() {
                 variant="ghost"
                 size="icon"
                 className="text-muted-foreground hover:text-foreground shrink-0"
-                aria-label="Attach"
+                aria-label={t('messages.attach')}
               >
                 <Paperclip className="w-5 h-5" />
               </Button>
@@ -601,7 +603,7 @@ export default function ChatView() {
                   <div className="p-3 bg-primary rounded-full">
                     <ImageIcon className="w-5 h-5 text-primary-foreground" />
                   </div>
-                  <span className="text-xs">Photo / Video</span>
+                  <span className="text-xs">{t('messages.photoVideo')}</span>
                 </button>
                 
                 <Dialog>
@@ -610,12 +612,12 @@ export default function ChatView() {
                       <div className="p-3 bg-accent rounded-full">
                         <BarChart3 className="w-5 h-5 text-accent-foreground" />
                       </div>
-                      <span className="text-xs">Poll</span>
+                      <span className="text-xs">{t('messages.poll')}</span>
                     </button>
                   </DialogTrigger>
                   <DialogContent className={ABOVE_CHAT}>
                     <DialogHeader>
-                      <DialogTitle>Create Poll</DialogTitle>
+                      <DialogTitle>{t('messages.createPoll')}</DialogTitle>
                     </DialogHeader>
                     <PollCreator conversationId={conversationId || ''} onClose={() => setShowMoreOptions(false)} />
                   </DialogContent>
@@ -627,12 +629,12 @@ export default function ChatView() {
                       <div className="p-3 bg-secondary rounded-full">
                         <Calendar className="w-5 h-5 text-secondary-foreground" />
                       </div>
-                      <span className="text-xs">Event</span>
+                      <span className="text-xs">{t('messages.event')}</span>
                     </button>
                   </DialogTrigger>
                   <DialogContent className={ABOVE_CHAT}>
                     <DialogHeader>
-                      <DialogTitle>Share Event</DialogTitle>
+                      <DialogTitle>{t('messages.shareEvent')}</DialogTitle>
                     </DialogHeader>
                     <EventCreator conversationId={conversationId || ''} onClose={() => setShowMoreOptions(false)} />
                   </DialogContent>
@@ -645,11 +647,11 @@ export default function ChatView() {
                   <div className="p-3 bg-destructive rounded-full">
                     <MapPin className="w-5 h-5 text-destructive-foreground" />
                   </div>
-                  <span className="text-xs">Location</span>
+                  <span className="text-xs">{t('messages.location')}</span>
                 </button>
                 
                 <div className="col-span-3 mt-2">
-                  <p className="text-xs font-semibold mb-2">Stickers</p>
+                  <p className="text-xs font-semibold mb-2">{t('messages.stickers')}</p>
                   <div className="grid grid-cols-5 gap-2">
                     {STICKERS.map((sticker, idx) => (
                       <button
@@ -670,7 +672,7 @@ export default function ChatView() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder="Message..."
+            placeholder={t('messages.typeMessage')}
             className="flex-1"
             disabled={isRecording}
           />
@@ -708,11 +710,12 @@ const MAP_ZOOM = 15;
  * the message has no usable coordinates.
  */
 function LocationCard({ location }: { location?: MessageLocation }) {
+  const { t } = useTranslation();
   if (!location) {
     return (
       <div className="flex items-center gap-2 min-w-[200px]">
         <MapPin className="w-4 h-4" />
-        <p className="font-semibold">Location unavailable</p>
+        <p className="font-semibold">{t('messages.locationUnavailable')}</p>
       </div>
     );
   }
@@ -731,18 +734,18 @@ function LocationCard({ location }: { location?: MessageLocation }) {
     <div className="w-[250px] max-w-full">
       <div className="flex items-center gap-2 mb-2">
         <MapPin className="w-4 h-4" />
-        <p className="font-semibold">Shared location</p>
+        <p className="font-semibold">{t('messages.sharedLocation')}</p>
       </div>
       <a
         href={mapUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="relative block aspect-square overflow-hidden rounded-lg bg-muted"
-        aria-label="Open location in OpenStreetMap"
+        aria-label={t('messages.openInMap')}
       >
         <img
           src={`https://tile.openstreetmap.org/${MAP_ZOOM}/${tileX}/${tileY}.png`}
-          alt="Map"
+          alt={t('messages.mapAlt')}
           loading="lazy"
           className="h-full w-full"
         />
@@ -750,7 +753,7 @@ function LocationCard({ location }: { location?: MessageLocation }) {
           className="absolute w-7 h-7 -translate-x-1/2 -translate-y-full text-red-600 fill-red-200 drop-shadow"
           style={{ left: `${(x - tileX) * 100}%`, top: `${(y - tileY) * 100}%` }}
         />
-        <span className="absolute bottom-0 right-0 bg-white/80 px-1 text-[10px] text-black">
+        <span className="absolute bottom-0 end-0 bg-white/80 px-1 text-[10px] text-black">
           © OpenStreetMap
         </span>
       </a>
@@ -760,7 +763,7 @@ function LocationCard({ location }: { location?: MessageLocation }) {
         rel="noopener noreferrer"
         className="mt-1 inline-block text-sm underline"
       >
-        View location
+        {t('messages.viewLocation')}
       </a>
     </div>
   );
@@ -768,6 +771,7 @@ function LocationCard({ location }: { location?: MessageLocation }) {
 
 function PollCreator({ conversationId, onClose }: { conversationId: string; onClose: () => void }) {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
 
@@ -794,14 +798,14 @@ function PollCreator({ conversationId, onClose }: { conversationId: string; onCl
   return (
     <div className="space-y-4">
       <Input
-        placeholder="Ask a question..."
+        placeholder={t('messages.pollQuestionPlaceholder')}
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
       />
       {options.map((opt, idx) => (
         <Input
           key={idx}
-          placeholder={`Option ${idx + 1}`}
+          placeholder={t('messages.pollOption', { n: idx + 1 })}
           value={opt}
           onChange={(e) => {
             const newOptions = [...options];
@@ -811,7 +815,7 @@ function PollCreator({ conversationId, onClose }: { conversationId: string; onCl
         />
       ))}
       <Button onClick={handleCreate} className="w-full bg-[#d6955b] hover:bg-[#c58549]">
-        Create Poll
+        {t('messages.createPoll')}
       </Button>
     </div>
   );
@@ -819,6 +823,7 @@ function PollCreator({ conversationId, onClose }: { conversationId: string; onCl
 
 function EventCreator({ conversationId, onClose }: { conversationId: string; onClose: () => void }) {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -844,7 +849,7 @@ function EventCreator({ conversationId, onClose }: { conversationId: string; onC
   return (
     <div className="space-y-4">
       <Input
-        placeholder="Event title"
+        placeholder={t('messages.eventTitlePlaceholder')}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
@@ -859,12 +864,12 @@ function EventCreator({ conversationId, onClose }: { conversationId: string; onC
         onChange={(e) => setTime(e.target.value)}
       />
       <Input
-        placeholder="Location (optional)"
+        placeholder={t('messages.eventLocationPlaceholder')}
         value={location}
         onChange={(e) => setLocation(e.target.value)}
       />
       <Button onClick={handleCreate} className="w-full bg-[#d6955b] hover:bg-[#c58549]">
-        Share Event
+        {t('messages.shareEvent')}
       </Button>
     </div>
   );

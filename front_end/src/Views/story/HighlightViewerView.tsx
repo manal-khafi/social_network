@@ -13,8 +13,10 @@ import {
   type Highlight,
 } from "../../api/highlightsApi";
 import { IMAGE_STORY_MS } from "../../Components/story/storyConfig";
+import { useTranslation } from "react-i18next";
 
 export default function HighlightViewerView() {
+  const { t } = useTranslation();
   const { highlightId } = useParams();
   const navigate = useNavigate();
   const currentUser = useAppSelector((s) => s.user.currentUser);
@@ -40,12 +42,12 @@ export default function HighlightViewerView() {
       .then((h) => {
         setHighlight(h);
         if (h.items.length === 0) {
-          toast("This highlight is empty");
+          toast(t("stories.thisHighlightIsEmpty"));
           navigate(-1);
         }
       })
       .catch(() => {
-        toast.error("Highlight not found");
+        toast.error(t("stories.highlightNotFound"));
         navigate(-1);
       });
   }, [highlightId, navigate]);
@@ -122,23 +124,23 @@ export default function HighlightViewerView() {
     setMenuOpen(false);
     try {
       const res = await removeFromHighlight(highlight.id, item.id);
-      toast.success("Removed from highlight");
+      toast.success(t("stories.removedFromHighlight"));
       if (res.deleted || items.length <= 1) return navigate(-1);
       setHighlight({ ...highlight, items: items.filter((s) => s.id !== item.id) });
       setIdx((i) => Math.max(0, i - 1));
     } catch {
-      toast.error("Could not remove");
+      toast.error(t("stories.couldNotRemove"));
     }
   };
 
   const doDelete = async () => {
-    if (!highlight || !window.confirm(`Delete highlight “${highlight.title}”?`)) return;
+    if (!highlight || !window.confirm(t("stories.deleteHighlightConfirm", { title: highlight.title }))) return;
     try {
       await deleteHighlight(highlight.id);
-      toast.success("Highlight deleted");
+      toast.success(t("stories.highlightDeleted"));
       navigate(-1);
     } catch {
-      toast.error("Could not delete");
+      toast.error(t("stories.couldNotDelete"));
     }
   };
 
@@ -158,9 +160,9 @@ export default function HighlightViewerView() {
     try {
       await renameHighlight(highlight.id, title);
       setHighlight({ ...highlight, title });
-      toast.success("Renamed");
+      toast.success(t("stories.renamed"));
     } catch {
-      toast.error("Could not rename");
+      toast.error(t("stories.couldNotRename"));
     }
   };
 
@@ -169,7 +171,7 @@ export default function HighlightViewerView() {
   return (
     <div className="fixed inset-0 bg-black z-[60] flex items-center justify-center">
       <div className="relative w-full h-full max-w-[440px] mx-auto">
-        <div className="absolute top-2 left-3 right-3 flex gap-1 z-30">
+        <div className="absolute top-2 start-3 end-3 flex gap-1 z-30">
           {items.map((s, i) => (
             <div key={s.id} className="flex-1 h-[3px] bg-white/25 rounded-full overflow-hidden">
               <div
@@ -183,7 +185,7 @@ export default function HighlightViewerView() {
           ))}
         </div>
 
-        <div className="absolute top-5 left-3 right-3 flex items-center justify-between z-30 pt-1">
+        <div className="absolute top-5 start-3 end-3 flex items-center justify-between z-30 pt-1">
           <div className="flex items-center gap-2">
             <Avatar className="w-9 h-9 border border-white/60">
               <AvatarImage src={highlight.user.avatar_url ?? undefined} />
@@ -194,7 +196,7 @@ export default function HighlightViewerView() {
               <p className="text-[11px] opacity-80">@{highlight.user.username}</p>
             </div>
             {item.music && (
-              <div className="flex items-center gap-1 bg-white/15 rounded-full pl-1 pr-2 py-0.5 ml-1">
+              <div className="flex items-center gap-1 bg-white/15 rounded-full ps-1 pe-2 py-0.5 ms-1">
                 <Music2 className="w-3 h-3 text-white" />
                 <span className="text-[10px] text-white max-w-[110px] truncate">
                   {item.music.title} · {item.music.artist}
@@ -207,13 +209,13 @@ export default function HighlightViewerView() {
               <div className="relative">
                 <button
                   onClick={() => { setMenuOpen((o) => !o); setPaused(true); }}
-                  aria-label="Highlight options"
+                  aria-label={t("stories.highlightOptions")}
                   className="p-2 rounded-full bg-black/40 text-white"
                 >
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
                 {menuOpen && (
-                  <div className="absolute right-0 mt-1 w-44 rounded-xl bg-neutral-900 border border-white/10 overflow-hidden text-sm">
+                  <div className="absolute end-0 mt-1 w-44 rounded-xl bg-neutral-900 border border-white/10 overflow-hidden text-sm">
                     <button onClick={startRename} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/10">
                       <Pencil className="w-4 h-4" /> Rename
                     </button>
@@ -229,7 +231,7 @@ export default function HighlightViewerView() {
             )}
             <button
               onClick={() => navigate(-1)}
-              aria-label="Close"
+              aria-label={t("actions.close")}
               className="p-2 rounded-full bg-black/40 text-white"
             >
               <X className="w-5 h-5" />
@@ -249,7 +251,7 @@ export default function HighlightViewerView() {
           {item.content_type === "image" && (
             <img
               src={item.content_url}
-              alt={item.caption || `${highlight.title} highlight`}
+              alt={item.caption || t("stories.highlightAlt", { title: highlight.title })}
               className="w-full h-full object-contain"
             />
           )}
@@ -284,7 +286,7 @@ export default function HighlightViewerView() {
         </div>
 
         {item.content_type !== "text" && item.caption && (
-          <div className="absolute bottom-6 left-4 right-4 z-20 text-center">
+          <div className="absolute bottom-6 start-4 end-4 z-20 text-center">
             <span className="inline-block bg-black/45 text-white text-sm px-3 py-1.5 rounded-lg">
               {item.caption}
             </span>
@@ -293,7 +295,7 @@ export default function HighlightViewerView() {
 
         {renameValue !== null && (
           <div className="absolute inset-0 z-40 bg-black/80 flex flex-col justify-center p-6 text-white">
-            <p className="text-sm text-white/70 mb-2">Rename highlight</p>
+            <p className="text-sm text-white/70 mb-2">{t("stories.renameHighlight")}</p>
             <input
               autoFocus
               value={renameValue}
@@ -316,13 +318,13 @@ export default function HighlightViewerView() {
                 }}
                 className="flex-1 rounded-full bg-white/10 py-2.5 text-sm"
               >
-                Cancel
+                {t("actions.cancel")}
               </button>
               <button
                 onClick={commitRename}
                 className="flex-1 rounded-full bg-white text-black py-2.5 text-sm font-semibold"
               >
-                Save
+                {t("actions.save")}
               </button>
             </div>
           </div>

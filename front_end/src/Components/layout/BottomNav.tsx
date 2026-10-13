@@ -4,21 +4,23 @@ import { PATHS } from '../../routes/paths';
 import { useAppSelector } from '../../hooks';
 import { selectUnreadConversationCount } from '../../features/messages/messagesSlice';
 import { Badge } from '../ui/badge';
+import { useTranslation } from 'react-i18next';
 
 export default function BottomNav() {
   const location = useLocation();
+  const { t } = useTranslation();
   const unreadConversations = useAppSelector(selectUnreadConversationCount);
 
   const navItems = [
-    { path: PATHS.FEED, icon: Home, label: 'Home' },
-    { path: PATHS.COMMUNITY, icon: Users, label: 'Community' },
-    { path: PATHS.CREATE_POST, icon: PlusCircle, label: 'Create' },
-    { path: PATHS.INBOX, icon: Mail, label: 'Inbox', badge: unreadConversations },
-    { path: PATHS.PROFILE_ME, icon: User, label: 'Profile' },
+    { path: PATHS.FEED, icon: Home, label: t('nav.home') },
+    { path: PATHS.COMMUNITY, icon: Users, label: t('nav.community') },
+    { path: PATHS.CREATE_POST, icon: PlusCircle, label: t('nav.create') },
+    { path: PATHS.INBOX, icon: Mail, label: t('nav.inbox'), badge: unreadConversations },
+    { path: PATHS.PROFILE_ME, icon: User, label: t('nav.profile') },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 lg:hidden">
+    <nav className="fixed bottom-0 start-0 end-0 bg-card border-t border-border z-50 lg:hidden">
       <div className="max-w-2xl mx-auto px-4">
         <div className="flex justify-around items-center h-16">
           {navItems.map((item) => {
@@ -39,7 +41,7 @@ export default function BottomNav() {
                 <div className="relative">
                   <Icon className={`w-6 h-6 ${isActive ? 'fill-current' : ''}`} />
                   {item.badge !== undefined && item.badge > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">
+                    <Badge className="absolute -top-1 -end-1 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">
                       {item.badge > 9 ? '9+' : item.badge}
                     </Badge>
                   )}

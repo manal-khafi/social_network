@@ -2,15 +2,17 @@ import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const VerifyEmail = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = searchParams.get("token"); // Get token from URL
     if (!token) {
-      toast.error("Token is missing!");
+      toast.error(t("auth.tokenIsMissing"));
       navigate("/"); // redirect to login
       return;
     }
@@ -25,7 +27,7 @@ const VerifyEmail = () => {
           navigate("/"); // redirect to login page
         }
       } catch (error: any) {
-        toast.error(error.response?.data?.message || "Server error. Please try again later.");
+        toast.error(error.response?.data?.message || t("auth.serverError"));
         navigate("/"); // redirect on error
       }
     };

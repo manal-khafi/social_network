@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import { getQuestionResponses, type QuestionResponse } from "../../api/storiesApi";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   storyId: string;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function QuestionResponsesSheet({ storyId, overlayId, prompt, onClose }: Props) {
+  const { t } = useTranslation();
   const [responses, setResponses] = useState<QuestionResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,10 +32,10 @@ export default function QuestionResponsesSheet({ storyId, overlayId, prompt, onC
       >
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <div>
-            <span className="font-semibold">Responses</span>
+            <span className="font-semibold">{t("stories.responses")}</span>
             <p className="text-xs text-white/50 truncate max-w-[240px]">{prompt}</p>
           </div>
-          <button onClick={onClose} aria-label="Close"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} aria-label={t("actions.close")}><X className="w-5 h-5" /></button>
         </div>
         <div className="flex-1 overflow-y-auto px-2 py-2">
           {loading ? (
@@ -41,7 +43,7 @@ export default function QuestionResponsesSheet({ storyId, overlayId, prompt, onC
               <Loader2 className="w-5 h-5 animate-spin text-white/50" />
             </div>
           ) : responses.length === 0 ? (
-            <p className="text-center text-sm text-white/50 py-10">No responses yet</p>
+            <p className="text-center text-sm text-white/50 py-10">{t("stories.noResponsesYet")}</p>
           ) : (
             responses.map((r) => (
               <div key={r.id} className="flex items-start gap-3 p-2">

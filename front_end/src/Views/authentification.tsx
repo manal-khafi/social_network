@@ -18,8 +18,8 @@ export default function AuthView() {
     <LeftSide />
     <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-[#feeaa1]/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#226d68]/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 start-10 w-72 h-72 bg-[#feeaa1]/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 end-10 w-96 h-96 bg-[#226d68]/10 rounded-full blur-3xl"></div>
       </div>
 
       <div className="relative bg-white rounded-3xl shadow-2xl p-8 md:p-12 w-full max-w-md">

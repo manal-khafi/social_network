@@ -11,6 +11,7 @@ import { Camera } from "lucide-react";
 import { toast } from "sonner";
 import { saveMyProfile, updateMyAvatar, updateCoverImage } from "../../features/user/userSlice";
 import { uploadImageAndGetURL } from "../../utils/uploadImageAndGetURL";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   showCover?: boolean;
@@ -24,6 +25,7 @@ export default function ProfileEditorSection({
   onSaved,
 }: Props) {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const { currentUser } = useAppSelector((state) => state.user);
 
   const profilePicRef = useRef<HTMLInputElement>(null);
@@ -79,7 +81,7 @@ export default function ProfileEditorSection({
         })
       ).unwrap();
 
-      toast.success("Profile updated successfully");
+      toast.success(t("profile.updated"));
       onSaved?.();
     } catch (err: any) {
       toast.error(String(err));
@@ -90,15 +92,15 @@ export default function ProfileEditorSection({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) return toast.error("File must be an image");
-    if (file.size > 5 * 1024 * 1024) return toast.error("Max size is 5MB");
+    if (!file.type.startsWith("image/")) return toast.error(t("profile.fileMustBeImage"));
+    if (file.size > 5 * 1024 * 1024) return toast.error(t("profile.maxSize"));
 
     try {
       const url = await uploadImageAndGetURL(file, "avatars");
       await dispatch(updateMyAvatar({ avatar_url: url })).unwrap();
-      toast.success("Profile picture updated");
+      toast.success(t("profile.pictureUpdated"));
     } catch (err: any) {
-      toast.error(err?.message ?? "Failed to update picture");
+      toast.error(err?.message ?? t("profile.pictureUpdateFailed"));
     }
   };
 
@@ -106,15 +108,15 @@ export default function ProfileEditorSection({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) return toast.error("File must be an image");
-    if (file.size > 5 * 1024 * 1024) return toast.error("Max size is 5MB");
+    if (!file.type.startsWith("image/")) return toast.error(t("profile.fileMustBeImage"));
+    if (file.size > 5 * 1024 * 1024) return toast.error(t("profile.maxSize"));
 
     try {
       const url = await uploadImageAndGetURL(file, "covers");
       await dispatch(updateCoverImage({ cover_image: url })).unwrap();
-      toast.success("Cover photo updated");
+      toast.success(t("profile.coverUpdated"));
     } catch (err: any) {
-      toast.error(err?.message ?? "Failed to update cover photo");
+      toast.error(err?.message ?? t("profile.coverUpdateFailed"));
     }
   };
 
@@ -129,7 +131,7 @@ export default function ProfileEditorSection({
             {currentUser.cover_image && (
               <img
                 src={currentUser.cover_image}
-                alt="Cover"
+                alt={t("profile.coverAlt")}
                 className="w-full h-full object-cover"
               />
             )}
@@ -145,7 +147,8 @@ export default function ProfileEditorSection({
             <button
               type="button"
               onClick={() => coverPicRef.current?.click()}
-              className="absolute bottom-4 right-4 p-3 bg-background/90 rounded-full hover:bg-background shadow-lg"
+              className="absolute bottom-4 end-4 p-3 bg-background/90 rounded-full hover:bg-background shadow-lg"
+              aria-label={t("profile.changeCover")}
             >
               <Camera className="w-5 h-5" />
             </button>
@@ -155,7 +158,7 @@ export default function ProfileEditorSection({
 
       {/* Profile Picture */}
       <Card className="p-6">
-        <h3 className="font-semibold mb-4">Profile Picture</h3>
+        <h3 className="font-semibold mb-4">{t("profile.profilePicture")}</h3>
         <div className="flex items-center gap-4">
           <div className="relative">
             <Avatar className="w-24 h-24">
@@ -176,87 +179,88 @@ export default function ProfileEditorSection({
             <button
               type="button"
               onClick={() => profilePicRef.current?.click()}
-              className="absolute bottom-0 right-0 p-2 bg-primary rounded-full text-primary-foreground hover:bg-primary/90 shadow-lg"
+              className="absolute bottom-0 end-0 p-2 bg-primary rounded-full text-primary-foreground hover:bg-primary/90 shadow-lg"
+              aria-label={t("profile.changePhoto")}
             >
               <Camera className="w-4 h-4" />
             </button>
           </div>
 
           <div className="flex-1">
-            <p className="text-sm text-muted-foreground">Upload a new profile picture</p>
-            <p className="text-xs text-muted-foreground mt-1">JPG, PNG or GIF. Max 5MB</p>
+            <p className="text-sm text-muted-foreground">{t("profile.uploadNewPicture")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("profile.pictureHint")}</p>
           </div>
         </div>
       </Card>
 
       {/* Basic Information */}
       <Card className="p-6 space-y-4">
-        <h3 className="font-semibold">Basic Information</h3>
+        <h3 className="font-semibold">{t("profile.basicInfo")}</h3>
 
         <div className="space-y-2">
-          <label className="text-sm">Username</label>
+          <label className="text-sm">{t("auth.username")}</label>
           <Input
             value={formData.username}
             onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-            placeholder="username"
+            placeholder={t("profile.usernamePlaceholder")}
           />
-          <p className="text-xs text-muted-foreground">Your unique username on ANMOUGAR</p>
+          <p className="text-xs text-muted-foreground">{t("profile.usernameHint")}</p>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm">Full Name</label>
+          <label className="text-sm">{t("auth.fullName")}</label>
           <Input
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            placeholder="Full Name"
+            placeholder={t("auth.fullName")}
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm">Bio</label>
+          <label className="text-sm">{t("profile.bio")}</label>
           <Textarea
             value={formData.bio}
             onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-            placeholder="Tell us about yourself..."
+            placeholder={t("profile.bioPlaceholder")}
             className="resize-none"
             rows={4}
           />
-          <p className="text-xs text-muted-foreground text-right">{(formData.bio ?? "").length}/160</p>
+          <p className="text-xs text-muted-foreground text-end">{(formData.bio ?? "").length}/160</p>
         </div>
       </Card>
 
       {/* Additional Information */}
       <Card className="p-6 space-y-4">
-        <h3 className="font-semibold">Additional Information</h3>
+        <h3 className="font-semibold">{t("profile.additionalInfo")}</h3>
 
         <div className="space-y-2">
-          <label className="text-sm">Location</label>
+          <label className="text-sm">{t("profile.location")}</label>
           <Input
             value={formData.location}
             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            placeholder="City, Country"
+            placeholder={t("profile.locationPlaceholder")}
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm">Date of Birth</label>
+          <label className="text-sm">{t("profile.dateOfBirth")}</label>
           <Input
             value={formData.dateOfBirth}
             onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
             type="date"
           />
-          <p className="text-xs text-muted-foreground">This won't be shown publicly</p>
+          <p className="text-xs text-muted-foreground">{t("profile.dateOfBirthHint")}</p>
         </div>
       </Card>
 
       {/* Privacy Settings */}
       <Card className="p-6 space-y-4">
-        <h3 className="font-semibold">Privacy</h3>
+        <h3 className="font-semibold">{t("settings.privacy")}</h3>
 
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="font-medium">Private Account</p>
-            <p className="text-sm text-muted-foreground">Only approved followers can see your posts and stories</p>
+            <p className="font-medium">{t("privacy.privateAccount")}</p>
+            <p className="text-sm text-muted-foreground">{t("privacy.privateAccountDescription")}</p>
           </div>
           <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
         </div>
@@ -265,8 +269,8 @@ export default function ProfileEditorSection({
 
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="font-medium">Allow Comments</p>
-            <p className="text-sm text-muted-foreground">People can comment on your posts</p>
+            <p className="font-medium">{t("privacy.allowComments")}</p>
+            <p className="text-sm text-muted-foreground">{t("privacy.allowCommentsDescription")}</p>
           </div>
           <Switch
             checked={formData.allowComments}
@@ -278,8 +282,8 @@ export default function ProfileEditorSection({
 
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="font-medium">Allow Mentions</p>
-            <p className="text-sm text-muted-foreground">People can mention you in posts and comments</p>
+            <p className="font-medium">{t("privacy.allowMentions")}</p>
+            <p className="text-sm text-muted-foreground">{t("privacy.allowMentionsDescription")}</p>
           </div>
           <Switch
             checked={formData.allowMentions}
@@ -291,8 +295,8 @@ export default function ProfileEditorSection({
 
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="font-medium">Show Activity Status</p>
-            <p className="text-sm text-muted-foreground">Let people see when you're online</p>
+            <p className="font-medium">{t("privacy.activityStatus")}</p>
+            <p className="text-sm text-muted-foreground">{t("privacy.activityStatusDescription")}</p>
           </div>
           <Switch
             checked={formData.showActivityStatus}
@@ -304,7 +308,7 @@ export default function ProfileEditorSection({
       {showSaveButton && (
         <div className="flex justify-end">
           <Button onClick={handleSave} className="bg-[#d6955b] hover:bg-[#c58549]">
-            Save Changes
+            {t("actions.saveChanges")}
           </Button>
         </div>
       )}

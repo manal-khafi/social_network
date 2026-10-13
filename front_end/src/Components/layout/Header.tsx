@@ -5,9 +5,11 @@ import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { PATHS } from '../../routes/paths';
 import { LogoIcon } from '../ui/LogoIcon';
+import { useTranslation } from 'react-i18next';
 
 export default function Header() {
   const location = useLocation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { unreadCount } = useAppSelector((state) => state.notifications);
@@ -44,15 +46,15 @@ export default function Header() {
 
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={query}
               onFocus={() => {
                 if (!isSearchPage) navigate(PATHS.SEARCH);
               }}
               onChange={(event) => handleSearchChange(event.target.value)}
-              placeholder="Search"
-              className="h-9 rounded-full pl-9 bg-muted/60 border-none focus-visible:ring-0"
+              placeholder={t('nav.search')}
+              className="h-9 rounded-full ps-9 bg-muted/60 border-none focus-visible:ring-0"
             />
           </div>
         </div>
@@ -60,7 +62,7 @@ export default function Header() {
         <Link to={PATHS.NOTIFICATIONS} className="relative p-2 hover:bg-muted rounded-full transition-colors">
           <Heart className="w-5 h-5 text-foreground" />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">
+            <Badge className="absolute -top-1 -end-1 h-5 min-w-5 flex items-center justify-center px-1 text-xs bg-destructive text-destructive-foreground border-0">
               {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
           )}

@@ -1,12 +1,14 @@
 import { motion } from "framer-motion";
 import { Users, MessageCircle, Heart, Share2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function LeftSide() {
+  const { t } = useTranslation();
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-[#18534F] to-[#718197] flex items-center justify-center p-12">
       {/* Decorative floating elements */}
       <motion.div
-        className="absolute top-20 left-16 w-32 h-32 rounded-full bg-[#FEEAA1] opacity-10"
+        className="absolute top-20 start-16 w-32 h-32 rounded-full bg-[#FEEAA1] opacity-10"
         animate={{
           y: [0, 20, 0],
           scale: [1, 1.1, 1],
@@ -18,7 +20,7 @@ export function LeftSide() {
         }}
       />
       <motion.div
-        className="absolute bottom-32 right-24 w-24 h-24 rounded-full bg-[#D6955B] opacity-20"
+        className="absolute bottom-32 end-24 w-24 h-24 rounded-full bg-[#D6955B] opacity-20"
         animate={{
           y: [0, -15, 0],
           scale: [1, 1.05, 1],
@@ -31,7 +33,7 @@ export function LeftSide() {
         }}
       />
       <motion.div
-        className="absolute top-1/3 right-12 w-16 h-16 rounded-full bg-[#FEEAA1] opacity-15"
+        className="absolute top-1/3 end-12 w-16 h-16 rounded-full bg-[#FEEAA1] opacity-15"
         animate={{
           y: [0, 25, 0],
         }}
@@ -70,9 +72,9 @@ export function LeftSide() {
           transition={{ duration: 0.6, delay: 0.4 }}
           style={{ fontFamily: 'Inter, sans-serif' }}
         >
-          Welcome to the
+          {t("auth.welcomeToThe")}
           <br />
-          <span className="text-[#FEEAA1]">Social World</span>
+          <span className="text-[#FEEAA1]">{t("auth.socialWorld")}</span>
         </motion.h1>
 
         {/* Description */}
@@ -83,7 +85,7 @@ export function LeftSide() {
           transition={{ duration: 0.6, delay: 0.6 }}
           style={{ fontFamily: 'Inter, sans-serif' }}
         >
-          Connect with friends, share moments, and discover communities that inspire you. Your journey to meaningful connections starts here.
+          {t("auth.connectWithFriendsShareMomentsAnd")}
         </motion.p>
 
         {/* Social Icons with Connection Lines */}
@@ -135,7 +137,7 @@ export function LeftSide() {
           transition={{ duration: 0.6, delay: 1 }}
           style={{ fontFamily: 'Inter, sans-serif' }}
         >
-          Join thousands already connected
+          {t("auth.joinThousandsAlreadyConnected")}
         </motion.p>
 
         {/* Decorative online dots */}

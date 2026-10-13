@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { PATHS } from '../../routes/paths';
+import { useTranslation } from 'react-i18next';
 
 interface ProfileHeaderLayoutProps {
   coverImage: string | null;
@@ -20,13 +21,14 @@ export default function ProfileHeaderLayout({
   bio,
   actionsSlot,
 }: ProfileHeaderLayoutProps) {
+  const { t } = useTranslation();
   return (
     <>
       <div className="h-48 bg-muted overflow-hidden">
         {coverImage && (
           <img
             src={coverImage}
-            alt="Cover"
+            alt={t('profile.coverAlt')}
             className="w-full h-full object-cover"
           />
         )}

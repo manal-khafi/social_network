@@ -16,7 +16,11 @@ import { Separator } from '../../Components/ui/separator';
 import { Heart, MessageCircle, UserPlus, UserCheck, Repeat, AtSign, Bell, Check, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+
+import { useTranslation } from 'react-i18next';
+
 export default function NotificationsView() {
+  const { t } = useTranslation();
   useTimeTicker();
   const { notifications, nextCursor, status, unreadCount } = useAppSelector((state) => state.notifications);
   const isLoading = status === 'loading';
@@ -25,12 +29,12 @@ export default function NotificationsView() {
 
   const handleAcceptRequest = (requestId: string, username: string) => {
     dispatch(acceptFollowRequest(requestId));
-    toast.success(`Accepted ${username}'s follow request`);
+    toast.success(t('notifications.acceptedRequest', { username }));
   };
 
   const handleDenyRequest = (requestId: string, username: string) => {
     dispatch(denyFollowRequest(requestId));
-    toast.success(`Denied ${username}'s follow request`);
+    toast.success(t('notifications.deniedRequest', { username }));
   };
 
   useEffect(() => {
@@ -56,14 +60,14 @@ export default function NotificationsView() {
   return (
     <div className="p-4 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Notifications</h2>
+        <h2 className="text-xl font-semibold">{t("notifications.title")}</h2>
         <Button
           variant="ghost"
           size="sm"
           disabled={unreadCount === 0}
           onClick={() => dispatch(markAllAsRead())}
         >
-          Mark all as read
+          {t("notifications.markAllRead")}
         </Button>
       </div>
 
@@ -73,7 +77,7 @@ export default function NotificationsView() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <UserPlus className="w-5 h-5 text-primary" />
-              <h3 className="font-semibold">Follow Requests</h3>
+              <h3 className="font-semibold">{t("notifications.followRequests")}</h3>
               <span className="text-xs bg-primary text-primary-foreground rounded-full px-2 py-0.5">
                 {followRequests.length}
               </span>
@@ -101,16 +105,16 @@ export default function NotificationsView() {
                         onClick={() => handleAcceptRequest(request.requestId, request.user.username)}
                         className="bg-[#d6955b] hover:bg-[#c58549]"
                       >
-                        <Check className="w-4 h-4 mr-1" />
-                        Accept
+                        <Check className="w-4 h-4 me-1" />
+                        {t("notifications.accept")}
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleDenyRequest(request.requestId, request.user.username)}
                       >
-                        <X className="w-4 h-4 mr-1" />
-                        Deny
+                        <X className="w-4 h-4 me-1" />
+                        {t("notifications.deny")}
                       </Button>
                     </div>
                   </div>
@@ -125,10 +129,10 @@ export default function NotificationsView() {
 
       {/* Regular Notifications */}
       <div>
-        <h3 className="font-semibold mb-3">Recent Activity</h3>
+        <h3 className="font-semibold mb-3">{t("notifications.recentActivity")}</h3>
         {notifications.length === 0 && !isLoading && (
           <p className="text-sm text-muted-foreground text-center py-8">
-            {status === 'failed' ? 'Could not load notifications.' : 'No notifications yet.'}
+            {status === 'failed' ? t("notifications.couldNotLoadNotifications") : t("notifications.noNotificationsYet")}
           </p>
         )}
 
@@ -161,7 +165,7 @@ export default function NotificationsView() {
                     variant="ghost"
                     size="sm"
                     className="flex-shrink-0 text-muted-foreground"
-                    aria-label="Delete notification"
+                    aria-label={t("notifications.deleteNotification")}
                     onClick={(e) => {
                       e.stopPropagation();
                       dispatch(deleteNotification(notif.id));
@@ -188,7 +192,7 @@ export default function NotificationsView() {
               size="sm"
               onClick={() => dispatch(fetchNotifications({ cursor: nextCursor }))}
             >
-              Load more
+              {t("actions.loadMore")}
             </Button>
           </div>
         )}

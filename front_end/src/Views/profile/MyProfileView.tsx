@@ -29,10 +29,12 @@ import {
 } from "../../Components/ui/dropdown-menu";
 import PostCard from "../../Components/post/PostCard";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export default function MyProfileView() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { user: authUser, isAuthenticated } = useAppSelector((state) => state.auth);
   const { currentUser, followers, following, status: profileStatus } = useAppSelector(
@@ -98,9 +100,9 @@ export default function MyProfileView() {
   if (!user) {
     return (
       <div className="text-center py-10">
-        <p className="text-muted-foreground">Could not load user profile.</p>
+        <p className="text-muted-foreground">{t("profile.loadFailed")}</p>
         <Button onClick={() => dispatch(fetchCurrentUserProfile())} className="mt-4">
-          Retry
+          {t("actions.retry")}
         </Button>
       </div>
     );
@@ -115,21 +117,21 @@ export default function MyProfileView() {
       const result = await dispatch(toggleFollow(targetUserId)).unwrap();
 
       if (result.followRequestPending || (isPrivate && !result.isFollowing)) {
-        toast.success("Follow request sent");
+        toast.success(t("profile.followRequestSent"));
       } else if (result.isFollowing) {
-        toast.success("Following user");
+        toast.success(t("profile.followingUser"));
       } else {
-        toast.success("Unfollowed user");
+        toast.success(t("profile.unfollowedUser"));
       }
     } catch (e: unknown) {
-      toast.error(typeof e === "string" ? e : "Failed to update follow");
+      toast.error(typeof e === "string" ? e : t("profile.followUpdateFailed"));
     }
   };
 
   const getButtonLabel = (u: (typeof followers)[number]) => {
-    if (u.followRequestPending) return "Requested";
-    if (u.isFollowing) return "Unfollow";
-    return "Follow";
+    if (u.followRequestPending) return t("profile.requested");
+    if (u.isFollowing) return t("profile.unfollow");
+    return t("profile.follow");
   };
 
   const isDisabled = (u: (typeof followers)[number]) => !!u.followRequestPending;
@@ -138,7 +140,7 @@ export default function MyProfileView() {
     list: typeof followers,
     emptyText: string
   ) => (
-    <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+    <div className="max-h-[60vh] space-y-2 overflow-y-auto pe-1">
       {list.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-6">{emptyText}</p>
       ) : (
@@ -186,8 +188,8 @@ export default function MyProfileView() {
           <>
             <Link to={PATHS.PROFILE_EDIT}>
               <Button variant="outline" size="sm">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Profile
+                <Edit className="w-4 h-4 me-2" />
+                {t("profile.editProfile")}
               </Button>
             </Link>
 
@@ -201,15 +203,15 @@ export default function MyProfileView() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
                   <Link to={PATHS.SETTINGS} className="flex items-center cursor-pointer">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
+                    <Settings className="w-4 h-4 me-2" />
+                    {t("nav.settings")}
                   </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
                   <button className="flex items-center cursor-pointer w-full" onClick={handleLogout}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
+                    <LogOut className="w-4 h-4 me-2" />
+                    {t("settings.logout")}
                   </button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -222,7 +224,7 @@ export default function MyProfileView() {
         <div className="flex justify-around text-center border-t border-b border-border py-3 my-4">
           <div>
             <p className="font-semibold">{myPosts.length}</p>
-            <p className="text-sm text-muted-foreground">Posts</p>
+            <p className="text-sm text-muted-foreground">{t("profile.posts")}</p>
           </div>
 
           <button
@@ -231,7 +233,7 @@ export default function MyProfileView() {
             className={myUserId ? "hover:underline" : "cursor-default pointer-events-none"}
           >
             <p className="font-semibold">{followers.length.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground">Followers</p>
+            <p className="text-sm text-muted-foreground">{t("profile.followers")}</p>
           </button>
 
           <button
@@ -240,7 +242,7 @@ export default function MyProfileView() {
             className={myUserId ? "hover:underline" : "cursor-default pointer-events-none"}
           >
             <p className="font-semibold">{following.length.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground">Following</p>
+            <p className="text-sm text-muted-foreground">{t("profile.following")}</p>
           </button>
         </div>
       </div>
@@ -248,18 +250,18 @@ export default function MyProfileView() {
       <Dialog open={followersOpen} onOpenChange={setFollowersOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Followers</DialogTitle>
+            <DialogTitle>{t("profile.followers")}</DialogTitle>
           </DialogHeader>
-          {renderFollowList(followers, "No followers yet")}
+          {renderFollowList(followers, t("empty.followers"))}
         </DialogContent>
       </Dialog>
 
       <Dialog open={followingOpen} onOpenChange={setFollowingOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Following</DialogTitle>
+            <DialogTitle>{t("profile.following")}</DialogTitle>
           </DialogHeader>
-          {renderFollowList(following, "Not following anyone yet")}
+          {renderFollowList(following, t("empty.following"))}
         </DialogContent>
       </Dialog>
       {myUserId && <HighlightsBar userId={myUserId} />}
@@ -267,13 +269,13 @@ export default function MyProfileView() {
       <Tabs defaultValue="posts" className="mt-4">
         <TabsList className="w-full justify-start rounded-none border-b">
           <TabsTrigger value="posts" className="flex-1">
-            Posts
+            {t("profile.posts")}
           </TabsTrigger>
           <TabsTrigger value="reposts" className="flex-1">
-            Reposts
+            {t("profile.reposts")}
           </TabsTrigger>
           <TabsTrigger value="saved" className="flex-1">
-            Saved
+            {t("profile.saved")}
           </TabsTrigger>
         </TabsList>
 
@@ -287,7 +289,7 @@ export default function MyProfileView() {
 
         <TabsContent value="saved" className="p-4 space-y-4">
           {postsStatus === "loading" && (
-            <div className="text-center text-muted-foreground py-8">Loading...</div>
+            <div className="text-center text-muted-foreground py-8">{t("actions.loading")}</div>
           )}
           {postsStatus === "failed" && (
             <div className="text-center text-destructive py-8">{postsError}</div>
@@ -295,7 +297,7 @@ export default function MyProfileView() {
           {postsStatus === "succeeded" && savedPosts.length > 0 ? (
             savedPosts.map((post) => <PostCard key={post.id} post={post} />)
           ) : (
-            <p className="text-center text-muted-foreground py-8">No saved posts</p>
+            <p className="text-center text-muted-foreground py-8">{t("empty.savedPosts")}</p>
           )}
         </TabsContent>
       </Tabs>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { X, Search, Loader2, AtSign } from "lucide-react";
 import { searchAccounts, type StoryUser } from "../../api/storiesApi";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   onPick: (username: string) => void;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function MentionPicker({ onPick, onClose }: Props) {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [results, setResults] = useState<StoryUser[]>([]);
   const [loading, setLoading] = useState(false);
@@ -35,9 +37,9 @@ export default function MentionPicker({ onPick, onClose }: Props) {
   return (
     <div className="absolute inset-0 z-40 bg-black/95 flex flex-col">
       <div className="flex items-center gap-2 p-3 border-b border-white/10 text-white">
-        <button onClick={onClose} aria-label="Close"><X className="w-6 h-6" /></button>
+        <button onClick={onClose} aria-label={t("actions.close")}><X className="w-6 h-6" /></button>
         <AtSign className="w-4 h-4" />
-        <span className="font-semibold">Mention someone</span>
+        <span className="font-semibold">{t("stories.mentionSomeone")}</span>
       </div>
       <div className="p-3">
         <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-white">
@@ -46,7 +48,7 @@ export default function MentionPicker({ onPick, onClose }: Props) {
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search accounts"
+            placeholder={t("search.searchAccounts")}
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-white/40"
           />
           {loading && <Loader2 className="w-4 h-4 animate-spin text-white/50" />}
@@ -63,7 +65,7 @@ export default function MentionPicker({ onPick, onClose }: Props) {
               <AvatarImage src={u.avatar_url ?? undefined} />
               <AvatarFallback>{u.username[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className="min-w-0 text-left">
+            <div className="min-w-0 text-start">
               <p className="text-sm font-medium truncate">{u.username}</p>
               <p className="text-xs text-white/50 truncate">{u.display_name}</p>
             </div>

@@ -214,7 +214,7 @@ export default function AppearanceView() {
               <button
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang)}
-                className={`w-full text-left p-4 rounded-lg transition-colors ${
+                className={`w-full text-start p-4 rounded-lg transition-colors ${
                   language === lang.code
                     ? 'bg-primary/10 text-primary font-medium border-2 border-primary'
                     : 'hover:bg-muted border-2 border-transparent'

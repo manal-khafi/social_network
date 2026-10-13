@@ -14,7 +14,11 @@ import { Separator } from '../../Components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '../../Components/ui/radio-group';
 import { Label } from '../../Components/ui/label';
 
+
+import { useTranslation } from 'react-i18next';
+
 export default function NotificationsView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { notifications } = useAppSelector((state) => state.settings);
@@ -28,7 +32,7 @@ export default function NotificationsView() {
     try {
       await dispatch(updateNotificationSettings(changes)).unwrap();
     } catch (message) {
-      toast.error(typeof message === 'string' ? message : 'Failed to save notification settings');
+      toast.error(typeof message === 'string' ? message : t("notificationSettings.failedToSaveNotificationSettings"));
     }
   };
 
@@ -39,7 +43,7 @@ export default function NotificationsView() {
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-bold">Notifications</h1>
+        <h1 className="text-xl font-bold">{t("notificationSettings.notifications")}</h1>
       </div>
 
       <div className="p-4 space-y-4 max-w-2xl mx-auto pb-24">
@@ -49,9 +53,9 @@ export default function NotificationsView() {
             <div className="flex items-center gap-3">
               <Bell className="w-5 h-5 text-[#18534f]" />
               <div>
-                <p className="font-semibold">All Notifications</p>
+                <p className="font-semibold">{t("notificationSettings.allNotifications")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Enable or disable all notifications
+                  {t("notificationSettings.enableOrDisableAllNotifications")}
                 </p>
               </div>
             </div>
@@ -72,14 +76,14 @@ export default function NotificationsView() {
 
         {/* Notification Channels */}
         <Card className="p-6 space-y-4">
-          <h2 className="font-semibold">Notification Channels</h2>
+          <h2 className="font-semibold">{t("notificationSettings.notificationChannels")}</h2>
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Smartphone className="w-5 h-5 text-muted-foreground" />
               <div>
-                <p className="font-medium">Push Notifications</p>
-                <p className="text-sm text-muted-foreground">Receive notifications on your device</p>
+                <p className="font-medium">{t("notificationSettings.pushNotifications")}</p>
+                <p className="text-sm text-muted-foreground">{t("notificationSettings.receiveNotificationsOnYourDevice")}</p>
               </div>
             </div>
             <Switch
@@ -94,8 +98,8 @@ export default function NotificationsView() {
             <div className="flex items-center gap-3">
               <Mail className="w-5 h-5 text-muted-foreground" />
               <div>
-                <p className="font-medium">Email Notifications</p>
-                <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+                <p className="font-medium">{t("notificationSettings.emailNotifications")}</p>
+                <p className="text-sm text-muted-foreground">{t("notificationSettings.receiveNotificationsViaEmail")}</p>
               </div>
             </div>
             <Switch
@@ -110,8 +114,8 @@ export default function NotificationsView() {
             <div className="flex items-center gap-3">
               <MessageSquare className="w-5 h-5 text-muted-foreground" />
               <div>
-                <p className="font-medium">In-App Notifications</p>
-                <p className="text-sm text-muted-foreground">See notifications within the app</p>
+                <p className="font-medium">{t("notificationSettings.inAppNotifications")}</p>
+                <p className="text-sm text-muted-foreground">{t("notificationSettings.seeNotificationsWithinTheApp")}</p>
               </div>
             </div>
             <Switch
@@ -123,12 +127,12 @@ export default function NotificationsView() {
 
         {/* Notification Types */}
         <Card className="p-6 space-y-4">
-          <h2 className="font-semibold">Activity Notifications</h2>
+          <h2 className="font-semibold">{t("notificationSettings.activityNotifications")}</h2>
           
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Likes</p>
-              <p className="text-sm text-muted-foreground">When someone likes your post</p>
+              <p className="font-medium">{t("notificationSettings.likes")}</p>
+              <p className="text-sm text-muted-foreground">{t("notificationSettings.whenSomeoneLikesYourPost")}</p>
             </div>
             <Switch
               checked={notifications.likes}
@@ -141,8 +145,8 @@ export default function NotificationsView() {
           
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Comments</p>
-              <p className="text-sm text-muted-foreground">When someone comments on your post or replies to you</p>
+              <p className="font-medium">{t("notificationSettings.comments")}</p>
+              <p className="text-sm text-muted-foreground">{t("notificationSettings.whenSomeoneCommentsOnYourPost")}</p>
             </div>
             <Switch
               checked={notifications.comments}
@@ -155,8 +159,8 @@ export default function NotificationsView() {
           
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">New Followers</p>
-              <p className="text-sm text-muted-foreground">When someone follows you, asks to, or accepts your request</p>
+              <p className="font-medium">{t("notificationSettings.newFollowers")}</p>
+              <p className="text-sm text-muted-foreground">{t("notificationSettings.whenSomeoneFollowsYouAsksTo")}</p>
             </div>
             <Switch
               checked={notifications.follows}
@@ -169,8 +173,8 @@ export default function NotificationsView() {
           
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Mentions</p>
-              <p className="text-sm text-muted-foreground">When someone mentions you</p>
+              <p className="font-medium">{t("notificationSettings.mentions")}</p>
+              <p className="text-sm text-muted-foreground">{t("notificationSettings.whenSomeoneMentionsYou")}</p>
             </div>
             <Switch
               checked={notifications.mentions}
@@ -183,8 +187,8 @@ export default function NotificationsView() {
           
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Reposts</p>
-              <p className="text-sm text-muted-foreground">When someone reposts your content</p>
+              <p className="font-medium">{t("notificationSettings.reposts")}</p>
+              <p className="text-sm text-muted-foreground">{t("notificationSettings.whenSomeoneRepostsYourContent")}</p>
             </div>
             <Switch
               checked={notifications.reposts}
@@ -196,33 +200,33 @@ export default function NotificationsView() {
 
         {/* Notification Timing */}
         <Card className="p-6 space-y-4">
-          <h2 className="font-semibold">Notification Timing</h2>
+          <h2 className="font-semibold">{t("notificationSettings.notificationTiming")}</h2>
           <p className="text-sm text-muted-foreground">
-            Choose when you want to receive notifications
+            {t("notificationSettings.chooseWhenYouWantToReceive")}
           </p>
           
           <RadioGroup defaultValue="always">
             <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
               <RadioGroupItem value="always" id="always" />
               <Label htmlFor="always" className="flex-1 cursor-pointer">
-                <p className="font-medium">Always</p>
-                <p className="text-sm text-muted-foreground">Receive notifications at any time</p>
+                <p className="font-medium">{t("notificationSettings.always")}</p>
+                <p className="text-sm text-muted-foreground">{t("notificationSettings.receiveNotificationsAtAnyTime")}</p>
               </Label>
             </div>
             
             <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
               <RadioGroupItem value="scheduled" id="scheduled" />
               <Label htmlFor="scheduled" className="flex-1 cursor-pointer">
-                <p className="font-medium">Scheduled</p>
-                <p className="text-sm text-muted-foreground">Only during specific hours</p>
+                <p className="font-medium">{t("notificationSettings.scheduled")}</p>
+                <p className="text-sm text-muted-foreground">{t("notificationSettings.onlyDuringSpecificHours")}</p>
               </Label>
             </div>
             
             <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
               <RadioGroupItem value="important" id="important" />
               <Label htmlFor="important" className="flex-1 cursor-pointer">
-                <p className="font-medium">Important Only</p>
-                <p className="text-sm text-muted-foreground">Only critical notifications</p>
+                <p className="font-medium">{t("notificationSettings.importantOnly")}</p>
+                <p className="text-sm text-muted-foreground">{t("notificationSettings.onlyCriticalNotifications")}</p>
               </Label>
             </div>
           </RadioGroup>
@@ -230,12 +234,12 @@ export default function NotificationsView() {
 
         {/* Messaging Notifications */}
         <Card className="p-6 space-y-4">
-          <h2 className="font-semibold">Messaging</h2>
+          <h2 className="font-semibold">{t("notificationSettings.messaging")}</h2>
           
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Message Requests</p>
-              <p className="text-sm text-muted-foreground">From people you don't follow</p>
+              <p className="font-medium">{t("notificationSettings.messageRequests")}</p>
+              <p className="text-sm text-muted-foreground">{t("notificationSettings.fromPeopleYouDontFollow")}</p>
             </div>
             <Switch defaultChecked disabled={!notifications.all} />
           </div>
@@ -244,8 +248,8 @@ export default function NotificationsView() {
           
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Group Messages</p>
-              <p className="text-sm text-muted-foreground">When you're added to a group</p>
+              <p className="font-medium">{t("notificationSettings.groupMessages")}</p>
+              <p className="text-sm text-muted-foreground">{t("notificationSettings.whenYoureAddedToAGroup")}</p>
             </div>
             <Switch defaultChecked disabled={!notifications.all} />
           </div>
@@ -254,8 +258,8 @@ export default function NotificationsView() {
           
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Video Calls</p>
-              <p className="text-sm text-muted-foreground">Incoming call notifications</p>
+              <p className="font-medium">{t("notificationSettings.videoCalls")}</p>
+              <p className="text-sm text-muted-foreground">{t("notificationSettings.incomingCallNotifications")}</p>
             </div>
             <Switch defaultChecked disabled={!notifications.all} />
           </div>

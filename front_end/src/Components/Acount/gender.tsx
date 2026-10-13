@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, Lock, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ChooseGenderProps {
   onSelect: (gender: string | null) => void;
@@ -14,6 +15,7 @@ const ChooseGender: React.FC<ChooseGenderProps> = ({
   onBack,
   selectedValue,
 }) => {
+  const { t } = useTranslation();
   const [selectedGender, setSelectedGender] = useState<string | null>(
     selectedValue || null
   );
@@ -22,7 +24,7 @@ const ChooseGender: React.FC<ChooseGenderProps> = ({
   const genderOptions = [
     {
       id: 'male',
-      label: 'Male',
+      label: t("onboarding.male"),
       icon: '♂',
       color: 'from-blue-400 to-cyan-500',
       bgColor: 'bg-gradient-to-br from-blue-50 to-cyan-50',
@@ -30,7 +32,7 @@ const ChooseGender: React.FC<ChooseGenderProps> = ({
     },
     {
       id: 'female',
-      label: 'Female',
+      label: t("onboarding.female"),
       icon: '♀',
       color: 'from-pink-400 to-rose-500',
       bgColor: 'bg-gradient-to-br from-pink-50 to-rose-50',
@@ -38,7 +40,7 @@ const ChooseGender: React.FC<ChooseGenderProps> = ({
     },
     {
       id: 'prefer_not_say',
-      label: 'Prefer not to say',
+      label: t("onboarding.preferNotToSay"),
       icon: <Lock className="w-6 h-6" />,
       color: 'from-[#718197] to-[#18534F]',
       bgColor: 'bg-gradient-to-br from-gray-50 to-[#ECF8F6]',
@@ -81,7 +83,7 @@ const ChooseGender: React.FC<ChooseGenderProps> = ({
         {/* Header */}
         <div className="text-center mb-10">
           <p className="text-[#718197]">
-            Choose how you want to be identified
+            {t("onboarding.chooseHowYouWantToBe")}
           </p>
         </div>
 
@@ -114,14 +116,14 @@ const ChooseGender: React.FC<ChooseGenderProps> = ({
                       : option.icon}
                   </div>
 
-                  <div className="text-left">
+                  <div className="text-start">
                     <div className="font-bold text-lg text-[#18534F]">
                       {option.label}
                     </div>
                     <div className="text-sm text-[#718197]">
                       {option.id === 'prefer_not_say'
-                        ? 'Keep this information private'
-                        : 'For personalized recommendations'}
+                        ? t("onboarding.keepThisInformationPrivate")
+                        : t("onboarding.forPersonalizedRecommendations")}
                     </div>
                   </div>
                 </div>
@@ -151,11 +153,11 @@ const ChooseGender: React.FC<ChooseGenderProps> = ({
             </div>
             <div>
               <h4 className="font-medium text-[#18534F] mb-1">
-                Why do we ask this?
+                {t("onboarding.whyDoWeAskThis")}
               </h4>
               <p className="text-sm text-[#718197]">
-                To better tailor your experience on the platform.
-                This information stays private and can be changed later.
+                {t("onboarding.toBetterTailorYourExperienceOn")}
+                {t("onboarding.thisInformationStaysPrivateAndCan")}
               </p>
             </div>
           </div>
@@ -169,7 +171,7 @@ const ChooseGender: React.FC<ChooseGenderProps> = ({
               hover:bg-white/50 transition flex items-center justify-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            {t("actions.back")}
           </button>
 
           <button
@@ -177,7 +179,7 @@ const ChooseGender: React.FC<ChooseGenderProps> = ({
             className="flex-1 py-3 border border-[#718197]/30 text-[#718197] rounded-lg
               hover:bg-white/50 transition"
           >
-            Skip
+            {t("onboarding.skip")}
           </button>
 
           <button
@@ -191,7 +193,7 @@ const ChooseGender: React.FC<ChooseGenderProps> = ({
               'Processing...'
             ) : (
               <>
-                Next
+                {t("actions.next")}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

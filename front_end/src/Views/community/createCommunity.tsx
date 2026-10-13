@@ -15,6 +15,7 @@ import { Textarea } from "../../Components/Community/communityTextArea";
 import { toast } from "sonner";
 import { createCommunity } from "../../api/axios";
 import { uploadFile } from "../../api/upload";
+import { useTranslation } from "react-i18next";
 
 const COMMUNITY_TYPES = [
   "tech",
@@ -31,6 +32,7 @@ const COMMUNITY_TYPES = [
 ];
 
 export function CreateCommunity() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -77,7 +79,7 @@ export function CreateCommunity() {
     e.preventDefault();
 
     if (!name.trim() || !bio.trim()) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("errors.requiredFields"));
       return;
     }
 
@@ -112,17 +114,17 @@ export function CreateCommunity() {
 
       if (!communityId) {
         console.log("Create community response:", response?.data);
-        toast.error("Community created but ID not returned by API");
+        toast.error(t("communities.communityCreatedButIdNotReturned"));
         return;
       }
 
-      toast.success("Community created!");
+      toast.success(t("communities.communityCreated"));
       navigate(`/home/community/${communityId}`, { replace: true });
     } catch (error: any) {
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to create the community"
+          t("communities.failedToCreateTheCommunity")
       );
     } finally {
       setIsLoading(false);
@@ -139,10 +141,10 @@ export function CreateCommunity() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[#18534f]">
-              Create a community
+              {t("communities.create")}
             </h1>
             <p className="text-sm text-gray-600">
-              Share your passion with the world
+              {t("communities.shareYourPassionWithTheWorld")}
             </p>
           </div>
         </div>
@@ -151,48 +153,48 @@ export function CreateCommunity() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Card className="border-2 shadow-xl bg-[#ecf8f6]">
           <CardHeader>
-            <CardTitle>Community details</CardTitle>
+            <CardTitle>{t("communities.communityDetails")}</CardTitle>
             <CardDescription>
-              Fill in the details below
+              {t("communities.fillInTheDetailsBelow")}
             </CardDescription>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label>Name *</Label>
+                <Label>{t("communities.name")}</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} />
               </div>
 
               <div>
-                <Label>Description *</Label>
+                <Label>{t("communities.description")}</Label>
                 <Textarea value={bio} onChange={(e) => setBio(e.target.value)} />
               </div>
 
               <div ref={dropdownRef} className="relative">
-                <Label>Category *</Label>
+                <Label>{t("communities.category2")}</Label>
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="w-full h-12 border-2 rounded-lg flex justify-between px-4"
                 >
-                  {type}
+                  {t(`communities.${type}`)}
                   <ChevronDown />
                 </button>
 
                 {isDropdownOpen && (
                   <div className="absolute z-50 bg-white border rounded w-full">
-                    {COMMUNITY_TYPES.map((t) => (
+                    {COMMUNITY_TYPES.map((ct) => (
                       <button
-                        key={t}
+                        key={ct}
                         type="button"
                         onClick={() => {
-                          setType(t);
+                          setType(ct);
                           setIsDropdownOpen(false);
                         }}
-                        className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                        className="block w-full px-4 py-2 text-start hover:bg-gray-100"
                       >
-                        {t}
+                        {t(`communities.${ct}`)}
                       </button>
                     ))}
                   </div>
@@ -205,13 +207,13 @@ export function CreateCommunity() {
                   variant="outline"
                   onClick={() => navigate("/home/community/list")}
                 >
-                  Cancel
+                  {t("actions.cancel")}
                 </Button>
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? (
                     <Loader2 className="animate-spin h-4 w-4" />
                   ) : (
-                    "Create community"
+                    t("communities.createCommunity")
                   )}
                 </Button>
               </div>

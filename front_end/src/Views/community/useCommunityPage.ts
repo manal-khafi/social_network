@@ -5,6 +5,7 @@ import { uploadFile } from "../../api/upload";
 import { useAppSelector } from "../../hooks";
 import { toast } from "sonner";
 import type { Community, CommunityRule, JoinRequest, Member } from "./types";
+import { useTranslation } from "react-i18next";
 
 /**
  * All data, form state and actions of the community page: loads the community,
@@ -13,6 +14,7 @@ import type { Community, CommunityRule, JoinRequest, Member } from "./types";
  * survive switching between tabs.
  */
 export function useCommunityPage(communityId: string | number) {
+  const { t } = useTranslation();
   const authUser = useAppSelector((s) => s.auth.user);
   const authUserId = authUser?.id;
 
@@ -184,10 +186,10 @@ export function useCommunityPage(communityId: string | number) {
       setMembers(Array.isArray(membersData) ? membersData : []);
 
       // Show success message
-      toast.success("Request accepted");
+      toast.success(t("communities.requestAccepted"));
     } catch (error) {
       console.error("Failed to approve request:", error);
-      toast.error("Failed to accept the request");
+      toast.error(t("communities.failedToAcceptTheRequest"));
     }
   };
 
@@ -195,24 +197,24 @@ export function useCommunityPage(communityId: string | number) {
     try {
       await rejectJoinRequest(communityId, requestId, userId);
       setJoinRequests(joinRequests.filter(req => req.id !== requestId));
-      toast.success("Request rejected");
+      toast.success(t("communities.requestRejected"));
     } catch (error) {
       console.error("Failed to reject request:", error);
-      toast.error("Failed to reject the request");
+      toast.error(t("communities.failedToRejectTheRequest"));
     }
   };
 
   const handleJoinLeave = async () => {
     try {
       if (!authUserId) {
-        toast.error("You must be signed in to do that");
+        toast.error(t("errors.notSignedIn"));
         return;
       }
 
       if (isJoined) {
         await leaveCommunity(communityId, authUserId);
         setIsJoined(false);
-        toast.success("You left the community");
+        toast.success(t("communities.youLeftTheCommunity"));
 
         const membersRes = await getCommunityMembers(communityId);
         const membersData =
@@ -223,7 +225,7 @@ export function useCommunityPage(communityId: string | number) {
       }
     } catch (error: any) {
       console.error("Failed to join/leave community:", error);
-      const msg = error?.response?.data?.message || "Something went wrong";
+      const msg = error?.response?.data?.message || t("errors.generic");
       toast.error(msg);
     }
   };
@@ -231,7 +233,7 @@ export function useCommunityPage(communityId: string | number) {
   const handleSubmitJoinRequest = async () => {
     try {
       if (!authUserId) {
-        toast.error("You must be signed in to do that");
+        toast.error(t("errors.notSignedIn"));
         return;
       }
 
@@ -239,11 +241,11 @@ export function useCommunityPage(communityId: string | number) {
 
       setShowJoinDialog(false);
       setJoinMessage("");
-      toast.success("Join request sent");
+      toast.success(t("communities.joinRequestSent"));
     } catch (error: any) {
       console.error("Failed to send join request:", error);
       const msg =
-        error?.response?.data?.message || "Failed to send the join request";
+        error?.response?.data?.message || t("communities.failedToSendTheJoinRequest");
       toast.error(msg);
     }
   };
@@ -261,10 +263,10 @@ export function useCommunityPage(communityId: string | number) {
         setRules([...rules, newRule]);
         setNewRuleTitle("");
         setNewRuleDescription("");
-        toast.success("Rule added");
+        toast.success(t("communities.ruleAdded"));
       } catch (error) {
         console.error("Failed to create rule:", error);
-        toast.error("Failed to add the rule");
+        toast.error(t("communities.failedToAddTheRule"));
       }
     }
   };
@@ -273,10 +275,10 @@ export function useCommunityPage(communityId: string | number) {
     try {
       await deleteCommunityRule(communityId, ruleId);
       setRules(rules.filter(rule => rule.id !== ruleId));
-      toast.success("Rule deleted");
+      toast.success(t("communities.ruleDeleted"));
     } catch (error) {
       console.error("Failed to delete rule:", error);
-      toast.error("Failed to delete the rule");
+      toast.error(t("communities.failedToDeleteTheRule"));
     }
   };
 
@@ -296,10 +298,10 @@ export function useCommunityPage(communityId: string | number) {
         rule.id === ruleId ? updatedRule : rule
       ));
       setEditingRuleId(null);
-      toast.success("Rule updated");
+      toast.success(t("communities.ruleUpdated"));
     } catch (error) {
       console.error("Failed to update rule:", error);
-      toast.error("Failed to update the rule");
+      toast.error(t("communities.failedToUpdateTheRule"));
     }
   };
 
@@ -358,10 +360,10 @@ export function useCommunityPage(communityId: string | number) {
       setCoverImagePreview("");
       setLogoImagePreview("");
 
-      toast.success("Community updated");
+      toast.success(t("communities.communityUpdated"));
     } catch (error) {
       console.error("Failed to update community:", error);
-      toast.error("Failed to update the community");
+      toast.error(t("communities.failedToUpdateTheCommunity"));
     } finally {
       setIsSaving(false);
     }

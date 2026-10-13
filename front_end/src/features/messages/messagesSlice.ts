@@ -3,6 +3,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import * as messagesApi from "../../api/messagesApi";
 import type { ApiConversation, ApiMessage } from "../../api/messagesApi";
 import type { RootState } from "../../store";
+import i18n from "../../i18n/i18n";
 
 export type MessageType =
   | "text"
@@ -102,12 +103,14 @@ const initialState: MessagesState = {
   status: "idle",
 };
 
+// Texts built here (short times, message previews) are stored in the slice, so
+// they are in the interface language as of when the data was loaded.
 const rel = (iso: string) => {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (s < 60) return "now";
-  if (s < 3600) return `${Math.floor(s / 60)}m`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h`;
-  return `${Math.floor(s / 86400)}d`;
+  if (s < 60) return i18n.t("messages.timeNow");
+  if (s < 3600) return i18n.t("messages.timeMinutes", { n: Math.floor(s / 60) });
+  if (s < 86400) return i18n.t("messages.timeHours", { n: Math.floor(s / 3600) });
+  return i18n.t("messages.timeDays", { n: Math.floor(s / 86400) });
 };
 
 // The API has no location message type, so a shared location travels as a text
@@ -133,19 +136,22 @@ export const parseLocation = (content: string): { lat: number; lng: number } | n
 const summarize = (m: ApiMessage | null): string => {
   if (!m) return "";
   if (m.message_type === "call") {
-    const t = m.call_meta?.callType === "video" ? "Video call" : "Voice call";
-    return m.call_meta?.status === "missed" ? `Missed ${t.toLowerCase()}` : t;
+    const video = m.call_meta?.callType === "video";
+    if (m.call_meta?.status === "missed") {
+      return i18n.t(video ? "messages.missedVideoCall" : "messages.missedVoiceCall");
+    }
+    return i18n.t(video ? "messages.videoCall" : "messages.voiceCall");
   }
-  if (m.message_type === "image") return "Photo";
-  if (m.message_type === "video") return "Video";
-  if (m.message_type === "text" && isLocationContent(m.content)) return "Location";
+  if (m.message_type === "image") return i18n.t("messages.photo");
+  if (m.message_type === "video") return i18n.t("messages.video");
+  if (m.message_type === "text" && isLocationContent(m.content)) return i18n.t("messages.location");
   return m.content ?? "";
 };
 
 const mapConversation = (c: ApiConversation): Conversation => ({
   id: c.id,
   userId: c.other_user?.id ?? "",
-  username: c.other_user?.username ?? "Unknown",
+  username: c.other_user?.username ?? i18n.t("messages.unknownUser"),
   avatar: c.other_user?.avatar_url ?? undefined,
   lastMessage: summarize(c.last_message),
   timestamp: rel(c.last_message_at),
@@ -164,7 +170,7 @@ const mapLocationMessage = (m: ApiMessage): Message => {
     senderId: m.sender_id,
     content: "",
     type: "location",
-    location: coords ? { name: "Shared location", ...coords } : undefined,
+    location: coords ? { name: i18n.t("messages.sharedLocation"), ...coords } : undefined,
     timestamp: rel(m.created_at),
     createdAt: m.created_at,
     isRead: true,
@@ -219,7 +225,7 @@ export const fetchConversation = createAsyncThunk(
     const conv: Conversation = {
       id: c.id,
       userId: c.other_user?.id ?? "",
-      username: c.other_user?.username ?? "Unknown",
+      username: c.other_user?.username ?? i18n.t("messages.unknownUser"),
       avatar: c.other_user?.avatar_url ?? undefined,
       lastMessage: "",
       timestamp: rel(c.last_message_at),
@@ -337,7 +343,7 @@ const messagesSlice = createSlice({
       const conv = state.conversations.find((c) => c.id === m.conversation_id);
       if (conv) {
         conv.lastMessage = summarize(m);
-        conv.timestamp = "now";
+        conv.timestamp = i18n.t("messages.timeNow");
         conv.lastMessageFromMe = false;
         conv.lastMessageAt = m.created_at;
         if (state.currentConversation !== m.conversation_id) conv.unreadCount += 1;
@@ -386,11 +392,11 @@ const messagesSlice = createSlice({
             m.type === "text"
               ? m.content
               : m.type === "location"
-              ? "Location"
+              ? i18n.t("messages.location")
               : m.type === "video"
-              ? "Video"
-              : "Photo";
-          conv.timestamp = "now";
+              ? i18n.t("messages.video")
+              : i18n.t("messages.photo");
+          conv.timestamp = i18n.t("messages.timeNow");
           conv.lastMessageFromMe = true;
           conv.lastMessageAt = m.createdAt;
           state.conversations = [conv, ...state.conversations.filter((c) => c.id !== conv.id)];

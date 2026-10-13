@@ -18,6 +18,7 @@ import {
   BookmarkPlus
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface ShareDialogProps {
   postId: string;
@@ -27,34 +28,35 @@ interface ShareDialogProps {
 
 export default function ShareDialog({ postId, open, onOpenChange }: ShareDialogProps) {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const [caption, setCaption] = useState('');
 
   const handleShareToFeed = () => {
     dispatch(repostPost(postId));
-    toast.success('Shared to feed');
+    toast.success(t('posts.shareDialog.sharedToFeed'));
     onOpenChange(false);
   };
 
   const handleShareToStory = () => {
-    toast.success('Shared to your story');
+    toast.success(t('posts.shareDialog.sharedToStory'));
     onOpenChange(false);
   };
 
   const handleShareViaMessages = () => {
-    toast.success('Opening messages...');
+    toast.success(t('posts.shareDialog.openingMessages'));
     onOpenChange(false);
   };
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`https://anmougar.app/post/${postId}`);
-    toast.success('Link copied to clipboard');
+    toast.success(t('posts.shareDialog.linkCopied'));
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Share Post</DialogTitle>
+          <DialogTitle>{t('posts.shareDialog.title')}</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-3">
@@ -66,9 +68,9 @@ export default function ShareDialog({ postId, open, onOpenChange }: ShareDialogP
             <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full">
               <BookmarkPlus className="w-5 h-5 text-white" />
             </div>
-            <div className="text-left">
-              <p className="font-semibold">Share to Story</p>
-              <p className="text-xs text-muted-foreground">Share this post to your story</p>
+            <div className="text-start">
+              <p className="font-semibold">{t('posts.shareDialog.toStory')}</p>
+              <p className="text-xs text-muted-foreground">{t('posts.shareDialog.toStoryDesc')}</p>
             </div>
           </Button>
 
@@ -80,9 +82,9 @@ export default function ShareDialog({ postId, open, onOpenChange }: ShareDialogP
             <div className="p-2 bg-green-500 rounded-full">
               <Repeat className="w-5 h-5 text-white" />
             </div>
-            <div className="text-left">
-              <p className="font-semibold">Share to Feed</p>
-              <p className="text-xs text-muted-foreground">Repost this on your profile</p>
+            <div className="text-start">
+              <p className="font-semibold">{t('posts.shareDialog.toFeed')}</p>
+              <p className="text-xs text-muted-foreground">{t('posts.shareDialog.toFeedDesc')}</p>
             </div>
           </Button>
 
@@ -94,9 +96,9 @@ export default function ShareDialog({ postId, open, onOpenChange }: ShareDialogP
             <div className="p-2 bg-blue-500 rounded-full">
               <Send className="w-5 h-5 text-white" />
             </div>
-            <div className="text-left">
-              <p className="font-semibold">Share via Messages</p>
-              <p className="text-xs text-muted-foreground">Send this post to your friends</p>
+            <div className="text-start">
+              <p className="font-semibold">{t('posts.shareDialog.viaMessages')}</p>
+              <p className="text-xs text-muted-foreground">{t('posts.shareDialog.viaMessagesDesc')}</p>
             </div>
           </Button>
 
@@ -108,9 +110,9 @@ export default function ShareDialog({ postId, open, onOpenChange }: ShareDialogP
             <div className="p-2 bg-gray-500 rounded-full">
               <Copy className="w-5 h-5 text-white" />
             </div>
-            <div className="text-left">
-              <p className="font-semibold">Copy Link</p>
-              <p className="text-xs text-muted-foreground">Copy link to clipboard</p>
+            <div className="text-start">
+              <p className="font-semibold">{t('posts.shareDialog.copyLink')}</p>
+              <p className="text-xs text-muted-foreground">{t('posts.shareDialog.copyLinkDesc')}</p>
             </div>
           </Button>
         </div>

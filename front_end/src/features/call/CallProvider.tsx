@@ -9,6 +9,7 @@ import {
 import { toast } from "sonner";
 import { getSocket } from "../../realtime/socket";
 import { getIceServers } from "../../api/messagesApi";
+import i18n from "../../i18n/i18n";
 
 export type CallStatus = "idle" | "outgoing" | "incoming" | "connecting" | "active";
 export type CallType = "audio" | "video";
@@ -171,7 +172,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           sdp: offer,
         });
       } catch {
-        toast.error("Couldn't access your microphone/camera");
+        toast.error(i18n.t("calls.couldntAccessYourMicrophoneCamera"));
         if (callIdRef.current) getSocket().emit("call:cancel", { callId: callIdRef.current });
         cleanup();
       }
@@ -192,7 +193,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       await pc.setLocalDescription(answer);
       getSocket().emit("call:accept", { callId: callIdRef.current, sdp: answer });
     } catch {
-      toast.error("Couldn't access your microphone/camera");
+      toast.error(i18n.t("calls.couldntAccessYourMicrophoneCamera"));
       getSocket().emit("call:reject", { callId: callIdRef.current });
       cleanup();
     }
@@ -240,7 +241,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       pendingOfferRef.current = p.sdp;
       setPeer({
         id: p.from?.id,
-        username: p.from?.username ?? "Unknown",
+        username: p.from?.username ?? i18n.t("messages.unknownUser"),
         avatar: p.from?.avatar_url ?? null,
       });
       setCallType(p.callType === "video" ? "video" : "audio");
@@ -262,20 +263,20 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     };
 
     const onRejected = () => {
-      toast("Call declined");
+      toast(i18n.t("calls.callDeclined"));
       cleanup();
     };
     const onCanceled = () => {
-      toast("Call canceled");
+      toast(i18n.t("calls.callCanceled"));
       cleanup();
     };
     const onEnded = () => cleanup();
     const onBusy = () => {
-      toast("They're on another call");
+      toast(i18n.t("calls.theyreOnAnotherCall"));
       cleanup();
     };
     const onUnavailable = () => {
-      toast("They're offline right now");
+      toast(i18n.t("calls.theyreOfflineRightNow"));
       cleanup();
     };
 

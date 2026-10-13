@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import ProfileEditorSection from "../../Components/Profile/ProfileEditorSection";
 import { PATHS } from "../../routes/paths";
+import { useTranslation } from "react-i18next";
 
 export default function EditProfileView() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background">
@@ -13,7 +15,7 @@ export default function EditProfileView() {
           <button onClick={() => navigate(PATHS.PROFILE_ME)} className="p-2 hover:bg-muted rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h2 className="font-semibold">Edit Profile</h2>
+          <h2 className="font-semibold">{t("profile.editProfile")}</h2>
         </div>
 
         <div className="p-4">

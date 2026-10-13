@@ -2,7 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Card } from '../../Components/ui/card';
 
+
+import { useTranslation } from 'react-i18next';
+
 export default function PrivacyCenterView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -11,20 +15,20 @@ export default function PrivacyCenterView() {
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-bold">Privacy Center</h1>
+        <h1 className="text-xl font-bold">{t("settings.privacyCenter")}</h1>
       </div>
       
       <div className="p-4 max-w-2xl mx-auto space-y-4">
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-2">Our Commitment to Privacy</h2>
+          <h2 className="text-lg font-semibold mb-2">{t("settings.ourCommitmentToPrivacy")}</h2>
           <p className="text-muted-foreground">
-            This is a placeholder for the Privacy Center. Here you would find detailed information about our privacy policy, how we use your data, and your rights as a user. We are committed to protecting your personal information.
+            {t("settings.privacyCenterIntro")}
           </p>
         </Card>
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-2">Data Collection</h2>
+          <h2 className="text-lg font-semibold mb-2">{t("settings.dataCollection")}</h2>
           <p className="text-muted-foreground">
-            We collect data to provide and improve our services. This includes information you provide when you create an account, as well as usage data.
+            {t("settings.weCollectDataToProvideAnd")}
           </p>
         </Card>
       </div>

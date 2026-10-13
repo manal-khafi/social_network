@@ -2,6 +2,7 @@ import { Button } from "../../../Components/Community/communityButton";
 import { Textarea } from "../../../Components/Community/communityTextArea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../Components/Community/communityDialog";
 import type { Community } from "../types";
+import { useTranslation } from "react-i18next";
 
 interface JoinRequestDialogProps {
   community: Community;
@@ -21,24 +22,25 @@ export function JoinRequestDialog({
   setJoinMessage,
   handleSubmitJoinRequest,
 }: JoinRequestDialogProps) {
+  const { t } = useTranslation();
   return (
     <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Join {community?.name}</DialogTitle>
+          <DialogTitle>{t("communities.joinName", { name: community?.name })}</DialogTitle>
           <DialogDescription>
             Add a message to go with your join request (optional)
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <Textarea
-            placeholder="Why do you want to join this community?"
+            placeholder={t("communities.whyDoYouWantToJoin")}
             value={joinMessage}
             onChange={(e) => setJoinMessage(e.target.value)}
             rows={4}
             className="w-full border-2 focus:border-[#226d68] resize-none"
           />
-          <p className="text-xs text-gray-500 mt-2">{joinMessage.length} characters</p>
+          <p className="text-xs text-gray-500 mt-2">{t("communities.charactersCount", { n: joinMessage.length })}</p>
         </div>
         <DialogFooter>
           <Button
@@ -49,13 +51,13 @@ export function JoinRequestDialog({
             }}
             className="border-2"
           >
-            Cancel
+            {t("actions.cancel")}
           </Button>
           <Button
             onClick={handleSubmitJoinRequest}
             className="bg-[#d6955b] hover:bg-[#c5844a] text-white"
           >
-            Send request
+            {t("communities.sendRequest")}
           </Button>
         </DialogFooter>
       </DialogContent>

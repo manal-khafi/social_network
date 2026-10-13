@@ -12,6 +12,7 @@ import { Button } from "../../Components/ui/button";
 import { PATHS } from "../../routes/paths";
 import { toast } from "sonner";
 
+import { useTranslation } from "react-i18next";
 type SearchAccount = {
   id: string;
   username: string;
@@ -23,6 +24,7 @@ type SearchAccount = {
 };
 
 export default function SearchView() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [accounts, setAccounts] = useState<SearchAccount[]>([]);
@@ -95,19 +97,19 @@ export default function SearchView() {
         )
       );
 
-      if (followRequestPending) toast.success("Follow request sent");
-      else if (isFollowing) toast.success("Following user");
-      else toast.success("Unfollowed user");
+      if (followRequestPending) toast.success(t("profile.followRequestSent"));
+      else if (isFollowing) toast.success(t("profile.followingUser"));
+      else toast.success(t("profile.unfollowedUser"));
     } catch (e: unknown) {
-      toast.error(typeof e === "string" ? e : "Failed to update follow");
+      toast.error(typeof e === "string" ? e : t("profile.followUpdateFailed"));
     }
   };
 
 
   const getButtonLabel = (u: SearchAccount) => {
-    if (u.followRequestPending) return "Cancel request";
-    if (u.isFollowing) return "Unfollow";
-    return "Follow";
+    if (u.followRequestPending) return t("search.cancelRequest");
+    if (u.isFollowing) return t("profile.unfollow");
+    return t("profile.follow");
   };
 
 
@@ -129,7 +131,7 @@ export default function SearchView() {
               <button
                 type="button"
                 onClick={() => navigate(`/home/profile/${encodeURIComponent(account.username)}`)}
-                className="flex items-center gap-3 text-left"
+                className="flex items-center gap-3 text-start"
               >
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={account.avatar_url ?? undefined} />
@@ -141,7 +143,7 @@ export default function SearchView() {
                 <p className="font-semibold truncate">{account.display_name ?? account.username}</p>
                 <p className="text-sm text-muted-foreground truncate">@{account.username}</p>
                 {account.is_private && (
-                  <span className="text-xs text-muted-foreground">Private account</span>
+                  <span className="text-xs text-muted-foreground">{t("search.privateAccount")}</span>
                 )}
               </div>
 
@@ -165,12 +167,12 @@ export default function SearchView() {
     <div className="space-y-6">
       <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search accounts"
-            className="h-10 rounded-full pl-9 bg-muted/60 border-none focus-visible:ring-0"
+            placeholder={t("search.searchAccounts")}
+            className="h-10 rounded-full ps-9 bg-muted/60 border-none focus-visible:ring-0"
           />
         </div>
       </div>
@@ -178,18 +180,18 @@ export default function SearchView() {
       <Tabs defaultValue="top">
         <TabsList className="w-full justify-start rounded-none border-b">
           <TabsTrigger value="top" className="flex-1">
-            Top
+            {t("search.top")}
           </TabsTrigger>
           <TabsTrigger value="accounts" className="flex-1">
-            Accounts
+            {t("search.accounts")}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="top" className="pt-4">
           {status === "loading" ? (
-            <p className="text-sm text-muted-foreground text-center py-8">Searching...</p>
+            <p className="text-sm text-muted-foreground text-center py-8">{t("search.searching")}</p>
           ) : status === "error" ? (
-            <p className="text-sm text-destructive text-center py-8">Failed to search. Try again.</p>
+            <p className="text-sm text-destructive text-center py-8">{t("search.failedToSearchTryAgain")}</p>
           ) : (
             renderAccounts(topResults, "No top results yet")
           )}
@@ -197,9 +199,9 @@ export default function SearchView() {
 
         <TabsContent value="accounts" className="pt-4">
           {status === "loading" ? (
-            <p className="text-sm text-muted-foreground text-center py-8">Searching...</p>
+            <p className="text-sm text-muted-foreground text-center py-8">{t("search.searching")}</p>
           ) : status === "error" ? (
-            <p className="text-sm text-destructive text-center py-8">Failed to search. Try again.</p>
+            <p className="text-sm text-destructive text-center py-8">{t("search.failedToSearchTryAgain")}</p>
           ) : (
             renderAccounts(accounts, "No accounts found")
           )}

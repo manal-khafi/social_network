@@ -14,7 +14,11 @@ import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../Components/ui/dialog';
 import { toast } from 'sonner';
 
+
+import { useTranslation } from 'react-i18next';
+
 export default function PrivacyView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { blockedUsers } = useAppSelector((state) => state.user);
@@ -30,7 +34,7 @@ export default function PrivacyView() {
         if (!cancelled) setReadReceipts(res.data.allow_read_receipts ?? true);
       })
       .catch(() => {
-        if (!cancelled) toast.error('Failed to load privacy settings');
+        if (!cancelled) toast.error(t("privacy.failedToLoadPrivacySettings"));
       });
     return () => {
       cancelled = true;
@@ -44,17 +48,17 @@ export default function PrivacyView() {
       await dispatch(updatePrivacySettings({ allow_read_receipts: checked })).unwrap();
     } catch {
       setReadReceipts(previous);
-      toast.error('Failed to update read receipts');
+      toast.error(t("privacy.failedToUpdateReadReceipts"));
     }
   };
 
   const handleUnblock = (userId: string, username: string) => {
     dispatch(unblockUser(userId));
-    toast.success(`Unblocked @${username}`);
+    toast.success(t('privacy.unblockedUser', { username }));
   };
 
   const handleDownloadData = () => {
-    toast.success('Preparing your data download...');
+    toast.success(t("privacy.preparingYourDataDownload"));
     setShowDataDialog(false);
   };
 
@@ -65,7 +69,7 @@ export default function PrivacyView() {
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-bold">Privacy & Safety</h1>
+        <h1 className="text-xl font-bold">{t("privacy.title")}</h1>
       </div>
 
       <div className="p-4 space-y-4 max-w-2xl mx-auto pb-24">
@@ -73,33 +77,33 @@ export default function PrivacyView() {
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
             <Eye className="w-5 h-5" />
-            Content Visibility
+            {t("privacy.contentVisibility")}
           </h2>
 
           <div className="space-y-3">
-            <p className="text-sm font-medium">Who can see your posts</p>
+            <p className="text-sm font-medium">{t("privacy.whoCanSeeYourPosts")}</p>
             <RadioGroup defaultValue="followers">
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="everyone" id="everyone" />
                 <Label htmlFor="everyone" className="flex-1 cursor-pointer">
-                  <p className="font-medium">Everyone</p>
-                  <p className="text-sm text-muted-foreground">Anyone on ANMOUGAR</p>
+                  <p className="font-medium">{t("privacy.everyone")}</p>
+                  <p className="text-sm text-muted-foreground">{t("privacy.anyoneOnAnmougar")}</p>
                 </Label>
               </div>
 
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="followers" id="followers" />
                 <Label htmlFor="followers" className="flex-1 cursor-pointer">
-                  <p className="font-medium">Followers</p>
-                  <p className="text-sm text-muted-foreground">Only people who follow you</p>
+                  <p className="font-medium">{t("privacy.followers")}</p>
+                  <p className="text-sm text-muted-foreground">{t("privacy.onlyPeopleWhoFollowYou")}</p>
                 </Label>
               </div>
 
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="mentioned" id="mentioned" />
                 <Label htmlFor="mentioned" className="flex-1 cursor-pointer">
-                  <p className="font-medium">Mentioned Only</p>
-                  <p className="text-sm text-muted-foreground">Only people you mention</p>
+                  <p className="font-medium">{t("privacy.mentionedOnly")}</p>
+                  <p className="text-sm text-muted-foreground">{t("privacy.onlyPeopleYouMention")}</p>
                 </Label>
               </div>
             </RadioGroup>
@@ -108,26 +112,26 @@ export default function PrivacyView() {
           <Separator />
 
           <div className="space-y-3">
-            <p className="text-sm font-medium">Who can see your stories</p>
+            <p className="text-sm font-medium">{t("privacy.whoCanSeeYourStories")}</p>
             <RadioGroup defaultValue="followers">
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="everyone" id="stories-everyone" />
                 <Label htmlFor="stories-everyone" className="flex-1 cursor-pointer">
-                  <p className="font-medium">Everyone</p>
+                  <p className="font-medium">{t("privacy.everyone")}</p>
                 </Label>
               </div>
 
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="followers" id="stories-followers" />
                 <Label htmlFor="stories-followers" className="flex-1 cursor-pointer">
-                  <p className="font-medium">Followers</p>
+                  <p className="font-medium">{t("privacy.followers")}</p>
                 </Label>
               </div>
 
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="close-friends" id="close-friends" />
                 <Label htmlFor="close-friends" className="flex-1 cursor-pointer">
-                  <p className="font-medium">Close Friends</p>
+                  <p className="font-medium">{t("privacy.closeFriends")}</p>
                 </Label>
               </div>
             </RadioGroup>
@@ -137,8 +141,8 @@ export default function PrivacyView() {
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Tagged Posts Approval</p>
-              <p className="text-sm text-muted-foreground">Approve posts you're tagged in</p>
+              <p className="font-medium">{t("privacy.taggedPostsApproval")}</p>
+              <p className="text-sm text-muted-foreground">{t("privacy.approvePostsYoureTaggedIn")}</p>
             </div>
             <Switch defaultChecked />
           </div>
@@ -148,30 +152,30 @@ export default function PrivacyView() {
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
             <MessageCircle className="w-5 h-5" />
-            Interactions
+            {t("privacy.interactions")}
           </h2>
 
           <div className="space-y-3">
-            <p className="text-sm font-medium">Who can contact you</p>
+            <p className="text-sm font-medium">{t("privacy.whoCanContactYou")}</p>
             <RadioGroup defaultValue="everyone">
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="everyone" id="contact-everyone" />
                 <Label htmlFor="contact-everyone" className="flex-1 cursor-pointer">
-                  <p className="font-medium">Everyone</p>
+                  <p className="font-medium">{t("privacy.everyone")}</p>
                 </Label>
               </div>
 
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="followers" id="contact-followers" />
                 <Label htmlFor="contact-followers" className="flex-1 cursor-pointer">
-                  <p className="font-medium">People I Follow</p>
+                  <p className="font-medium">{t("privacy.peopleIFollow")}</p>
                 </Label>
               </div>
 
               <div className="flex items-center space-x-3 p-3 hover:bg-muted rounded-lg">
                 <RadioGroupItem value="none" id="contact-none" />
                 <Label htmlFor="contact-none" className="flex-1 cursor-pointer">
-                  <p className="font-medium">No One</p>
+                  <p className="font-medium">{t("privacy.noOne")}</p>
                 </Label>
               </div>
             </RadioGroup>
@@ -181,14 +185,14 @@ export default function PrivacyView() {
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Read receipts</p>
-              <p className="text-sm text-muted-foreground">Let people know when you've read their messages</p>
+              <p className="font-medium">{t("privacy.readReceipts")}</p>
+              <p className="text-sm text-muted-foreground">{t("privacy.readReceiptsDescription")}</p>
             </div>
             <Switch
               checked={readReceipts ?? true}
               disabled={readReceipts === null}
               onCheckedChange={handleReadReceiptsChange}
-              aria-label="Read receipts"
+              aria-label={t("privacy.readReceipts")}
             />
           </div>
 
@@ -196,8 +200,8 @@ export default function PrivacyView() {
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Comment Filtering</p>
-              <p className="text-sm text-muted-foreground">Hide potentially offensive comments</p>
+              <p className="font-medium">{t("privacy.commentFiltering")}</p>
+              <p className="text-sm text-muted-foreground">{t("privacy.hidePotentiallyOffensiveComments")}</p>
             </div>
             <Switch defaultChecked />
           </div>
@@ -206,8 +210,8 @@ export default function PrivacyView() {
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Hide Offensive Words</p>
-              <p className="text-sm text-muted-foreground">Automatically filter comments</p>
+              <p className="font-medium">{t("privacy.hideOffensiveWords")}</p>
+              <p className="text-sm text-muted-foreground">{t("privacy.automaticallyFilterComments")}</p>
             </div>
             <Switch />
           </div>
@@ -217,16 +221,16 @@ export default function PrivacyView() {
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
             <UserX className="w-5 h-5" />
-            Blocked & Muted Accounts
+            {t("privacy.blockedMutedAccounts")}
             {blockedUsers.length > 0 && (
-              <span className="ml-auto text-sm text-muted-foreground">
+              <span className="ms-auto text-sm text-muted-foreground">
                 {blockedUsers.length}
               </span>
             )}
           </h2>
 
           {blockedUsers.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No blocked accounts</p>
+            <p className="text-sm text-muted-foreground">{t("privacy.noBlockedAccounts")}</p>
           ) : (
             <div className="space-y-3">
               {blockedUsers.map((user) => (
@@ -246,7 +250,7 @@ export default function PrivacyView() {
                     size="sm"
                     onClick={() => handleUnblock(user.id, user.username)}
                   >
-                    Unblock
+                    {t("privacy.unblock")}
                   </Button>
                 </div>
               ))}
@@ -255,9 +259,9 @@ export default function PrivacyView() {
 
           <Separator />
 
-          <button className="w-full text-left p-3 hover:bg-muted rounded-lg transition-colors">
-            <p className="font-medium">Muted Accounts</p>
-            <p className="text-sm text-muted-foreground">0 accounts muted</p>
+          <button className="w-full text-start p-3 hover:bg-muted rounded-lg transition-colors">
+            <p className="font-medium">{t("privacy.mutedAccounts")}</p>
+            <p className="text-sm text-muted-foreground">{t("privacy.0AccountsMuted")}</p>
           </button>
         </Card>
 
@@ -265,7 +269,7 @@ export default function PrivacyView() {
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
             <Download className="w-5 h-5" />
-            Your Data
+            {t("privacy.yourData")}
           </h2>
 
           <button
@@ -274,9 +278,9 @@ export default function PrivacyView() {
           >
             <div className="flex items-center gap-3">
               <Download className="w-5 h-5 text-muted-foreground" />
-              <div className="text-left">
-                <p className="font-medium">Download Your Data</p>
-                <p className="text-sm text-muted-foreground">Request a copy of your information</p>
+              <div className="text-start">
+                <p className="font-medium">{t("privacy.downloadYourData")}</p>
+                <p className="text-sm text-muted-foreground">{t("privacy.requestACopyOfYourInformation")}</p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -287,9 +291,9 @@ export default function PrivacyView() {
           <button className="w-full flex items-center justify-between p-3 hover:bg-muted rounded-lg transition-colors">
             <div className="flex items-center gap-3">
               <Clock className="w-5 h-5 text-muted-foreground" />
-              <div className="text-left">
-                <p className="font-medium">Search History</p>
-                <p className="text-sm text-muted-foreground">View and clear your search history</p>
+              <div className="text-start">
+                <p className="font-medium">{t("privacy.searchHistory")}</p>
+                <p className="text-sm text-muted-foreground">{t("privacy.viewAndClearYourSearchHistory")}</p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -300,13 +304,13 @@ export default function PrivacyView() {
           <button className="w-full flex items-center justify-between p-3 hover:bg-muted rounded-lg transition-colors">
             <div className="flex items-center gap-3">
               <Trash2 className="w-5 h-5 text-muted-foreground" />
-              <div className="text-left">
-                <p className="font-medium">Clear Cache</p>
-                <p className="text-sm text-muted-foreground">Free up storage space</p>
+              <div className="text-start">
+                <p className="font-medium">{t("privacy.clearCache")}</p>
+                <p className="text-sm text-muted-foreground">{t("privacy.freeUpStorageSpace")}</p>
               </div>
             </div>
             <Button variant="outline" size="sm">
-              Clear
+              {t("privacy.clear")}
             </Button>
           </button>
         </Card>
@@ -316,31 +320,31 @@ export default function PrivacyView() {
       <Dialog open={showDataDialog} onOpenChange={setShowDataDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Download Your Data</DialogTitle>
+            <DialogTitle>{t("privacy.downloadYourData")}</DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <p className="text-sm">
-              We'll prepare a copy of your ANMOUGAR data including:
+              {t("privacy.wellPrepareACopyOfYour")}
             </p>
             <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
-              <li>Profile information</li>
-              <li>Posts and comments</li>
-              <li>Messages and conversations</li>
-              <li>Media files</li>
+              <li>{t("privacy.profileInformation")}</li>
+              <li>{t("privacy.postsAndComments")}</li>
+              <li>{t("privacy.messagesAndConversations")}</li>
+              <li>{t("privacy.mediaFiles")}</li>
             </ul>
             <p className="text-sm text-muted-foreground">
-              This may take up to 48 hours. We'll notify you when it's ready.
+              {t("privacy.thisMayTakeUpTo48")}
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDataDialog(false)}>
-              Cancel
+              {t("actions.cancel")}
             </Button>
             <Button
               className="bg-[#d6955b] hover:bg-[#c58549]"
               onClick={handleDownloadData}
             >
-              Request Download
+              {t("privacy.requestDownload")}
             </Button>
           </DialogFooter>
         </DialogContent>

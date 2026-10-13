@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 interface SocialButtonProps {
   provider: "google" | "facebook";
@@ -8,6 +9,7 @@ interface SocialButtonProps {
 
 export const SocialButton: React.FC<SocialButtonProps> = ({ provider, onClick }) => {
   const isGoogle = provider === "google";
+  const { t } = useTranslation();
   
   return (
     <motion.button
@@ -41,7 +43,7 @@ export const SocialButton: React.FC<SocialButtonProps> = ({ provider, onClick })
         </svg>
       )}
       <span className="text-gray-700">
-        Continue with {isGoogle ? "Google" : "Facebook"}
+        {isGoogle ? t("auth.continueWithGoogle") : t("auth.continueWithFacebook")}
       </span>
     </motion.button>
   );

@@ -1,3 +1,5 @@
+import i18n from "../i18n/i18n";
+
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
@@ -6,7 +8,7 @@ const DAY = 24 * HOUR;
 const CLOCK_SKEW_MS = 5 * MINUTE;
 
 const formatDate = (date: Date, now: Date): string =>
-  date.toLocaleDateString("en-US", {
+  date.toLocaleDateString(i18n.language || "en", {
     month: "short",
     day: "numeric",
     ...(date.getFullYear() !== now.getFullYear() && { year: "numeric" }),
@@ -14,8 +16,9 @@ const formatDate = (date: Date, now: Date): string =>
 
 /**
  * Relative time for an ISO string / Date: "Just now", "5m ago", "3h ago",
- * "2d ago", then the date itself ("Oct 6") from a week on. Computed at call
- * time: pair it with useTimeTicker() so it is re-evaluated as time passes.
+ * "2d ago", then the date itself ("Oct 6") from a week on, in the interface
+ * language (time.* keys). Computed at call time: pair it with useTimeTicker()
+ * so it is re-evaluated as time passes.
  */
 export const formatTime = (dateInput?: string | Date | null): string => {
   if (!dateInput) return "—";
@@ -31,9 +34,9 @@ export const formatTime = (dateInput?: string | Date | null): string => {
   // rather than a "Just now" that would never change.
   if (diff < -CLOCK_SKEW_MS) return formatDate(date, now);
 
-  if (diff < MINUTE) return "Just now";
-  if (diff < HOUR) return `${Math.floor(diff / MINUTE)}m ago`;
-  if (diff < DAY) return `${Math.floor(diff / HOUR)}h ago`;
-  if (diff < 7 * DAY) return `${Math.floor(diff / DAY)}d ago`;
+  if (diff < MINUTE) return i18n.t("time.justNow");
+  if (diff < HOUR) return i18n.t("time.minutesAgo", { count: Math.floor(diff / MINUTE) });
+  if (diff < DAY) return i18n.t("time.hoursAgo", { count: Math.floor(diff / HOUR) });
+  if (diff < 7 * DAY) return i18n.t("time.daysAgo", { count: Math.floor(diff / DAY) });
   return formatDate(date, now);
 };

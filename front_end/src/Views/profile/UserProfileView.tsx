@@ -8,6 +8,7 @@ import { useCall } from '../../features/call/CallProvider';
 import { Button } from '../../Components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../Components/ui/tabs';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import PostCard from '../../Components/post/PostCard';
 import ProfileHeaderLayout from '../../Components/Profile/ProfileHeaderLayout';
 import HighlightsBar from '../../Components/story/HighlightsBar';
@@ -18,6 +19,7 @@ import { Card } from '../../Components/ui/card';
 export default function UserProfileView() {
   const { userId: username } = useParams();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const { startCall } = useCall();
   const { viewedUser: user, status, followers, following } = useAppSelector((state) => state.user);
   const { userPosts, userReposts } = useAppSelector((state) => state.posts);
@@ -51,10 +53,10 @@ export default function UserProfileView() {
   }, [dispatch, followingOpen, user?.id]);
 
   if (status === 'loading' && !user) {
-    return <div className="p-4">Loading...</div>;
+    return <div className="p-4">{t('actions.loading')}</div>;
   }
 
-  if (!user) return <div className="p-4">User not available</div>;
+  if (!user) return <div className="p-4">{t('profile.userNotAvailable')}</div>;
   
   const myUserId = authUser?.id;
   const isMe = myUserId && user.id === myUserId;
@@ -66,37 +68,37 @@ export default function UserProfileView() {
     dispatch(toggleFollow(user.id));
     
     if (user.is_private && !user.isFollowing && !user.followRequestPending) {
-      toast.success('Follow request sent');
+      toast.success(t('profile.followRequestSent'));
     } else if (user.followRequestPending) {
-      toast.info('Follow request already sent');
+      toast.info(t('profile.followRequestAlreadySent'));
     }
   };
 
   const getFollowButtonText = () => {
-    if (user.isFollowing) return 'Following';
-    if (user.followRequestPending) return 'Requested';
-    return 'Follow';
+    if (user.isFollowing) return t('profile.followingButton');
+    if (user.followRequestPending) return t('profile.requested');
+    return t('profile.follow');
   };
 
   const handleToggleFollow = async (targetUserId: string, isPrivate: boolean) => {
     try {
       const result = await dispatch(toggleFollow(targetUserId)).unwrap();
       if (result.followRequestPending || (isPrivate && !result.isFollowing)) {
-        toast.success('Follow request sent');
+        toast.success(t('profile.followRequestSent'));
       } else if (result.isFollowing) {
-        toast.success('Following user');
+        toast.success(t('profile.followingUser'));
       } else {
-        toast.success('Unfollowed user');
+        toast.success(t('profile.unfollowedUser'));
       }
     } catch (e: unknown) {
-      toast.error(typeof e === 'string' ? e : 'Failed to update follow');
+      toast.error(typeof e === 'string' ? e : t('profile.followUpdateFailed'));
     }
   };
 
   const getButtonLabel = (u: (typeof followers)[number]) => {
-    if (u.followRequestPending) return 'Requested';
-    if (u.isFollowing) return 'Unfollow';
-    return 'Follow';
+    if (u.followRequestPending) return t('profile.requested');
+    if (u.isFollowing) return t('profile.unfollow');
+    return t('profile.follow');
   };
 
   const isDisabled = (u: (typeof followers)[number]) => !!u.followRequestPending;
@@ -105,7 +107,7 @@ export default function UserProfileView() {
     list: typeof followers,
     emptyText: string
   ) => (
-    <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+    <div className="max-h-[60vh] space-y-2 overflow-y-auto pe-1">
       {list.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-6">{emptyText}</p>
       ) : (
@@ -165,7 +167,7 @@ export default function UserProfileView() {
           isMe ? (
             <Link to="/home/settings/profile" className="w-full">
               <Button variant="outline" className="w-full">
-                Edit Profile
+                {t('profile.editProfile')}
               </Button>
             </Link>
           ) : (
@@ -180,14 +182,14 @@ export default function UserProfileView() {
               </Button>
               <Link to={`/home/inbox/${user.id}`} className="flex-1">
                 <Button variant="outline" className="w-full">
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Message
+                  <MessageCircle className="w-4 h-4 me-2" />
+                  {t('profile.message')}
                 </Button>
               </Link>
               <Button
                 variant="outline"
                 size="icon"
-                aria-label="Call"
+                aria-label={t('profile.call')}
                 onClick={() =>
                   startCall(
                     { id: user.id, username: user.username, avatar: user.avatar_url ?? undefined },
@@ -206,15 +208,15 @@ export default function UserProfileView() {
         <div className="flex justify-around text-center border-t border-b border-border py-3 my-4">
           <div>
             <p className="font-semibold">{posts.length}</p>
-            <p className="text-sm text-muted-foreground">Posts</p>
+            <p className="text-sm text-muted-foreground">{t('profile.posts')}</p>
           </div>
           <button type="button" onClick={() => setFollowersOpen(true)} className="hover:underline">
             <p className="font-semibold">{followersCount.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground">Followers</p>
+            <p className="text-sm text-muted-foreground">{t('profile.followers')}</p>
           </button>
           <button type="button" onClick={() => setFollowingOpen(true)} className="hover:underline">
             <p className="font-semibold">{followingCount.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground">Following</p>
+            <p className="text-sm text-muted-foreground">{t('profile.following')}</p>
           </button>
         </div>
       </div>
@@ -222,26 +224,26 @@ export default function UserProfileView() {
       <Dialog open={followersOpen} onOpenChange={setFollowersOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Followers</DialogTitle>
+            <DialogTitle>{t('profile.followers')}</DialogTitle>
           </DialogHeader>
-          {renderFollowList(followers, "No followers yet")}
+          {renderFollowList(followers, t('empty.followers'))}
         </DialogContent>
       </Dialog>
 
       <Dialog open={followingOpen} onOpenChange={setFollowingOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Following</DialogTitle>
+            <DialogTitle>{t('profile.following')}</DialogTitle>
           </DialogHeader>
-          {renderFollowList(following, "Not following anyone yet")}
+          {renderFollowList(following, t('empty.following'))}
         </DialogContent>
       </Dialog>
       {user?.id && <HighlightsBar userId={user.id} />}
 
       <Tabs defaultValue="posts" className="mt-4">
         <TabsList className="w-full justify-start rounded-none border-b">
-          <TabsTrigger value="posts" className="flex-1">Posts</TabsTrigger>
-          <TabsTrigger value="reposts" className="flex-1">Reposts</TabsTrigger>
+          <TabsTrigger value="posts" className="flex-1">{t('profile.posts')}</TabsTrigger>
+          <TabsTrigger value="reposts" className="flex-1">{t('profile.reposts')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="posts" className="p-4 space-y-4">
@@ -249,14 +251,14 @@ export default function UserProfileView() {
             posts.length > 0 ? (
               posts.map(post => <PostCard key={post.id} post={post} />)
             ) : (
-              <p className="text-center text-muted-foreground py-8">No posts yet</p>
+              <p className="text-center text-muted-foreground py-8">{t('empty.feed')}</p>
             )
           ) : (
             <div className="text-center py-12">
               <Lock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="font-semibold mb-1">This Account is Private</p>
+              <p className="font-semibold mb-1">{t('profile.privateAccount')}</p>
               <p className="text-sm text-muted-foreground">
-                Follow this account to see their posts
+                {t('profile.followToSee')}
               </p>
             </div>
           )}
@@ -267,14 +269,14 @@ export default function UserProfileView() {
             reposts.length > 0 ? (
               reposts.map(post => <PostCard key={post.id} post={post} />)
             ) : (
-              <p className="text-center text-muted-foreground py-8">No reposts yet</p>
+              <p className="text-center text-muted-foreground py-8">{t('empty.reposts')}</p>
             )
           ) : (
             <div className="text-center py-12">
               <Lock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="font-semibold mb-1">This Account is Private</p>
+              <p className="font-semibold mb-1">{t('profile.privateAccount')}</p>
               <p className="text-sm text-muted-foreground">
-                Follow this account to see their reposts
+                {t('profile.followToSeeReposts')}
               </p>
             </div>
           )}

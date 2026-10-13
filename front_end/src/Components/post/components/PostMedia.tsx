@@ -1,6 +1,7 @@
 import VideoPlayer from "../VideoPlayer";
 import { isVideoUrl } from "../../../utils/mediaUtils";
 import type { Post } from "../../../features/posts/postsSlice";
+import { useTranslation } from "react-i18next";
 
 interface PostMediaProps {
   post: Post;
@@ -10,6 +11,7 @@ interface PostMediaProps {
 
 /** Images and videos attached to a post (grid when there is more than one). */
 export default function PostMedia({ post, media, handleDoubleTapLike }: PostMediaProps) {
+  const { t } = useTranslation();
   if (media.length === 0) return null;
 
   return (
@@ -26,7 +28,7 @@ export default function PostMedia({ post, media, handleDoubleTapLike }: PostMedi
             ) : (
               <img
                 src={item}
-                alt="Post content"
+                alt={t("posts.mediaAlt")}
                 className={`w-full object-cover rounded-lg ${
                   media.length > 1 ? "h-48" : "max-h-96"
                 }`}

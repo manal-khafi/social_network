@@ -1,0 +1,45 @@
+/*
+ * Right-to-left support (Arabic). App.tsx sets <html dir="rtl" lang="ar">.
+ * Layout mirrors mostly by itself: flex/grid follow the text direction and
+ * components use logical Tailwind utilities (ms-/me-, ps-/pe-, start-/end-,
+ * text-start/end, border-s/e). This file only covers what utilities can't.
+ */
+
+/* Arabic typeface (loaded in index.html); Latin text keeps the default font. */
+:lang(ar) body {
+  font-family: "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Arabic script has no letter-spacing: tracking utilities break its joins. */
+:lang(ar) * {
+  letter-spacing: 0 !important;
+}
+
+/* Icons that point in a reading direction (back, forward, send, reply...). */
+[dir="rtl"] .lucide-arrow-left,
+[dir="rtl"] .lucide-arrow-right,
+[dir="rtl"] .lucide-chevron-left,
+[dir="rtl"] .lucide-chevron-right,
+[dir="rtl"] .lucide-chevrons-left,
+[dir="rtl"] .lucide-chevrons-right,
+[dir="rtl"] .lucide-send,
+[dir="rtl"] .lucide-reply,
+[dir="rtl"] .lucide-log-out,
+[dir="rtl"] .lucide-log-in,
+[dir="rtl"] .lucide-external-link {
+  transform: scaleX(-1);
+}
+
+/* Things that must stay left-to-right inside an RTL page. */
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="url"],
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] input[type="password"],
+[dir="rtl"] video {
+  direction: ltr;
+}
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="url"],
+[dir="rtl"] input[type="tel"] {
+  text-align: right;
+}

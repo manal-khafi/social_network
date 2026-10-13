@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "../../hooks";
 import { fetchStories, selectStoryGroups } from "../../features/stories/storiesSlice";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import StoryComposer from "./StoryComposer";
+import { useTranslation } from "react-i18next";
 
 const RING_UNSEEN =
   "bg-[conic-gradient(from_180deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888,#f09433)]";
@@ -37,6 +38,7 @@ function Ring({
 }
 
 export default function StoryBar() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const groups = useAppSelector(selectStoryGroups);
@@ -66,7 +68,7 @@ export default function StoryBar() {
               myGroup ? navigate(`/home/stories/${meId}`) : setComposerOpen(true)
             }
             className="relative active:scale-95 transition-transform"
-            aria-label={myGroup ? "View your story" : "Add to your story"}
+            aria-label={myGroup ? t("stories.viewYourStory") : t("stories.addToYourStory")}
           >
             {myGroup ? (
               <Ring
@@ -93,12 +95,12 @@ export default function StoryBar() {
                 e.stopPropagation();
                 setComposerOpen(true);
               }}
-              className="absolute bottom-0.5 right-0.5 w-6 h-6 bg-primary rounded-full grid place-items-center border-[3px] border-card shadow"
+              className="absolute bottom-0.5 end-0.5 w-6 h-6 bg-primary rounded-full grid place-items-center border-[3px] border-card shadow"
             >
               <Plus className="w-3.5 h-3.5 text-primary-foreground" strokeWidth={3} />
             </span>
           </button>
-          <span className="text-[11px] text-muted-foreground truncate max-w-full">Your story</span>
+          <span className="text-[11px] text-muted-foreground truncate max-w-full">{t("stories.yourStory")}</span>
         </div>
 
         {loading &&

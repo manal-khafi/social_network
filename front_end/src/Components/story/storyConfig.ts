@@ -30,11 +30,12 @@ export const STORY_BACKGROUNDS = [
   "#7c3aed",
 ];
 
+// `label` (and `hint` below) are i18n keys, resolved with t() where they are rendered.
 export const FONT_FAMILIES = [
-  { label: "Classic", value: "'Inter', system-ui, sans-serif" },
-  { label: "Typewriter", value: "'Courier New', monospace" },
-  { label: "Serif", value: "'Georgia', serif" },
-  { label: "Strong", value: "'Arial Black', 'Inter', sans-serif" },
+  { label: "stories.fonts.classic", value: "'Inter', system-ui, sans-serif" },
+  { label: "stories.fonts.typewriter", value: "'Courier New', monospace" },
+  { label: "stories.fonts.serif", value: "'Georgia', serif" },
+  { label: "stories.fonts.strong", value: "'Arial Black', 'Inter', sans-serif" },
 ];
 
 export const VISIBILITY_OPTIONS: {
@@ -42,7 +43,7 @@ export const VISIBILITY_OPTIONS: {
   label: string;
   hint: string;
 }[] = [
-  { value: "public", label: "Everyone", hint: "Anyone can see this story" },
-  { value: "friends", label: "Friends", hint: "Only people you follow back" },
-  { value: "close_friends", label: "Close friends", hint: "Only your close friends list" },
+  { value: "public", label: "stories.visibility.public", hint: "stories.visibility.publicHint" },
+  { value: "friends", label: "stories.visibility.friends", hint: "stories.visibility.friendsHint" },
+  { value: "close_friends", label: "stories.visibility.closeFriends", hint: "stories.visibility.closeFriendsHint" },
 ];

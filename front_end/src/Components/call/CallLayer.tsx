@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff } from "lucide-react";
 import { useCall } from "../../features/call/CallProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useTranslation } from "react-i18next";
 
 function useRingtone(active: boolean) {
   const ctxRef = useRef<AudioContext | null>(null);
@@ -41,6 +42,7 @@ function fmt(sec: number) {
 }
 
 export default function CallLayer() {
+  const { t } = useTranslation();
   const call = useCall();
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -115,9 +117,9 @@ export default function CallLayer() {
   // Outgoing / connecting / active: full-screen call
   const label =
     call.status === "outgoing"
-      ? "Calling…"
+      ? t("calls.calling")
       : call.status === "connecting"
-      ? "Connecting…"
+      ? t("calls.connecting")
       : fmt(elapsed);
 
   return createPortal(
@@ -142,9 +144,9 @@ export default function CallLayer() {
           </div>
         )}
 
-        <div className="absolute top-5 left-0 right-0 text-center">
+        <div className="absolute top-5 start-0 end-0 text-center">
           <p className="text-sm text-white/80">
-            {isVideo ? "Video call" : "Voice call"} · {label}
+            {isVideo ? t("messages.videoCall") : t("messages.voiceCall")} · {label}
           </p>
         </div>
 
@@ -154,7 +156,7 @@ export default function CallLayer() {
             autoPlay
             playsInline
             muted
-            className="absolute bottom-28 right-4 w-28 h-40 object-cover rounded-xl border border-white/20 bg-black"
+            className="absolute bottom-28 end-4 w-28 h-40 object-cover rounded-xl border border-white/20 bg-black"
           />
         )}
       </div>
@@ -165,7 +167,7 @@ export default function CallLayer() {
           className={`w-14 h-14 rounded-full grid place-items-center ${
             call.muted ? "bg-white text-black" : "bg-white/15"
           }`}
-          aria-label={call.muted ? "Unmute" : "Mute"}
+          aria-label={call.muted ? t("stories.unmute") : t("stories.mute")}
         >
           {call.muted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
         </button>
@@ -176,7 +178,7 @@ export default function CallLayer() {
             className={`w-14 h-14 rounded-full grid place-items-center ${
               call.cameraOff ? "bg-white text-black" : "bg-white/15"
             }`}
-            aria-label={call.cameraOff ? "Turn camera on" : "Turn camera off"}
+            aria-label={call.cameraOff ? t("calls.turnCameraOn") : t("calls.turnCameraOff")}
           >
             {call.cameraOff ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}
           </button>
@@ -185,7 +187,7 @@ export default function CallLayer() {
         <button
           onClick={call.hangup}
           className="w-16 h-16 rounded-full bg-red-600 grid place-items-center"
-          aria-label="Hang up"
+          aria-label={t("calls.hangUp")}
         >
           <PhoneOff className="w-7 h-7" />
         </button>

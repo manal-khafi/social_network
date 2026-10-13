@@ -9,6 +9,7 @@ import { Textarea } from "../../../Components/Community/communityTextArea";
 import { Switch } from "../../../Components/Community/communitySwitch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../Components/Community/communitySelect";
 import type { Community } from "../types";
+import { useTranslation } from "react-i18next";
 
 interface SettingsTabProps {
   community: Community;
@@ -58,6 +59,7 @@ export function SettingsTab({
   handleLogoImageChange,
   handleSaveSettings,
 }: SettingsTabProps) {
+  const { t } = useTranslation();
   return (
     <TabsContent value="settings" className="mt-6">
       <div className="space-y-4">
@@ -68,52 +70,52 @@ export function SettingsTab({
               <div className="p-2 rounded-lg bg-[#ecf8f6]">
                 <Hash className="h-5 w-5 text-[#18534f]" />
               </div>
-              <h3 className="font-semibold text-lg">Basic information</h3>
+              <h3 className="font-semibold text-lg">{t("communities.basicInformation")}</h3>
             </div>
 
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="edit-name" className="text-sm text-gray-700">Community name</Label>
+                <Label htmlFor="edit-name" className="text-sm text-gray-700">{t("communities.communityName")}</Label>
                 <Input
                   id="edit-name"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Your community name"
+                  placeholder={t("communities.yourCommunityName")}
                   className="h-10 border-2 focus:border-[#226d68]"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="edit-description" className="text-sm text-gray-700">Description</Label>
+                <Label htmlFor="edit-description" className="text-sm text-gray-700">{t("communities.description2")}</Label>
                 <Textarea
                   id="edit-description"
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  placeholder="Describe your community..."
+                  placeholder={t("communities.describeYourCommunity")}
                   rows={3}
                   className="border-2 focus:border-[#226d68] resize-none"
                 />
-                <p className="text-xs text-gray-500">{editDescription.length} characters</p>
+                <p className="text-xs text-gray-500">{t("communities.charactersCount", { n: editDescription.length })}</p>
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="edit-category" className="text-sm text-gray-700">Category</Label>
+                <Label htmlFor="edit-category" className="text-sm text-gray-700">{t("communities.category")}</Label>
                 <Select value={editCategory} onValueChange={setEditCategory}>
                   <SelectTrigger className="h-10 border-2 focus:border-[#226d68]">
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder={t("communities.selectACategory")} />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
-                    <SelectItem value="tech">Tech</SelectItem>
-                    <SelectItem value="health">Health</SelectItem>
-                    <SelectItem value="education">Education</SelectItem>
-                    <SelectItem value="sports">Sports</SelectItem>
-                    <SelectItem value="entertainment">Entertainment</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                    <SelectItem value="arts">Arts</SelectItem>
-                    <SelectItem value="travel">Travel</SelectItem>
-                    <SelectItem value="food">Food</SelectItem>
-                    <SelectItem value="lifestyle">Lifestyle</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="tech">{t("communities.tech")}</SelectItem>
+                    <SelectItem value="health">{t("communities.health")}</SelectItem>
+                    <SelectItem value="education">{t("communities.education")}</SelectItem>
+                    <SelectItem value="sports">{t("communities.sports")}</SelectItem>
+                    <SelectItem value="entertainment">{t("communities.entertainment")}</SelectItem>
+                    <SelectItem value="business">{t("communities.business")}</SelectItem>
+                    <SelectItem value="arts">{t("communities.arts")}</SelectItem>
+                    <SelectItem value="travel">{t("communities.travel")}</SelectItem>
+                    <SelectItem value="food">{t("communities.food")}</SelectItem>
+                    <SelectItem value="lifestyle">{t("communities.lifestyle")}</SelectItem>
+                    <SelectItem value="other">{t("communities.other")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -128,18 +130,18 @@ export function SettingsTab({
               <div className="p-2 rounded-lg bg-[#feeaa1]">
                 <Palette className="h-5 w-5 text-[#18534f]" />
               </div>
-              <h3 className="font-semibold text-lg">Appearance</h3>
+              <h3 className="font-semibold text-lg">{t("communities.appearance")}</h3>
             </div>
 
             <div className="space-y-4">
               {/* Image de couverture */}
               <div className="space-y-2">
-                <Label className="text-sm text-gray-700">Cover image</Label>
+                <Label className="text-sm text-gray-700">{t("communities.coverImage")}</Label>
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <div className="w-full h-24 rounded-lg border-2 border-dashed border-[#226d68] bg-gray-50 overflow-hidden">
                       {coverImagePreview ? (
-                        <img src={coverImagePreview} alt="Cover preview" className="w-full h-full object-cover" />
+                        <img src={coverImagePreview} alt={t("communities.coverPreview")} className="w-full h-full object-cover" />
                       ) : (
                         <div className="flex items-center justify-center h-full">
                           <ImageIcon className="h-8 w-8 text-[#226d68]" />
@@ -153,7 +155,7 @@ export function SettingsTab({
                       className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-white border-2 border-[#226d68] rounded-lg hover:bg-[#ecf8f6] transition-colors text-[#18534f] text-sm"
                     >
                       <Upload className="h-4 w-4" />
-                      <span>Edit</span>
+                      <span>{t("actions.edit")}</span>
                     </Label>
                     <input
                       id="cover-upload"
@@ -162,19 +164,19 @@ export function SettingsTab({
                       onChange={handleCoverImageChange}
                       className="hidden"
                     />
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG (max. 5MB)</p>
+                    <p className="text-xs text-gray-500 mt-1">{t("communities.pngJpgMax5mb")}</p>
                   </div>
                 </div>
               </div>
 
               {/* Logo */}
               <div className="space-y-2">
-                <Label className="text-sm text-gray-700">Community logo</Label>
+                <Label className="text-sm text-gray-700">{t("communities.communityLogo")}</Label>
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-xl border-2 border-dashed border-[#226d68] bg-gray-50 overflow-hidden flex items-center justify-center">
                       {logoImagePreview ? (
-                        <img src={logoImagePreview} alt="Logo preview" className="w-full h-full object-cover" />
+                        <img src={logoImagePreview} alt={t("communities.logoPreview")} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-[#18534f] to-[#226d68] flex items-center justify-center text-white text-2xl font-bold">
                           {editName.charAt(0)}
@@ -188,7 +190,7 @@ export function SettingsTab({
                       className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-white border-2 border-[#226d68] rounded-lg hover:bg-[#ecf8f6] transition-colors text-[#18534f] text-sm"
                     >
                       <Upload className="h-4 w-4" />
-                      <span>Edit</span>
+                      <span>{t("actions.edit")}</span>
                     </Label>
                     <input
                       id="logo-upload"
@@ -197,7 +199,7 @@ export function SettingsTab({
                       onChange={handleLogoImageChange}
                       className="hidden"
                     />
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG (max. 2MB)</p>
+                    <p className="text-xs text-gray-500 mt-1">{t("communities.pngJpgMax2mb")}</p>
                   </div>
                 </div>
               </div>
@@ -212,16 +214,16 @@ export function SettingsTab({
               <div className="p-2 rounded-lg bg-[#ecf8f6]">
                 <Shield className="h-5 w-5 text-[#18534f]" />
               </div>
-              <h3 className="font-semibold text-lg">Privacy & Settings</h3>
+              <h3 className="font-semibold text-lg">{t("communities.privacySettings")}</h3>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
                 <div className="flex-1">
                   <Label htmlFor="public-toggle" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    Public community
+                    {t("communities.publicCommunity")}
                   </Label>
-                  <p className="text-xs text-gray-500 mt-0.5">Visible to all users</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{t("communities.visibleToAllUsers")}</p>
                 </div>
                 <Switch
                   id="public-toggle"
@@ -234,9 +236,9 @@ export function SettingsTab({
               <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
                 <div className="flex-1">
                   <Label htmlFor="posts-toggle" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    Allow posts
+                    {t("communities.allowPosts")}
                   </Label>
-                  <p className="text-xs text-gray-500 mt-0.5">Members can post content</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{t("communities.membersCanPostContent")}</p>
                 </div>
                 <Switch
                   id="posts-toggle"
@@ -249,9 +251,9 @@ export function SettingsTab({
               <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
                 <div className="flex-1">
                   <Label htmlFor="approval-toggle" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    Approval required
+                    {t("communities.approvalRequired")}
                   </Label>
-                  <p className="text-xs text-gray-500 mt-0.5">Review posts before they are shown</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{t("communities.reviewPostsBeforeTheyAreShown")}</p>
                 </div>
                 <Switch
                   id="approval-toggle"
@@ -272,7 +274,7 @@ export function SettingsTab({
                 <div className="p-2 rounded-lg bg-[#feeaa1]">
                   <TrendingUp className="h-5 w-5 text-[#18534f]" />
                 </div>
-                <h3 className="font-semibold text-lg">Preview of changes</h3>
+                <h3 className="font-semibold text-lg">{t("communities.previewOfChanges")}</h3>
               </div>
 
               <Card className="border-2 border-[#226d68]">
@@ -285,8 +287,8 @@ export function SettingsTab({
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold text-gray-900">{editName}</h4>
                         <Badge variant="secondary" className="bg-[#feeaa1] text-[#18534f] text-xs">
-                          <Hash className="h-3 w-3 mr-1" />
-                          {editCategory || "No category"}
+                          <Hash className="h-3 w-3 me-1" />
+                          {editCategory || t("communities.noCategory")}
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600">{editDescription}</p>
@@ -299,7 +301,7 @@ export function SettingsTab({
         )}
 
         {/* Boutons d'action */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-[#226d68] p-4 z-50">
+        <div className="fixed bottom-0 start-0 end-0 bg-white border-t-2 border-[#226d68] p-4 z-50">
           <div className="max-w-7xl mx-auto flex gap-3 px-[70px]">
             <Button
               variant="outline"
@@ -314,14 +316,14 @@ export function SettingsTab({
                 setLogoImagePreview("");
               }}
             >
-              Cancel
+              {t("actions.cancel")}
             </Button>
             <Button
               onClick={handleSaveSettings}
               disabled={isSaving}
               className="flex-1 h-11 bg-[#d6955b] hover:bg-[#c5844a] text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSaving ? "Saving..." : "Save"}
+              {isSaving ? t("posts.saving") : t("actions.save")}
             </Button>
           </div>
         </div>

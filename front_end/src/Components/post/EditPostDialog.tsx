@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { isVideoUrl } from '../../utils/mediaUtils';
 import type { Post } from '../../features/posts/postsSlice';
 
@@ -20,6 +21,7 @@ interface EditPostDialogProps {
 
 export default function EditPostDialog({ post, open, onOpenChange }: EditPostDialogProps) {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const [content, setContent] = useState(post.content);
   const [images, setImages] = useState<string[]>(post.images || []);
   const [uploading, setUploading] = useState(0);
@@ -38,7 +40,7 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
     e.target.value = '';
     if (files.length === 0) return;
     if (images.length + files.length > 10) {
-      toast.error('Up to 10 photos/videos per post');
+      toast.error(t('posts.maxMedia', { max: 10 }));
       return;
     }
     setUploading((n) => n + files.length);
@@ -47,7 +49,7 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
         const { url } = await uploadPostMedia(file);
         setImages((prev) => [...prev, url]);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Upload failed');
+        toast.error(err instanceof Error ? err.message : t('errors.uploadFailed'));
       } finally {
         setUploading((n) => n - 1);
       }
@@ -60,11 +62,11 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
 
   const handleSave = async () => {
     if (!content.trim() && images.length === 0) {
-      toast.error('Add text or media');
+      toast.error(t('posts.addTextOrMedia'));
       return;
     }
     if (uploading > 0) {
-      toast.error('Wait for uploads to finish');
+      toast.error(t('posts.waitUploads'));
       return;
     }
 
@@ -77,10 +79,10 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
           media_urls: images.length > 0 ? images : undefined,
         })
       ).unwrap();
-      toast.success('Post updated successfully');
+      toast.success(t('posts.updateSuccess'));
       onOpenChange(false);
     } catch (error: any) {
-      const message = error?.response?.data?.message || 'Failed to update post';
+      const message = error?.response?.data?.message || t('posts.updateFailed');
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -91,14 +93,14 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Post</DialogTitle>
+          <DialogTitle>{t('posts.edit')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="What's on your mind?"
+            placeholder={t('posts.whatsOnYourMind')}
             className="min-h-[150px] resize-none"
           />
 
@@ -120,13 +122,14 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
                   ) : (
                     <img
                       src={img}
-                      alt={`Upload ${index + 1}`}
+                      alt={t('posts.uploadAlt', { n: index + 1 })}
                       className="w-full h-48 object-cover rounded-lg"
                     />
                   )}
                   <button
                     onClick={() => handleRemoveImage(index)}
-                    className="absolute top-2 right-2 p-1.5 bg-background/90 rounded-full hover:bg-background shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 end-2 p-1.5 bg-background/90 rounded-full hover:bg-background shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-label={t('posts.removeMedia')}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -172,14 +175,14 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-                Cancel
+                {t('actions.cancel')}
               </Button>
               <Button
                 onClick={handleSave}
                 disabled={(!content.trim() && images.length === 0) || isLoading || uploading > 0}
                 className="bg-[#d6955b] hover:bg-[#c58549]"
               >
-                {isLoading ? 'Saving...' : 'Save Changes'}
+                {isLoading ? t('posts.saving') : t('posts.saveChanges')}
               </Button>
             </div>
           </div>

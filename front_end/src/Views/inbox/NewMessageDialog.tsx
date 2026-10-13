@@ -7,6 +7,7 @@ import { openDirectByUserId, fetchConversations } from "../../features/messages/
 import { getFollowing, type StoryUser } from "../../api/storiesApi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../Components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "../../Components/ui/avatar";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   open: boolean;
@@ -18,6 +19,7 @@ export default function NewMessageDialog({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
   const meId = useAppSelector((s) => s.user.currentUser?.id ?? s.auth.user?.id);
 
+  const { t } = useTranslation();
   const [people, setPeople] = useState<StoryUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -48,7 +50,7 @@ export default function NewMessageDialog({ open, onOpenChange }: Props) {
       onOpenChange(false);
       navigate(`/home/inbox/${convId}`);
     } catch {
-      toast.error("Couldn't start that chat");
+      toast.error(t("messages.chatStartFailed"));
     } finally {
       setBusy(null);
     }
@@ -58,7 +60,7 @@ export default function NewMessageDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
         <DialogHeader className="p-4 pb-3 border-b border-border">
-          <DialogTitle>New message</DialogTitle>
+          <DialogTitle>{t("messages.newMessage")}</DialogTitle>
         </DialogHeader>
 
         <div className="p-3">
@@ -68,7 +70,7 @@ export default function NewMessageDialog({ open, onOpenChange }: Props) {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search people you follow"
+              placeholder={t("messages.searchFollowing")}
               className="flex-1 bg-transparent text-sm outline-none"
             />
           </div>
@@ -81,7 +83,7 @@ export default function NewMessageDialog({ open, onOpenChange }: Props) {
             </div>
           ) : filtered.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground py-10">
-              Follow people to message them.
+              {t("messages.followToMessage")}
             </p>
           ) : (
             filtered.map((p) => (
@@ -95,7 +97,7 @@ export default function NewMessageDialog({ open, onOpenChange }: Props) {
                   <AvatarImage src={p.avatar_url ?? undefined} />
                   <AvatarFallback>{p.username[0]?.toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <div className="min-w-0 flex-1 text-left">
+                <div className="min-w-0 flex-1 text-start">
                   <p className="text-sm font-medium truncate">{p.username}</p>
                   <p className="text-xs text-muted-foreground truncate">{p.display_name}</p>
                 </div>

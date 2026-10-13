@@ -5,6 +5,7 @@ import { AuthInput } from "./AuthInput";
 import { AuthButton } from "./AuthButton";
 import { ArrowLeft, CircleCheck } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface ForgotPasswordScreenProps {
   onSwitchToLogin: () => void;
@@ -14,6 +15,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   onSwitchToLogin,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -32,7 +34,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
         toast.error(data.message);
       }
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Server error. Please try again later.";
+      const errorMsg = error.response?.data?.message || t("auth.serverError");
       toast.error(errorMsg);
     } finally {
       setIsLoading(false);
@@ -64,7 +66,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
             transition={{ delay: 0.3 }}
             className="text-3xl mb-4 text-[#18534f]"
           >
-            Check Your Email
+            {t("auth.checkYourEmail")}
           </motion.h2>
 
           <motion.p
@@ -73,12 +75,12 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
             transition={{ delay: 0.4 }}
             className="text-gray-600 mb-8"
           >
-            We've sent a password reset link to <br />
+            {t("auth.resetLinkSent")} <br />
             <span className="text-[#18534f]">{email}</span>
           </motion.p>
 
           <AuthButton variant="secondary" onClick={onSwitchToLogin}>
-            Back to Login
+            {t("auth.backToLogin")}
           </AuthButton>
         </div>
       </motion.div>
@@ -98,7 +100,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
         className="flex items-center gap-2 text-[#226d68] hover:text-[#18534f] transition-colors mb-6"
       >
         <ArrowLeft size={20} />
-        <span>Back to Login</span>
+        <span>{t("auth.backToLogin")}</span>
       </button>
 
       <div className="text-center mb-8">
@@ -108,7 +110,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           transition={{ delay: 0.1 }}
           className="text-4xl mb-2 text-[#18534f]"
         >
-          Forgot Password?
+          {t("auth.forgotPasswordTitle")}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
@@ -116,22 +118,22 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           transition={{ delay: 0.2 }}
           className="text-gray-600"
         >
-          No worries, we'll send you reset instructions.
+          {t("auth.forgotPasswordSubtitle")}
         </motion.p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <AuthInput
-          label="Email"
+          label={t("auth.email")}
           type="email"
-          placeholder="Enter your email"
+          placeholder={t("auth.emailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
 
         <AuthButton variant="primary" isLoading={isLoading} type="submit">
-          Send Reset Link
+          {t("auth.sendResetLink")}
         </AuthButton>
       </form>
     </motion.div>

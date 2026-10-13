@@ -33,6 +33,7 @@ import AddToHighlightSheet from "../../Components/story/AddToHighlightSheet";
 import QuestionResponsesSheet from "../../Components/story/QuestionResponsesSheet";
 import { DEFAULT_REACTIONS } from "../../api/storiesApi";
 import { IMAGE_STORY_MS, MAX_VIDEO_STORY_MS } from "../../Components/story/storyConfig";
+import { useTranslation } from "react-i18next";
 
 function timeAgo(iso: string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -42,6 +43,7 @@ function timeAgo(iso: string) {
 }
 
 export default function StoryViewerView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { userId } = useParams();
@@ -240,22 +242,22 @@ export default function StoryViewerView() {
     setReplyText("");
     try {
       await dispatch(replyToStory({ storyId: story.id, content: text })).unwrap();
-      toast.success("Reply sent");
+      toast.success(t("stories.replySent"));
     } catch {
-      toast.error("Could not send reply");
+      toast.error(t("stories.couldNotSendReply"));
     }
   };
 
   const del = async () => {
     if (!story) return;
-    if (!window.confirm("Delete this story?")) return;
+    if (!window.confirm(t("stories.deleteThisStory"))) return;
     try {
       await dispatch(removeStory(story.id)).unwrap();
-      toast.success("Story deleted");
+      toast.success(t("stories.storyDeleted"));
       if (items.length <= 1) navigate(-1);
       else setItemIdx((i) => Math.max(0, i - 1));
     } catch {
-      toast.error("Could not delete story");
+      toast.error(t("stories.couldNotDeleteStory"));
     }
   };
 
@@ -319,7 +321,7 @@ export default function StoryViewerView() {
       const res = await votePoll(story.id, overlayId, optionIndex);
       setPollResults((prev) => ({ ...prev, [overlayId]: res }));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not vote");
+      toast.error(e instanceof Error ? e.message : t("stories.couldNotVote"));
     }
   };
 
@@ -327,9 +329,9 @@ export default function StoryViewerView() {
     if (!story) return;
     try {
       await answerQuestion(story.id, overlayId, answer);
-      toast.success("Sent");
+      toast.success(t("messages.sent"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not send");
+      toast.error(e instanceof Error ? e.message : t("stories.couldNotSend"));
     }
   };
 
@@ -351,7 +353,7 @@ export default function StoryViewerView() {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/55 to-transparent z-20" />
 
         {/* progress bars */}
-        <div className="absolute top-2 left-3 right-3 flex gap-1 z-30">
+        <div className="absolute top-2 start-3 end-3 flex gap-1 z-30">
           {items.map((s, i) => (
             <div key={s.id} className="flex-1 h-[3px] bg-white/25 rounded-full overflow-hidden">
               <div
@@ -366,7 +368,7 @@ export default function StoryViewerView() {
         </div>
 
         {/* header */}
-        <div className="absolute top-5 left-3 right-3 flex items-center justify-between z-30 pt-1">
+        <div className="absolute top-5 start-3 end-3 flex items-center justify-between z-30 pt-1">
           <div className="flex items-center gap-2">
             <Avatar className="w-9 h-9 border border-white/60">
               <AvatarImage src={group.user.avatar_url ?? undefined} />
@@ -377,7 +379,7 @@ export default function StoryViewerView() {
               <p className="text-[11px] opacity-80">{timeAgo(story.created_at)}</p>
             </div>
             {story.music && (
-              <div className="flex items-center gap-1 bg-white/15 rounded-full pl-1 pr-2 py-0.5 ml-1">
+              <div className="flex items-center gap-1 bg-white/15 rounded-full ps-1 pe-2 py-0.5 ms-1">
                 {story.music.cover_url ? (
                   <img src={story.music.cover_url} className="w-4 h-4 rounded-full" alt="" />
                 ) : (
@@ -393,20 +395,20 @@ export default function StoryViewerView() {
             {(story.music || story.content_type === "video") && (
               <button
                 onClick={() => setMuted((m) => !m)}
-                aria-label={muted ? "Unmute" : "Mute"}
+                aria-label={muted ? t("stories.unmute") : t("stories.mute")}
                 className="p-2 rounded-full bg-black/40 text-white"
               >
                 {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
             )}
             {isOwn && (
-              <button onClick={del} aria-label="Delete story" className="p-2 rounded-full bg-black/40 text-white">
+              <button onClick={del} aria-label={t("stories.deleteStory")} className="p-2 rounded-full bg-black/40 text-white">
                 <Trash2 className="w-4 h-4" />
               </button>
             )}
             <button
               onClick={() => navigate(-1)}
-              aria-label="Close stories"
+              aria-label={t("stories.closeStories")}
               className="p-2 rounded-full bg-black/40 text-white"
             >
               <X className="w-5 h-5" />
@@ -430,7 +432,7 @@ export default function StoryViewerView() {
           {story.content_type === "image" && (
             <img
               src={story.content_url}
-              alt={story.caption || `Story by ${group.user.username}`}
+              alt={story.caption || t("stories.storyBy", { username: group.user.username })}
               className="w-full h-full object-contain"
             />
           )}
@@ -487,7 +489,7 @@ export default function StoryViewerView() {
 
         {/* caption (media stories) */}
         {!isText && story.caption && (
-          <div className="absolute bottom-24 left-4 right-4 z-20 text-center">
+          <div className="absolute bottom-24 start-4 end-4 z-20 text-center">
             <span className="inline-block bg-black/45 text-white text-sm px-3 py-1.5 rounded-lg">
               {story.caption}
             </span>
@@ -515,7 +517,7 @@ export default function StoryViewerView() {
         </AnimatePresence>
 
         {/* footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 z-30">
+        <div className="absolute bottom-0 start-0 end-0 p-3 z-30">
           {isOwn ? (
             <div className="flex items-center gap-2">
               <button
@@ -523,15 +525,15 @@ export default function StoryViewerView() {
                 className="flex-1 flex items-center justify-center gap-2 text-white/90 text-sm py-2"
               >
                 <Eye className="w-4 h-4" />
-                {story._count.views} views
-                {story._count.reactions > 0 && ` · ${story._count.reactions} reactions`}
+                {t("stories.viewsCount", { count: story._count.views })}
+                {story._count.reactions > 0 && ` · ${t("stories.reactionsCount", { count: story._count.reactions })}`}
               </button>
               <button
                 onClick={() => setShowHighlight(true)}
                 className="flex items-center gap-1 text-white/90 text-sm py-2 px-3 rounded-full bg-white/10"
               >
                 <Star className="w-4 h-4" />
-                Highlight
+                {t("stories.highlight")}
               </button>
             </div>
           ) : (
@@ -543,7 +545,7 @@ export default function StoryViewerView() {
                   onFocus={() => setPaused(true)}
                   onBlur={() => setPaused(false)}
                   onKeyDown={(e) => e.key === "Enter" && sendReply()}
-                  placeholder={`Reply to ${group.user.username}…`}
+                  placeholder={t("stories.replyTo", { username: group.user.username })}
                   className="flex-1 bg-transparent text-white text-sm placeholder:text-white/55 outline-none"
                 />
                 {replyText.trim() && (
@@ -604,15 +606,15 @@ export default function StoryViewerView() {
         {/* side nav (desktop) */}
         <button
           onClick={goPrev}
-          aria-label="Previous story"
-          className="hidden md:flex absolute left-[-52px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 items-center justify-center text-white"
+          aria-label={t("stories.previousStory")}
+          className="hidden md:flex absolute start-[-52px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 items-center justify-center text-white"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
         <button
           onClick={goNext}
-          aria-label="Next story"
-          className="hidden md:flex absolute right-[-52px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 items-center justify-center text-white"
+          aria-label={t("stories.nextStory")}
+          className="hidden md:flex absolute end-[-52px] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 items-center justify-center text-white"
         >
           <ChevronRight className="w-6 h-6" />
         </button>

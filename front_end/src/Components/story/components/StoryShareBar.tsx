@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { Loader2, Sparkles, Check, ChevronDown } from "lucide-react";
 import type { StoryVisibility } from "../../../api/storiesApi";
 import { VISIBILITY_OPTIONS } from "../storyConfig";
+import { useTranslation } from "react-i18next";
 
 interface StoryShareBarProps {
   visibility: StoryVisibility;
@@ -23,6 +24,7 @@ export default function StoryShareBar({
   canShare,
   posting,
 }: StoryShareBarProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3 p-3 border-t border-white/10">
       <div className="relative">
@@ -30,11 +32,11 @@ export default function StoryShareBar({
           onClick={() => setShowVisibility((v) => !v)}
           className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-2 text-xs"
         >
-          {VISIBILITY_OPTIONS.find((o) => o.value === visibility)?.label}
+          {t(VISIBILITY_OPTIONS.find((o) => o.value === visibility)?.label ?? "stories.visibility.public")}
           <ChevronDown className="w-3 h-3" />
         </button>
         {showVisibility && (
-          <div className="absolute bottom-full mb-2 left-0 w-52 rounded-xl bg-neutral-900 border border-white/10 overflow-hidden">
+          <div className="absolute bottom-full mb-2 start-0 w-52 rounded-xl bg-neutral-900 border border-white/10 overflow-hidden">
             {VISIBILITY_OPTIONS.map((o) => (
               <button
                 key={o.value}
@@ -42,13 +44,13 @@ export default function StoryShareBar({
                   setVisibility(o.value);
                   setShowVisibility(false);
                 }}
-                className="w-full text-left px-3 py-2 hover:bg-white/10"
+                className="w-full text-start px-3 py-2 hover:bg-white/10"
               >
                 <p className="text-sm flex items-center gap-2">
-                  {o.label}
+                  {t(o.label)}
                   {visibility === o.value && <Check className="w-3 h-3" />}
                 </p>
-                <p className="text-[11px] text-white/50">{o.hint}</p>
+                <p className="text-[11px] text-white/50">{t(o.hint)}</p>
               </button>
             ))}
           </div>
@@ -61,7 +63,7 @@ export default function StoryShareBar({
         className="flex-1 flex items-center justify-center gap-2 rounded-full bg-white text-black font-semibold py-2.5 disabled:opacity-50"
       >
         {posting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-        Share to story
+        {t("stories.shareToStory")}
       </button>
     </div>
   );

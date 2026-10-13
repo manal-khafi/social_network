@@ -4,6 +4,7 @@ import { Button } from "../../../Components/Community/communityButton";
 import { Input } from "../../../Components/Community/communityInput";
 import { Textarea } from "../../../Components/Community/communityTextArea";
 import type { CommunityRule } from "../types";
+import { useTranslation } from "react-i18next";
 
 /** Inline form used by RulesManager to edit one rule. */
 export function EditRuleForm({
@@ -15,13 +16,14 @@ export function EditRuleForm({
   onSave: (id: string, title: string, description: string) => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(rule.title);
   const [description, setDescription] = useState(rule.description);
 
   return (
     <div className="space-y-3">
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">Title</label>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">{t("communities.title2")}</label>
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -29,7 +31,7 @@ export function EditRuleForm({
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">Description</label>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">{t("communities.description2")}</label>
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -42,16 +44,16 @@ export function EditRuleForm({
           className="flex-1 bg-[#18534f] hover:bg-[#226d68] text-white"
           disabled={!title.trim() || !description.trim()}
         >
-          <Check className="h-4 w-4 mr-1" />
-          Save
+          <Check className="h-4 w-4 me-1" />
+          {t("actions.save")}
         </Button>
         <Button
           onClick={onCancel}
           variant="outline"
           className="flex-1 border-2"
         >
-          <X className="h-4 w-4 mr-1" />
-          Cancel
+          <X className="h-4 w-4 me-1" />
+          {t("actions.cancel")}
         </Button>
       </div>
     </div>

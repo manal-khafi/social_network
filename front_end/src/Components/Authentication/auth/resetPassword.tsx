@@ -6,9 +6,11 @@ import { AuthInput } from "./AuthInput";
 import { AuthButton } from "./AuthButton";
 import { ArrowLeft, CircleCheck, Shield } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export const ResetPasswordScreen: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const queryParams = new URLSearchParams(window.location.search);
   const token = queryParams.get("token");
 
@@ -25,7 +27,7 @@ export const ResetPasswordScreen: React.FC = () => {
   // Verify token on mount
   useEffect(() => {
     if (!token){
-      toast.error("Token missing or invalid");
+      toast.error(t("auth.tokenMissing"));
       handleNavigate();
       return;
     }
@@ -35,11 +37,11 @@ export const ResetPasswordScreen: React.FC = () => {
         const res = await api.get(`/authentication/verify-reset-token/${token}`);
         const data = res.data;
         if (!data.success) {
-          toast.error("Invalid or expired token");
+          toast.error(t("auth.tokenInvalid"));
           handleNavigate();
         }
       } catch (err: any) {
-        toast.error(err.response?.data?.message || "Server error.");
+        toast.error(err.response?.data?.message || t("auth.serverError"));
         handleNavigate();
       }
     };
@@ -68,8 +70,8 @@ export const ResetPasswordScreen: React.FC = () => {
   const validateForm = () => {
     const newErrors = { password: "", confirmPassword: "" };
 
-    if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters";
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    if (formData.password.length < 8) newErrors.password = t("auth.passwordTooShort");
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t("auth.passwordsDontMatch");
 
     setErrors(newErrors);
     return !newErrors.password && !newErrors.confirmPassword;
@@ -78,29 +80,29 @@ export const ResetPasswordScreen: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    if (!token) return toast.error("Token missing or invalid");
+    if (!token) return toast.error(t("auth.tokenMissing"));
 
     setIsLoading(true);
     try {
       const res = await api.post("/authentication/reset-password", { token, newPassword: formData.password });
       const data = res.data;
       if (data.success) {
-        toast.success("Password reset successful!");
+        toast.success(t("auth.resetSuccessToast"));
         setIsSuccess(true);
       } else {
-        toast.error(data.message || "Something went wrong");
+        toast.error(data.message || t("errors.generic"));
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Server error.");
+      toast.error(err.response?.data?.message || t("auth.serverError"));
     }
     setIsLoading(false);
   };
 
   const getStrengthStyles = () => {
     switch (passwordStrength) {
-      case "strong": return { width: "100%", color: "#226d68", label: "Strong", barColor: "bg-[#226d68]" };
-      case "medium": return { width: "66%", color: "#d6955b", label: "Medium", barColor: "bg-[#d6955b]" };
-      default: return { width: "33%", color: "#ef4444", label: "Weak", barColor: "bg-red-500" };
+      case "strong": return { width: "100%", color: "#226d68", label: t("auth.strengthStrong"), barColor: "bg-[#226d68]" };
+      case "medium": return { width: "66%", color: "#d6955b", label: t("auth.strengthMedium"), barColor: "bg-[#d6955b]" };
+      default: return { width: "33%", color: "#ef4444", label: t("auth.strengthWeak"), barColor: "bg-red-500" };
     }
   };
   const strengthStyles = getStrengthStyles();
@@ -121,7 +123,7 @@ export const ResetPasswordScreen: React.FC = () => {
           className="flex items-center gap-2 text-[#226d68] hover:text-[#18534f] transition-colors mb-6"
         >
           <ArrowLeft size={20} />
-          <span>Back to Login</span>
+          <span>{t("auth.backToLogin")}</span>
         </button>
 
         {/* Success State */}
@@ -139,15 +141,15 @@ export const ResetPasswordScreen: React.FC = () => {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
-                  className="absolute -top-2 -right-2"
+                  className="absolute -top-2 -end-2"
                 >
                   <Shield size={32} className="text-[#d6955b]" />
                 </motion.div>
               </div>
             </motion.div>
-            <h2 className="text-3xl mb-4 text-[#18534f]">Password Reset Successful!</h2>
-            <p className="text-gray-600 mb-8">Your password has been successfully reset.<br />You can now login with your new password.</p>
-            <AuthButton variant="primary" onClick={handleNavigate}>Continue to Login</AuthButton>
+            <h2 className="text-3xl mb-4 text-[#18534f]">{t("auth.resetSuccessTitle")}</h2>
+            <p className="text-gray-600 mb-8">{t("auth.resetSuccessBody")}<br />{t("auth.resetSuccessHint")}</p>
+            <AuthButton variant="primary" onClick={handleNavigate}>{t("auth.continueToLogin")}</AuthButton>
           </div>
         ) : (
           <>
@@ -156,16 +158,16 @@ export const ResetPasswordScreen: React.FC = () => {
               <motion.div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#ecf8f6] mb-4">
                 <Shield size={32} className="text-[#226d68]" />
               </motion.div>
-              <h1 className="text-4xl mb-2 text-[#18534f]">Reset Password</h1>
-              <p className="text-gray-600">Create a strong new password for your account.</p>
+              <h1 className="text-4xl mb-2 text-[#18534f]">{t("auth.resetPassword")}</h1>
+              <p className="text-gray-600">{t("auth.resetPasswordSubtitle")}</p>
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <AuthInput
-                label="New Password"
+                label={t("auth.newPassword")}
                 type="password"
-                placeholder="Enter new password"
+                placeholder={t("auth.newPasswordPlaceholder")}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 error={errors.password}
@@ -176,7 +178,7 @@ export const ResetPasswordScreen: React.FC = () => {
               {formData.password && (
                 <div className="mt-3">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-600">Password strength:</span>
+                    <span className="text-sm text-gray-600">{t("auth.passwordStrength")}</span>
                     <span className="text-sm font-medium" style={{ color: strengthStyles.color }}>
                       {strengthStyles.label}
                     </span>
@@ -185,15 +187,15 @@ export const ResetPasswordScreen: React.FC = () => {
                     <div className={`h-full ${strengthStyles.barColor} rounded-full`} style={{ width: strengthStyles.width }} />
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
-                    Use 8+ characters with uppercase, lowercase, numbers & symbols
+                    {t("auth.passwordHint")}
                   </p>
                 </div>
               )}
 
               <AuthInput
-                label="Confirm Password"
+                label={t("auth.confirmPassword")}
                 type="password"
-                placeholder="Confirm new password"
+                placeholder={t("auth.confirmNewPasswordPlaceholder")}
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 error={errors.confirmPassword}
@@ -201,7 +203,7 @@ export const ResetPasswordScreen: React.FC = () => {
               />
 
               <AuthButton variant="primary" isLoading={isLoading} type="submit">
-                Reset Password
+                {t("auth.resetPassword")}
               </AuthButton>
             </form>
           </>

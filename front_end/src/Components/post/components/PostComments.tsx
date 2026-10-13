@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
 import { Smile } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import CommentItem from "./CommentItem";
+import { useTranslation } from "react-i18next";
 
 interface PostCommentsProps {
   post: Post;
@@ -45,6 +46,7 @@ export default function PostComments({
 }: PostCommentsProps) {
   const { currentUser } = useAppSelector((state) => state.user);
   const authUser = useAppSelector((state) => state.auth.user);
+  const { t } = useTranslation();
 
   return (
     <>
@@ -69,10 +71,8 @@ export default function PostComments({
               className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-2 px-3"
             >
               {showAllComments
-                ? "Show less"
-                : `View ${comments.length - 2} more comment${
-                    comments.length - 2 > 1 ? "s" : ""
-                  }`}
+                ? t("posts.showLess")
+                : t("posts.viewMoreComments", { count: comments.length - 2 })}
             </button>
           )}
 
@@ -90,7 +90,7 @@ export default function PostComments({
         </Avatar>
 
         <Input
-          placeholder="Add a comment..."
+          placeholder={t("posts.addComment")}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleComment()}
@@ -115,7 +115,7 @@ export default function PostComments({
           className="bg-[#d6955b] hover:bg-[#c58549]"
           disabled={!comment.trim()}
         >
-          Post
+          {t("posts.post")}
         </Button>
       </div>
     </>

@@ -11,6 +11,7 @@ import { Repeat, Bookmark, MoreVertical, Ban, Flag, Archive, Edit, Trash2 } from
 import type { Post } from "../../../features/posts/postsSlice";
 import { formatTime } from "../../../utils/timeUtils";
 import { useTimeTicker } from "../../../hooks/useTimeTicker";
+import { useTranslation } from "react-i18next";
 
 interface PostHeaderProps {
   post: Post;
@@ -41,6 +42,7 @@ export default function PostHeader({
   handleReport,
 }: PostHeaderProps) {
   useTimeTicker();
+  const { t } = useTranslation();
 
   return (
     <div className="flex items-start gap-3 mb-3">
@@ -61,7 +63,7 @@ export default function PostHeader({
             </Link>
 
             {post.isEdited && (
-              <span className="text-xs text-muted-foreground italic">EDITED</span>
+              <span className="text-xs text-muted-foreground italic">{t("posts.edited")}</span>
             )}
           </div>
 
@@ -76,65 +78,65 @@ export default function PostHeader({
               {isOwnPost ? (
                 <>
                   <DropdownMenuItem onClick={handleEdit}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Post
+                    <Edit className="w-4 h-4 me-2" />
+                    {t("posts.edit")}
                   </DropdownMenuItem>
 
                   <DropdownMenuItem onClick={handleDeletePost} className="text-destructive">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Post
+                    <Trash2 className="w-4 h-4 me-2" />
+                    {t("posts.delete")}
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
 
                   <DropdownMenuItem onClick={handleSave}>
-                    <Bookmark className="w-4 h-4 mr-2" />
-                    {post.isSaved ? "Unsave" : "Save"} Post
+                    <Bookmark className="w-4 h-4 me-2" />
+                    {post.isSaved ? t("posts.unsavePost") : t("posts.savePost")}
                   </DropdownMenuItem>
 
                   <DropdownMenuItem onClick={handleRepost}>
-                    <Repeat className="w-4 h-4 mr-2" />
-                    Repost
+                    <Repeat className="w-4 h-4 me-2" />
+                    {t("posts.repost")}
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
 
                   {post.isArchived ? (
                     <DropdownMenuItem onClick={handleUnarchive}>
-                      <Archive className="w-4 h-4 mr-2" />
-                      Unarchive Post
+                      <Archive className="w-4 h-4 me-2" />
+                      {t("posts.unarchive")}
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem onClick={handleArchive}>
-                      <Archive className="w-4 h-4 mr-2" />
-                      Archive Post
+                      <Archive className="w-4 h-4 me-2" />
+                      {t("posts.archive")}
                     </DropdownMenuItem>
                   )}
                 </>
               ) : (
                 <>
                   <DropdownMenuItem onClick={handleBlock}>
-                    <Ban className="w-4 h-4 mr-2" />
-                    Block @{post.username}
+                    <Ban className="w-4 h-4 me-2" />
+                    {t("posts.blockUsername", { username: post.username })}
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
 
                   <DropdownMenuItem onClick={handleRepost}>
-                    <Repeat className="w-4 h-4 mr-2" />
-                    Repost
+                    <Repeat className="w-4 h-4 me-2" />
+                    {t("posts.repost")}
                   </DropdownMenuItem>
 
                   <DropdownMenuItem onClick={handleSave}>
-                    <Bookmark className="w-4 h-4 mr-2" />
-                    {post.isSaved ? "Unsave" : "Save"} Post
+                    <Bookmark className="w-4 h-4 me-2" />
+                    {post.isSaved ? t("posts.unsavePost") : t("posts.savePost")}
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
 
                   <DropdownMenuItem onClick={handleReport} className="text-destructive">
-                    <Flag className="w-4 h-4 mr-2" />
-                    Report Post
+                    <Flag className="w-4 h-4 me-2" />
+                    {t("posts.report")}
                   </DropdownMenuItem>
                 </>
               )}

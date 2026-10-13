@@ -37,7 +37,11 @@ import {
   reset2FAState,
 } from "../../features/twoFactorAuth/twoFactorAuthSlice";
 
+
+import { useTranslation } from "react-i18next";
+
 export default function AccountSettingsView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { currentUser, status: userStatus } = useAppSelector((state) => state.user);
@@ -93,15 +97,15 @@ export default function AccountSettingsView() {
     if (twoFactorCode.length === 6) {
       const result = await dispatch(enableTwoFactorAuth(twoFactorCode));
       if (enableTwoFactorAuth.fulfilled.match(result)) {
-        toast.success("2FA enabled successfully!");
+        toast.success(t("account.2faEnabledSuccessfully"));
         setShow2FADialog(false);
         dispatch(reset2FAState());
         setTwoFactorCode("");
       } else {
-        toast.error((result as any).payload?.message || "Failed to enable 2FA");
+        toast.error((result as any).payload?.message || t("account.failedToEnable2fa"));
       }
     } else {
-      toast.error("Please enter a 6-digit code.");
+      toast.error(t("account.pleaseEnterA6DigitCode"));
     }
   };
 
@@ -109,15 +113,15 @@ export default function AccountSettingsView() {
     if (twoFactorCode.length === 6) {
       const result = await dispatch(disableTwoFactorAuth(twoFactorCode));
       if (disableTwoFactorAuth.fulfilled.match(result)) {
-        toast.success("2FA disabled successfully!");
+        toast.success(t("account.2faDisabledSuccessfully"));
         setShow2FADialog(false);
         dispatch(reset2FAState());
         setTwoFactorCode("");
       } else {
-        toast.error((result as any).payload?.message || "Failed to disable 2FA");
+        toast.error((result as any).payload?.message || t("account.failedToDisable2fa"));
       }
     } else {
-      toast.error("Please enter a 6-digit code.");
+      toast.error(t("account.pleaseEnterA6DigitCode"));
     }
   };
 
@@ -125,15 +129,15 @@ export default function AccountSettingsView() {
     setPasswordError("");
 
     if (!currentPassword || !newPassword || !confirmNewPassword) {
-      setPasswordError("All fields are required");
+      setPasswordError(t("account.allFieldsAreRequired"));
       return;
     }
     if (newPassword.length < 8) {
-      setPasswordError("New password must be at least 8 characters");
+      setPasswordError(t("account.newPasswordMustBeAtLeast"));
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      setPasswordError("Passwords do not match");
+      setPasswordError(t("auth.passwordsDontMatch"));
       return;
     }
 
@@ -145,12 +149,12 @@ export default function AccountSettingsView() {
         newPassword,
       });
 
-      toast.success("Password changed successfully");
+      toast.success(t("account.passwordChangedSuccessfully"));
       setShowPasswordDialog(false);
       resetPasswordForm();
     } catch (err: any) {
       const msg =
-        err?.response?.data?.message || err?.message || "Failed to change password";
+        err?.response?.data?.message || err?.message || t("account.failedToChangePassword");
       setPasswordError(String(msg));
       toast.error(String(msg));
     } finally {
@@ -162,11 +166,11 @@ export default function AccountSettingsView() {
     setPasswordError("");
 
     if (!deactivatePassword) {
-      setPasswordError("Password is required");
+      setPasswordError(t("account.passwordIsRequired"));
       return;
     }
     if (!deactivateReason.trim()) {
-      toast.error("Please provide a reason for deactivation");
+      toast.error(t("account.pleaseProvideAReasonForDeactivation"));
       return;
     }
 
@@ -178,12 +182,12 @@ export default function AccountSettingsView() {
         reason: deactivateReason,
       });
 
-      toast.success("Account deactivated");
+      toast.success(t("account.accountDeactivated"));
       dispatch(logout());
       navigate("/login");
     } catch (err: any) {
       const msg =
-        err?.response?.data?.message || err?.message || "Failed to deactivate account";
+        err?.response?.data?.message || err?.message || t("account.failedToDeactivateAccount");
       setPasswordError(String(msg));
       toast.error(String(msg));
     } finally {
@@ -195,11 +199,11 @@ export default function AccountSettingsView() {
     setPasswordError("");
 
     if (!deletePassword) {
-      setPasswordError("Password is required");
+      setPasswordError(t("account.passwordIsRequired"));
       return;
     }
     if (!deleteReason.trim()) {
-      toast.error("Please provide a reason for deletion");
+      toast.error(t("account.pleaseProvideAReasonForDeletion"));
       return;
     }
 
@@ -210,12 +214,12 @@ export default function AccountSettingsView() {
         data: { password: deletePassword, reason: deleteReason },
       });
 
-      toast.success("Account deleted");
+      toast.success(t("account.accountDeleted"));
       dispatch(logout());
       navigate("/login");
     } catch (err: any) {
       const msg =
-        err?.response?.data?.message || err?.message || "Failed to delete account";
+        err?.response?.data?.message || err?.message || t("account.failedToDeleteAccount");
       setPasswordError(String(msg));
       toast.error(String(msg));
     } finally {
@@ -231,7 +235,7 @@ export default function AccountSettingsView() {
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">Account Settings</h1>
+          <h1 className="text-xl font-bold">{t("account.accountSettings")}</h1>
         </div>
       </div>
 
@@ -244,7 +248,7 @@ export default function AccountSettingsView() {
                 className="text-primary underline"
                 onClick={() => dispatch(fetchCurrentUserProfile())}
               >
-                Retry
+                {t("account.retry")}
               </button>
             </Card>
           ) : (
@@ -265,7 +269,7 @@ export default function AccountSettingsView() {
         <Card className="p-6 space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
             <Shield className="w-5 h-5" />
-            Security
+            {t("account.security")}
           </h2>
 
           <button
@@ -277,9 +281,9 @@ export default function AccountSettingsView() {
           >
             <div className="flex items-center gap-3">
               <Lock className="w-5 h-5 text-muted-foreground" />
-              <div className="text-left">
-                <p className="font-medium">Change Password</p>
-                <p className="text-sm text-muted-foreground">Update your password</p>
+              <div className="text-start">
+                <p className="font-medium">{t("account.changePassword")}</p>
+                <p className="text-sm text-muted-foreground">{t("account.updateYourPassword")}</p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -296,10 +300,10 @@ export default function AccountSettingsView() {
           >
             <div className="flex items-center gap-3">
               <Shield className="w-5 h-5 text-muted-foreground" />
-              <div className="text-left">
-                <p className="font-medium">Two-Factor Authentication</p>
+              <div className="text-start">
+                <p className="font-medium">{t("account.twoFactorAuthentication")}</p>
                 <p className="text-sm text-muted-foreground">
-                  {is2FAEnabled ? "2FA is currently enabled" : "Add extra security to your account"}
+                  {is2FAEnabled ? "2FA is currently enabled" : t("account.addExtraSecurityToYourAccount")}
                 </p>
               </div>
             </div>
@@ -309,7 +313,7 @@ export default function AccountSettingsView() {
 
         {/* Account Actions */}
         <Card className="p-6 space-y-4">
-          <h2 className="font-semibold">Account Actions</h2>
+          <h2 className="font-semibold">{t("account.accountActions")}</h2>
 
           <Button
             variant="outline"
@@ -320,8 +324,8 @@ export default function AccountSettingsView() {
             }}
             disabled={isSubmitting}
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
+            <LogOut className="w-4 h-4 me-2" />
+            {t("account.logout")}
           </Button>
 
           <Button
@@ -330,8 +334,8 @@ export default function AccountSettingsView() {
             onClick={() => setShowDeactivateDialog(true)}
             disabled={isSubmitting}
           >
-            <AlertCircle className="w-4 h-4 mr-2" />
-            Deactivate Account
+            <AlertCircle className="w-4 h-4 me-2" />
+            {t("account.deactivateAccount")}
           </Button>
 
           <Button
@@ -340,8 +344,8 @@ export default function AccountSettingsView() {
             onClick={() => setShowDeleteDialog(true)}
             disabled={isSubmitting}
           >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete Account
+            <Trash2 className="w-4 h-4 me-2" />
+            {t("account.deleteAccount")}
           </Button>
         </Card>
       </div>
@@ -357,35 +361,35 @@ export default function AccountSettingsView() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Change Password</DialogTitle>
+            <DialogTitle>{t("account.changePassword")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Current Password</label>
+              <label className="text-sm font-medium">{t("account.currentPassword")}</label>
               <Input
                 type="password"
-                placeholder="Enter current password"
+                placeholder={t("account.enterCurrentPassword")}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">New Password</label>
+              <label className="text-sm font-medium">{t("account.newPassword")}</label>
               <Input
                 type="password"
-                placeholder="Enter new password"
+                placeholder={t("account.enterNewPassword")}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Confirm New Password</label>
+              <label className="text-sm font-medium">{t("account.confirmNewPassword2")}</label>
               <Input
                 type="password"
-                placeholder="Confirm new password"
+                placeholder={t("account.confirmNewPassword")}
                 value={confirmNewPassword}
                 onChange={(e) => setConfirmNewPassword(e.target.value)}
               />
@@ -396,14 +400,14 @@ export default function AccountSettingsView() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPasswordDialog(false)} disabled={isSubmitting}>
-              Cancel
+              {t("actions.cancel")}
             </Button>
             <Button
               className="bg-[#d6955b] hover:bg-[#c58549]"
               onClick={handleChangePassword}
               disabled={isSubmitting}
             >
-              Update Password
+              {t("account.updatePassword")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -422,33 +426,33 @@ export default function AccountSettingsView() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{is2FAEnabled ? "Disable" : "Enable"} Two-Factor Authentication</DialogTitle>
+            <DialogTitle>{is2FAEnabled ? t("account.disable2faTitle") : t("account.enable2faTitle")}</DialogTitle>
             <DialogDescription>
               {is2FAEnabled
-                ? "Enter the code from your authenticator app to disable 2FA."
-                : "Scan the QR code with your authenticator app."}
+                ? t("account.enterTheCodeFromYourAuthenticator")
+                : t("account.scanTheQrCodeWithYour")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-4 space-y-4">
             {is2FAEnabled ? (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Verification Code</label>
+                <label className="text-sm font-medium">{t("account.verificationCode")}</label>
                 <Input
-                  placeholder="Enter 6-digit code"
+                  placeholder={t("account.enter6DigitCode")}
                   value={twoFactorCode}
                   onChange={(e) => setTwoFactorCode(e.target.value)}
                 />
               </div>
             ) : qrCodeDataUrl ? (
               <div className="flex flex-col items-center space-y-4">
-                <img src={qrCodeDataUrl} alt="2FA QR Code" />
-                <p className="text-sm text-muted-foreground">Or enter this code manually:</p>
+                <img src={qrCodeDataUrl} alt={t("account.2faQrCode")} />
+                <p className="text-sm text-muted-foreground">{t("account.orEnterThisCodeManually")}</p>
                 <p className="text-lg font-semibold tracking-widest bg-muted p-2 rounded-md">{manualKey}</p>
                 <div className="w-full space-y-2 pt-4">
-                  <label className="text-sm font-medium">Verification Code</label>
+                  <label className="text-sm font-medium">{t("account.verificationCode")}</label>
                   <Input
-                    placeholder="Enter 6-digit code"
+                    placeholder={t("account.enter6DigitCode")}
                     value={twoFactorCode}
                     onChange={(e) => setTwoFactorCode(e.target.value)}
                   />
@@ -456,11 +460,11 @@ export default function AccountSettingsView() {
               </div>
             ) : (
               <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm font-medium mb-2">Setup Steps:</p>
+                <p className="text-sm font-medium mb-2">{t("account.setupSteps")}</p>
                 <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                  <li>Download an authenticator app (e.g., Google Authenticator).</li>
-                  <li>Click "Continue" to generate a QR code.</li>
-                  <li>Scan the QR code and enter the verification code.</li>
+                  <li>{t("account.downloadAnAuthenticatorAppEG")}</li>
+                  <li>{t("account.clickContinueToGenerateAQr")}</li>
+                  <li>{t("account.scanTheQrCodeAndEnter")}</li>
                 </ol>
               </div>
             )}
@@ -472,20 +476,20 @@ export default function AccountSettingsView() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShow2FADialog(false)}>
-              Cancel
+              {t("actions.cancel")}
             </Button>
 
             {is2FAEnabled ? (
               <Button onClick={handleDisable2FA} variant="destructive">
-                Disable
+                {t("account.disable")}
               </Button>
             ) : qrCodeDataUrl ? (
               <Button onClick={handleEnable2FA} className="bg-[#d6955b] hover:bg-[#c58549]">
-                Verify & Enable
+                {t("account.verifyEnable")}
               </Button>
             ) : (
               <Button onClick={handleSetup2FA} className="bg-[#d6955b] hover:bg-[#c58549]">
-                Continue
+                {t("account.continue")}
               </Button>
             )}
           </DialogFooter>
@@ -506,16 +510,16 @@ export default function AccountSettingsView() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Deactivate Account</DialogTitle>
-            <DialogDescription>Your account will be temporarily disabled</DialogDescription>
+            <DialogTitle>{t("account.deactivateAccount")}</DialogTitle>
+            <DialogDescription>{t("account.yourAccountWillBeTemporarilyDisabled")}</DialogDescription>
           </DialogHeader>
 
           <div className="py-4 space-y-4">
-            <p className="text-sm mb-2">When you deactivate your account:</p>
+            <p className="text-sm mb-2">{t("account.whenYouDeactivateYourAccount")}</p>
             <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside mb-4">
-              <li>Your profile will be hidden from other users</li>
-              <li>Your posts will not be visible</li>
-              <li>You can reactivate anytime by logging in</li>
+              <li>{t("account.yourProfileWillBeHiddenFrom")}</li>
+              <li>{t("account.yourPostsWillNotBeVisible")}</li>
+              <li>{t("account.youCanReactivateAnytimeByLogging")}</li>
             </ul>
 
             <div className="space-y-2">
@@ -524,7 +528,7 @@ export default function AccountSettingsView() {
               </label>
               <Input
                 type="password"
-                placeholder="Enter your password"
+                placeholder={t("account.enterYourPassword")}
                 value={deactivatePassword}
                 onChange={(e) => {
                   setDeactivatePassword(e.target.value);
@@ -540,21 +544,21 @@ export default function AccountSettingsView() {
                 Why are you deactivating? <span className="text-destructive">*</span>
               </label>
               <Textarea
-                placeholder="Please tell us why you're deactivating your account..."
+                placeholder={t("account.pleaseTellUsWhyYoureDeactivating")}
                 value={deactivateReason}
                 onChange={(e) => setDeactivateReason(e.target.value)}
                 className="min-h-[80px] resize-none"
               />
-              <p className="text-xs text-muted-foreground">This helps us improve ANMOUGAR</p>
+              <p className="text-xs text-muted-foreground">{t("account.thisHelpsUsImproveAnmougar")}</p>
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeactivateDialog(false)} disabled={isSubmitting}>
-              Cancel
+              {t("actions.cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDeactivate} disabled={isSubmitting}>
-              Deactivate Account
+              {t("account.deactivateAccount")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -574,23 +578,23 @@ export default function AccountSettingsView() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Account</DialogTitle>
-            <DialogDescription className="text-destructive">This action cannot be undone</DialogDescription>
+            <DialogTitle>{t("account.deleteAccount")}</DialogTitle>
+            <DialogDescription className="text-destructive">{t("account.thisActionCannotBeUndone")}</DialogDescription>
           </DialogHeader>
 
           <div className="py-4 space-y-4">
             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <p className="text-sm font-medium text-destructive mb-1">⚠️ Warning</p>
+              <p className="text-sm font-medium text-destructive mb-1">{t("account.warning")}</p>
               <p className="text-sm text-muted-foreground">
-                This action is permanent and cannot be reversed
+                {t("account.thisActionIsPermanentAndCannot")}
               </p>
             </div>
 
-            <p className="text-sm mb-2">When you delete your account:</p>
+            <p className="text-sm mb-2">{t("account.whenYouDeleteYourAccount")}</p>
             <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside mb-4">
-              <li>All your data will be permanently deleted</li>
-              <li>Your posts, messages, and media will be removed</li>
-              <li>This cannot be undone or reversed</li>
+              <li>{t("account.allYourDataWillBePermanently")}</li>
+              <li>{t("account.yourPostsMessagesAndMediaWill")}</li>
+              <li>{t("account.thisCannotBeUndoneOrReversed")}</li>
             </ul>
 
             <div className="space-y-2">
@@ -599,7 +603,7 @@ export default function AccountSettingsView() {
               </label>
               <Input
                 type="password"
-                placeholder="Enter your password"
+                placeholder={t("account.enterYourPassword")}
                 value={deletePassword}
                 onChange={(e) => {
                   setDeletePassword(e.target.value);
@@ -615,21 +619,21 @@ export default function AccountSettingsView() {
                 Why are you deleting? <span className="text-destructive">*</span>
               </label>
               <Textarea
-                placeholder="Please tell us why you're deleting your account..."
+                placeholder={t("account.pleaseTellUsWhyYoureDeleting")}
                 value={deleteReason}
                 onChange={(e) => setDeleteReason(e.target.value)}
                 className="min-h-[80px] resize-none"
               />
-              <p className="text-xs text-muted-foreground">Your feedback is important to us</p>
+              <p className="text-xs text-muted-foreground">{t("account.yourFeedbackIsImportantToUs")}</p>
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={isSubmitting}>
-              Cancel
+              {t("actions.cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-              Delete Permanently
+              {t("account.deletePermanently")}
             </Button>
           </DialogFooter>
         </DialogContent>

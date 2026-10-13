@@ -3,9 +3,11 @@ import { useAppDispatch, useAppSelector } from '../../hooks';
 import StoryBar from '../../Components/story/StoryBar';
 import PostCard from '../../Components/post/PostCard';
 import { fetchPosts, fetchMorePosts } from '../../features/posts/postsSlice';
+import { useTranslation } from 'react-i18next';
 
 export default function FeedView() {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const { feed, status, loadMoreStatus, nextOffset, hasMore } = useAppSelector((state) => state.posts);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const filteredFeed = feed ?? [];
@@ -44,16 +46,16 @@ export default function FeedView() {
         
         {filteredFeed.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No posts yet. Start following people to see their posts!</p>
+            <p className="text-muted-foreground">{t('empty.feedFollow')}</p>
           </div>
         )}
 
         <div ref={loadMoreRef} />
         {loadMoreStatus === 'loading' && (
-          <div className="text-center py-6 text-sm text-muted-foreground">Loading more posts...</div>
+          <div className="text-center py-6 text-sm text-muted-foreground">{t('posts.loadingMore')}</div>
         )}
         {!hasMore && feed.length > 0 && (
-          <div className="text-center py-6 text-sm text-muted-foreground">You’re all caught up.</div>
+          <div className="text-center py-6 text-sm text-muted-foreground">{t('posts.allCaughtUp')}</div>
         )}
       </div>
     </div>

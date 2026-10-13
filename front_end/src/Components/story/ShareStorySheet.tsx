@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "../../hooks";
 import { shareStory } from "../../features/stories/storiesSlice";
 import { getFollowing, type StoryUser } from "../../api/storiesApi";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   storyId: string;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function ShareStorySheet({ storyId, onClose }: Props) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((s) => s.user.currentUser);
   const [people, setPeople] = useState<StoryUser[]>([]);
@@ -53,10 +55,10 @@ export default function ShareStorySheet({ storyId, onClose }: Props) {
       const res = await dispatch(
         shareStory({ storyId, recipientIds: [...selected], note: note.trim() || undefined })
       ).unwrap();
-      toast.success(`Sent to ${res.shared_count} ${res.shared_count === 1 ? "person" : "people"}`);
+      toast.success(t("stories.sentToCount", { count: res.shared_count }));
       onClose();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not send");
+      toast.error(e instanceof Error ? e.message : t("stories.couldNotSend"));
     } finally {
       setSending(false);
     }
@@ -70,7 +72,7 @@ export default function ShareStorySheet({ storyId, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-white/10">
-          <span className="font-semibold">Send to</span>
+          <span className="font-semibold">{t("stories.sendTo")}</span>
           <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
 
@@ -80,7 +82,7 @@ export default function ShareStorySheet({ storyId, onClose }: Props) {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search"
+              placeholder={t("actions.search")}
               className="flex-1 bg-transparent outline-none text-sm placeholder:text-white/40"
             />
           </div>
@@ -93,7 +95,7 @@ export default function ShareStorySheet({ storyId, onClose }: Props) {
             </div>
           )}
           {!loading && filtered.length === 0 && (
-            <p className="text-center text-sm text-white/50 py-10">No one to send to yet</p>
+            <p className="text-center text-sm text-white/50 py-10">{t("stories.noOneToSendToYet")}</p>
           )}
           {filtered.map((p) => {
             const isSel = selected.has(p.id);
@@ -107,7 +109,7 @@ export default function ShareStorySheet({ storyId, onClose }: Props) {
                   <AvatarImage src={p.avatar_url ?? undefined} />
                   <AvatarFallback>{p.username[0]?.toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <div className="min-w-0 flex-1 text-left">
+                <div className="min-w-0 flex-1 text-start">
                   <p className="text-sm font-medium truncate">{p.username}</p>
                   <p className="text-xs text-white/50 truncate">{p.display_name}</p>
                 </div>
@@ -127,7 +129,7 @@ export default function ShareStorySheet({ storyId, onClose }: Props) {
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Write a message…"
+            placeholder={t("stories.writeAMessage")}
             className="flex-1 rounded-full bg-white/10 px-4 py-2 text-sm outline-none placeholder:text-white/40"
           />
           <button

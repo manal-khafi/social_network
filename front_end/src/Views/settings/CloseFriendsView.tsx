@@ -11,7 +11,11 @@ import {
   removeCloseFriend,
 } from "../../api/closeFriendsApi";
 
+
+import { useTranslation } from "react-i18next";
+
 export default function CloseFriendsView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const currentUser = useAppSelector((s) => s.user.currentUser);
 
@@ -32,7 +36,7 @@ export default function CloseFriendsView() {
         [...following, ...close].forEach((u) => byId.set(u.id, u));
         setPeople([...byId.values()]);
       })
-      .catch(() => toast.error("Could not load your contacts"))
+      .catch(() => toast.error(t("settings.couldNotLoadYourContacts")))
       .finally(() => setLoading(false));
   }, [currentUser?.id]);
 
@@ -65,7 +69,7 @@ export default function CloseFriendsView() {
       if (isClose) await removeCloseFriend(user.id);
       else await addCloseFriend(user.id);
     } catch {
-      toast.error("Update failed");
+      toast.error(t("settings.updateFailed"));
       setCloseIds((prev) => {
         const next = new Set(prev);
         isClose ? next.add(user.id) : next.delete(user.id);
@@ -80,14 +84,13 @@ export default function CloseFriendsView() {
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-2xl mx-auto p-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} aria-label="Back">
+          <button onClick={() => navigate(-1)} aria-label={t("actions.back")}>
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="font-semibold">Close Friends</h1>
+            <h1 className="font-semibold">{t("settings.closeFriends")}</h1>
             <p className="text-xs text-muted-foreground">
-              {closeIds.size} {closeIds.size === 1 ? "person" : "people"} · only they see
-              close-friends stories
+              {t("settings.closeFriendsCount", { count: closeIds.size })}
             </p>
           </div>
         </div>
@@ -99,7 +102,7 @@ export default function CloseFriendsView() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search people you follow"
+            placeholder={t("messages.searchFollowing")}
             className="flex-1 bg-transparent text-sm outline-none"
           />
         </div>
@@ -110,7 +113,7 @@ export default function CloseFriendsView() {
           </div>
         ) : filtered.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-16">
-            No one to show. Follow people first.
+            {t("settings.noOneToShowFollowPeople")}
           </p>
         ) : (
           <ul className="space-y-1">
@@ -135,7 +138,7 @@ export default function CloseFriendsView() {
                     onClick={() => toggle(p)}
                     disabled={busy === p.id}
                     aria-pressed={isClose}
-                    aria-label={isClose ? "Remove from close friends" : "Add to close friends"}
+                    aria-label={isClose ? t("settings.removeFromCloseFriends") : t("settings.addToCloseFriends")}
                     className="p-2 disabled:opacity-50"
                   >
                     <Star

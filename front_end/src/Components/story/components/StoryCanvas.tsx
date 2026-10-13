@@ -5,6 +5,7 @@ import type { SelectedMusic } from "../MusicPicker";
 import StoryOverlayLayer from "../StoryOverlayLayer";
 import { STORY_BACKGROUNDS } from "../storyConfig";
 import type { Mode, StoryMedia } from "./types";
+import { useTranslation } from "react-i18next";
 
 interface StoryCanvasProps {
   mode: Mode;
@@ -46,6 +47,7 @@ export default function StoryCanvas({
   bgIndex,
   setBgIndex,
 }: StoryCanvasProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 pb-3">
       <div
@@ -82,7 +84,7 @@ export default function StoryCanvas({
 
         {/* music pill */}
         {music && (
-          <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/50 rounded-full pl-1 pr-3 py-1 text-xs backdrop-blur">
+          <div className="absolute top-3 start-3 flex items-center gap-2 bg-black/50 rounded-full ps-1 pe-3 py-1 text-xs backdrop-blur">
             {music.cover_url ? (
               <img
                 src={music.cover_url}
@@ -91,7 +93,7 @@ export default function StoryCanvas({
                 alt=""
               />
             ) : (
-              <Music2 className="w-4 h-4 ml-1" />
+              <Music2 className="w-4 h-4 ms-1" />
             )}
             <span className="max-w-[140px] truncate">{music.title} · {music.artist}</span>
           </div>
@@ -116,7 +118,7 @@ export default function StoryCanvas({
               }}
               className="px-3 py-1 rounded-full bg-white/20 text-xs"
             >
-              Edit
+              {t("actions.edit")}
             </button>
             <button onClick={removeSelectedOverlay} className="p-2 rounded-full bg-white/20">
               <Trash2 className="w-4 h-4" />
@@ -143,7 +145,7 @@ export default function StoryCanvas({
       <input
         value={caption}
         onChange={(e) => setCaption(e.target.value)}
-        placeholder={mode === "text" ? "Type something…" : "Add a caption…"}
+        placeholder={mode === "text" ? t("stories.typeSomething") : t("stories.addACaption")}
         className="mt-3 w-full max-w-[380px] rounded-full bg-white/10 px-4 py-2 text-sm outline-none placeholder:text-white/50"
       />
     </div>

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { StoryOverlay } from "../../api/storiesApi";
+import { useTranslation } from "react-i18next";
 
 export interface PollState {
   counts: Record<number, number> | null;
@@ -44,6 +45,7 @@ export default function StoryOverlayLayer({
   questionAuthorView,
   onMentionTap,
 }: Props) {
+  const { t } = useTranslation();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const layerRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{ id: string; pointerId: number } | null>(null);
@@ -77,7 +79,7 @@ export default function StoryOverlayLayer({
 
   const renderContent = (ov: StoryOverlay) => {
     if (ov.type === "link") {
-      const label = ov.label?.trim() || ov.url?.replace(/^https?:\/\//, "").slice(0, 24) || "Link";
+      const label = ov.label?.trim() || ov.url?.replace(/^https?:\/\//, "").slice(0, 24) || t("stories.link");
       return (
         <button
           onClick={(e) => {
@@ -112,13 +114,13 @@ export default function StoryOverlayLayer({
                     e.stopPropagation();
                     if (!editable) onPollVote?.(ov.id, i);
                   }}
-                  className={`relative overflow-hidden rounded-full text-sm px-3 py-1.5 text-left ${
+                  className={`relative overflow-hidden rounded-full text-sm px-3 py-1.5 text-start ${
                     mine ? "bg-white text-black font-semibold" : "bg-white/20"
                   }`}
                 >
                   {revealed && (
                     <span
-                      className="absolute inset-y-0 left-0 bg-white/25"
+                      className="absolute inset-y-0 start-0 bg-white/25"
                       style={{ width: `${pct(count, res!.total)}%` }}
                     />
                   )}
@@ -144,7 +146,7 @@ export default function StoryOverlayLayer({
           <p className="text-sm font-semibold text-center text-neutral-500 mb-2">{ov.prompt}</p>
           {editable ? (
             <div className="rounded-full bg-neutral-100 text-sm px-3 py-1.5 text-neutral-400">
-              Type something…
+              {t("stories.typeSomething")}
             </div>
           ) : questionAuthorView ? (
             <button
@@ -154,7 +156,7 @@ export default function StoryOverlayLayer({
               }}
               className="w-full rounded-full bg-neutral-100 text-sm py-1.5 font-medium"
             >
-              View responses
+              {t("stories.viewResponses")}
             </button>
           ) : (
             <div className="flex items-center gap-1">
@@ -167,7 +169,7 @@ export default function StoryOverlayLayer({
                     setAnswers((a) => ({ ...a, [ov.id]: "" }));
                   }
                 }}
-                placeholder="Type something…"
+                placeholder={t("stories.typeSomething")}
                 className="flex-1 rounded-full bg-neutral-100 text-sm px-3 py-1.5 outline-none"
               />
               <button
@@ -180,7 +182,7 @@ export default function StoryOverlayLayer({
                 }}
                 className="text-sm font-semibold text-sky-600 px-2"
               >
-                Send
+                {t("actions.send")}
               </button>
             </div>
           )}

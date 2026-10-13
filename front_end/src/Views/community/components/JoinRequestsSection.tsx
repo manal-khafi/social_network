@@ -4,6 +4,7 @@ import { Card, CardContent } from "../../../Components/Community/communityCard";
 import { Avatar, AvatarImage, AvatarFallback } from "../../../Components/Community/communityAvatar";
 import { ScrollArea } from "../../../Components/Community/communityScrollArea";
 import type { JoinRequest } from "../types";
+import { useTranslation } from "react-i18next";
 
 interface JoinRequestsSectionProps {
   joinRequests: JoinRequest[];
@@ -17,28 +18,29 @@ export function JoinRequestsSection({
   handleApproveRequest,
   handleRejectRequest,
 }: JoinRequestsSectionProps) {
+  const { t, i18n } = useTranslation();
   return (
     <Card className="border-2">
       <CardContent className="p-6">
         <div className="mb-6">
           <h3 className="text-xl font-semibold mb-2">
-            Join requests ({joinRequests.length})
+            {t("communities.joinRequestsCount", { n: joinRequests.length })}
           </h3>
           <p className="text-sm text-gray-600">
-            Manage requests to join the community
+            {t("communities.manageRequestsToJoinTheCommunity")}
           </p>
         </div>
 
         {joinRequests.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>No pending requests</p>
+            <p>{t("communities.noPendingRequests")}</p>
           </div>
         ) : (
-          <ScrollArea className="h-[400px] pr-4">
+          <ScrollArea className="h-[400px] pe-4">
             <div className="space-y-4">
               {joinRequests.map((request) => {
-                const userName = request.user?.display_name || request.user?.username || "User";
+                const userName = request.user?.display_name || request.user?.username || t("communities.user");
                 const userEmail = request.user?.email || "";
                 const userAvatar = request.user?.avatar_url;
                 const initials = userName.split(" ").map(n => n[0]).join("").toUpperCase();
@@ -65,7 +67,7 @@ export function JoinRequestsSection({
                               {userEmail}
                             </p>
                             <p className="text-xs text-gray-500 mb-2">
-                              Requested on {new Date(request.created_at).toLocaleDateString('en-US')}
+                              {t("communities.requestedOn", { date: new Date(request.created_at).toLocaleDateString(i18n.language) })}
                             </p>
                             {request.message && (
                               <p className="text-sm text-gray-600 bg-[#ecf8f6] p-3 rounded-lg">
@@ -80,8 +82,8 @@ export function JoinRequestsSection({
                             onClick={() => handleApproveRequest(request.id, request.user_id)}
                             className="bg-[#18534f] hover:bg-[#226d68] text-white"
                           >
-                            <Check className="h-4 w-4 mr-1" />
-                            Accept
+                            <Check className="h-4 w-4 me-1" />
+                            {t("communities.accept")}
                           </Button>
                           <Button
                             size="sm"
@@ -89,8 +91,8 @@ export function JoinRequestsSection({
                             onClick={() => handleRejectRequest(request.id, request.user_id)}
                             className="border-2 border-red-500 text-red-500 hover:bg-red-50"
                           >
-                            <X className="h-4 w-4 mr-1" />
-                            Reject
+                            <X className="h-4 w-4 me-1" />
+                            {t("communities.reject")}
                           </Button>
                         </div>
                       </div>

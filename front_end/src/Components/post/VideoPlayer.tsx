@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Heart, Maximize2, Pause, Play } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface VideoPlayerProps {
   src: string;
@@ -20,6 +21,7 @@ const formatTime = (seconds: number) => {
 };
 
 export default function VideoPlayer({ src, onDoubleTapLike, className }: VideoPlayerProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const clickTimeoutRef = useRef<number | null>(null);
@@ -146,7 +148,7 @@ export default function VideoPlayer({ src, onDoubleTapLike, className }: VideoPl
             togglePlay();
           }}
           className="rounded-full bg-black/50 p-3 text-white hover:bg-black/70 transition-opacity"
-          aria-label={isPlaying ? 'Pause video' : 'Play video'}
+          aria-label={isPlaying ? t("posts.pauseVideo") : t("posts.playVideo")}
         >
           {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
         </button>
@@ -164,7 +166,7 @@ export default function VideoPlayer({ src, onDoubleTapLike, className }: VideoPl
           value={Math.min(currentTime, duration || 0)}
           onChange={(event) => handleSeek(Number(event.target.value))}
           className="w-full accent-red-500"
-          aria-label="Seek video"
+          aria-label={t("posts.seekVideo")}
         />
         <div className="mt-1 flex items-center justify-between text-xs text-white">
           <span>{formatTime(currentTime)}</span>
@@ -174,7 +176,7 @@ export default function VideoPlayer({ src, onDoubleTapLike, className }: VideoPl
               type="button"
               onClick={handleFullscreen}
               className="rounded-full bg-black/40 p-1.5 text-white hover:bg-black/60"
-              aria-label="Toggle fullscreen"
+              aria-label={t("posts.toggleFullscreen")}
             >
               <Maximize2 className="h-4 w-4" />
             </button>
