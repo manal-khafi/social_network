@@ -13,6 +13,7 @@ import {
 } from "../features/notifications/notificationsSlice";
 import type { Notification } from "../features/notifications/notificationsSlice";
 import {
+  conversationRead,
   fetchUnreadConversationCount,
   isLocationContent,
   receiveMessage,
@@ -108,6 +109,11 @@ export function useRealtime() {
       toast(m?.shared_story_id ? `${who} sent you a story` : `${who}: ${m?.content ?? ""}`);
     };
 
+    // Read receipt: moves the "Seen" indicator in the chat and the inbox ticks.
+    const onConversationRead = (r: any) => {
+      if (r?.conversationId && r?.last_read_at) dispatch(conversationRead(r));
+    };
+
     socket.on("new_notification", onNotification);
     socket.on("notification_removed", onNotificationRemoved);
     socket.on("story:view", onStoryView);
@@ -117,6 +123,7 @@ export function useRealtime() {
     socket.on("story:poll", onStoryPoll);
     socket.on("story:question", onStoryQuestion);
     socket.on("message:new", onMessage);
+    socket.on("conversation:read", onConversationRead);
 
     connectSocket();
 
@@ -135,6 +142,7 @@ export function useRealtime() {
       socket.off("story:poll", onStoryPoll);
       socket.off("story:question", onStoryQuestion);
       socket.off("message:new", onMessage);
+      socket.off("conversation:read", onConversationRead);
       if (feedRefreshTimer.current) window.clearTimeout(feedRefreshTimer.current);
     };
   }, [isAuthenticated, currentUserId, dispatch]);

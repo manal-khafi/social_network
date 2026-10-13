@@ -7,6 +7,7 @@ import {
   deleteConversation,
   fetchConversations,
   fetchArchivedConversations,
+  isSeenBy,
 } from "../../features/messages/messagesSlice";
 import type { Conversation } from "../../features/messages/messagesSlice";
 import { Avatar, AvatarImage, AvatarFallback } from "../../Components/ui/avatar";
@@ -26,6 +27,8 @@ import {
   MessageSquare,
   ChevronRight,
   ArrowLeft,
+  Check,
+  CheckCheck,
 } from "lucide-react";
 import NewMessageDialog from "./NewMessageDialog";
 
@@ -64,15 +67,29 @@ function ConversationRow({
           </span>
         </div>
         <p
-          className={`truncate text-sm ${
+          className={`flex items-center gap-1 text-sm ${
             unread ? "text-foreground" : "text-muted-foreground"
           }`}
         >
-          {conv.lastMessage || "No messages yet"}
+          {conv.lastMessageFromMe &&
+            conv.lastMessage &&
+            (isSeenBy(conv.otherLastReadAt, conv.lastMessageAt) ? (
+              <CheckCheck className="w-4 h-4 shrink-0 text-primary" aria-label="Seen" />
+            ) : (
+              <Check className="w-4 h-4 shrink-0" aria-label="Sent" />
+            ))}
+          <span className="truncate">{conv.lastMessage || "No messages yet"}</span>
         </p>
       </div>
 
-      {unread && <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0" />}
+      {unread && (
+        <span
+          className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground"
+          aria-label={`${conv.unreadCount} unread messages`}
+        >
+          {conv.unreadCount > 9 ? "9+" : conv.unreadCount}
+        </span>
+      )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>

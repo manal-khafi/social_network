@@ -72,7 +72,16 @@ export interface Conversation {
   isArchived: boolean;
   isOnline: boolean;
   lastSeen?: string;
+  /** Read receipts: when the other participant last read the chat (null if unknown / turned off). */
+  otherLastReadAt?: string | null;
+  /** Whether the last message was sent by the current user, and when. */
+  lastMessageFromMe?: boolean;
+  lastMessageAt?: string;
 }
+
+/** True when the other participant has read everything up to `sentAt`. */
+export const isSeenBy = (otherLastReadAt: string | null | undefined, sentAt: string | undefined) =>
+  !!otherLastReadAt && !!sentAt && new Date(otherLastReadAt).getTime() >= new Date(sentAt).getTime();
 
 interface MessagesState {
   conversations: Conversation[];
@@ -143,6 +152,9 @@ const mapConversation = (c: ApiConversation): Conversation => ({
   unreadCount: c.unread_count,
   isArchived: c.is_archived,
   isOnline: false,
+  otherLastReadAt: c.other_last_read_at,
+  lastMessageFromMe: !!c.last_message && c.last_message.sender_id !== c.other_user?.id,
+  lastMessageAt: c.last_message?.created_at,
 });
 
 const mapLocationMessage = (m: ApiMessage): Message => {
@@ -214,6 +226,7 @@ export const fetchConversation = createAsyncThunk(
       unreadCount: 0,
       isArchived: false,
       isOnline: false,
+      otherLastReadAt: c.other_last_read_at,
     };
     return conv;
   }
@@ -291,19 +304,21 @@ export const deleteConversation = createAsyncThunk(
   }
 );
 
+/** Marks a conversation as read everywhere it is tracked (lists + nav badge). */
+const clearUnread = (state: MessagesState, conversationId: string) => {
+  state.unreadConversationIds = state.unreadConversationIds.filter((id) => id !== conversationId);
+  for (const c of [...state.conversations, ...state.archivedConversations]) {
+    if (c.id === conversationId) c.unreadCount = 0;
+  }
+};
+
 const messagesSlice = createSlice({
   name: "messages",
   initialState,
   reducers: {
     setCurrentConversation: (state, action: PayloadAction<string | null>) => {
       state.currentConversation = action.payload;
-      if (action.payload) {
-        state.unreadConversationIds = state.unreadConversationIds.filter(
-          (id) => id !== action.payload
-        );
-        const c = state.conversations.find((x) => x.id === action.payload);
-        if (c) c.unreadCount = 0;
-      }
+      if (action.payload) clearUnread(state, action.payload);
     },
     // Realtime message:new
     receiveMessage: (state, action: PayloadAction<ApiMessage>) => {
@@ -323,11 +338,23 @@ const messagesSlice = createSlice({
       if (conv) {
         conv.lastMessage = summarize(m);
         conv.timestamp = "now";
+        conv.lastMessageFromMe = false;
+        conv.lastMessageAt = m.created_at;
         if (state.currentConversation !== m.conversation_id) conv.unreadCount += 1;
         state.conversations = [
           conv,
           ...state.conversations.filter((c) => c.id !== conv.id),
         ];
+      }
+    },
+    /** Socket "conversation:read": the other participant read the chat. */
+    conversationRead: (
+      state,
+      action: PayloadAction<{ conversationId: string; userId: string; last_read_at: string }>
+    ) => {
+      const { conversationId, last_read_at } = action.payload;
+      for (const c of [...state.conversations, ...state.archivedConversations]) {
+        if (c.id === conversationId) c.otherLastReadAt = last_read_at;
       }
     },
   },
@@ -339,6 +366,8 @@ const messagesSlice = createSlice({
       .addCase(fetchConversations.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.conversations = action.payload;
+        // The list may have been computed before the open chat was marked read.
+        if (state.currentConversation) clearUnread(state, state.currentConversation);
       })
       .addCase(fetchConversations.rejected, (state) => {
         state.status = "failed";
@@ -362,15 +391,13 @@ const messagesSlice = createSlice({
               ? "Video"
               : "Photo";
           conv.timestamp = "now";
+          conv.lastMessageFromMe = true;
+          conv.lastMessageAt = m.createdAt;
           state.conversations = [conv, ...state.conversations.filter((c) => c.id !== conv.id)];
         }
       })
       .addCase(markRead.fulfilled, (state, action) => {
-        const c = state.conversations.find((x) => x.id === action.payload);
-        if (c) c.unreadCount = 0;
-        state.unreadConversationIds = state.unreadConversationIds.filter(
-          (id) => id !== action.payload
-        );
+        clearUnread(state, action.payload);
       })
       .addCase(fetchUnreadConversationCount.fulfilled, (state, action) => {
         // The open conversation is being read right now.
@@ -380,6 +407,7 @@ const messagesSlice = createSlice({
       })
       .addCase(fetchArchivedConversations.fulfilled, (state, action) => {
         state.archivedConversations = action.payload;
+        if (state.currentConversation) clearUnread(state, state.currentConversation);
       })
       .addCase(fetchConversation.fulfilled, (state, action) => {
         const c = action.payload;
@@ -416,7 +444,7 @@ const messagesSlice = createSlice({
   },
 });
 
-export const { setCurrentConversation, receiveMessage } = messagesSlice.actions;
+export const { setCurrentConversation, receiveMessage, conversationRead } = messagesSlice.actions;
 
 export const selectUnreadConversationCount = (s: RootState) =>
   s.messages.unreadConversationIds.length;

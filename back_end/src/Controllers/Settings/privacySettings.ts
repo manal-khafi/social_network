@@ -16,6 +16,7 @@ export const getPrivacySettings = async (req: Request, res: Response) => {
         allow_comments: true,
         allow_mentions: true,
         show_activity_status: true,
+        allow_read_receipts: true,
       },
     });
 
@@ -43,6 +44,7 @@ export const updatePrivacySettings = async (req: Request, res: Response) => {
       allow_comments,
       allow_mentions,
       show_activity_status,
+      allow_read_receipts,
     } = req.body;
 
     const updatedUser = await prisma.user.update({
@@ -54,12 +56,14 @@ export const updatePrivacySettings = async (req: Request, res: Response) => {
         ...(typeof show_activity_status === "boolean" && {
           show_activity_status,
         }),
+        ...(typeof allow_read_receipts === "boolean" && { allow_read_receipts }),
       },
       select: {
         is_private: true,
         allow_comments: true,
         allow_mentions: true,
         show_activity_status: true,
+        allow_read_receipts: true,
       },
     });
 

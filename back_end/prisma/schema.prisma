@@ -110,6 +110,8 @@ model User {
   allow_comments       Boolean  @default(true)
   allow_mentions       Boolean  @default(true)
   show_activity_status Boolean  @default(true)
+  // When false, others are not told when this user has read their messages.
+  allow_read_receipts  Boolean  @default(true)
 
   // Notification preferences (Settings > Notifications). When false, that
   // kind of notification is not created for this user.

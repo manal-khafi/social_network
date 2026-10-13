@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { unblockUser } from '../../features/user/userSlice';
+import { unblockUser, updatePrivacySettings } from '../../features/user/userSlice';
+import api from '../../api/axios';
 import { ArrowLeft, Lock, Eye, MessageCircle, UserX, Download, Clock, Trash2 } from 'lucide-react';
 import { Card } from '../../Components/ui/card';
 import { Button } from '../../Components/ui/button';
@@ -18,6 +19,34 @@ export default function PrivacyView() {
   const dispatch = useAppDispatch();
   const { blockedUsers } = useAppSelector((state) => state.user);
   const [showDataDialog, setShowDataDialog] = useState(false);
+  // null until the saved value has been loaded
+  const [readReceipts, setReadReceipts] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get('/privacy/me/privacy')
+      .then((res) => {
+        if (!cancelled) setReadReceipts(res.data.allow_read_receipts ?? true);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('Failed to load privacy settings');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleReadReceiptsChange = async (checked: boolean) => {
+    const previous = readReceipts;
+    setReadReceipts(checked);
+    try {
+      await dispatch(updatePrivacySettings({ allow_read_receipts: checked })).unwrap();
+    } catch {
+      setReadReceipts(previous);
+      toast.error('Failed to update read receipts');
+    }
+  };
 
   const handleUnblock = (userId: string, username: string) => {
     dispatch(unblockUser(userId));
@@ -146,6 +175,21 @@ export default function PrivacyView() {
                 </Label>
               </div>
             </RadioGroup>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Read receipts</p>
+              <p className="text-sm text-muted-foreground">Let people know when you've read their messages</p>
+            </div>
+            <Switch
+              checked={readReceipts ?? true}
+              disabled={readReceipts === null}
+              onCheckedChange={handleReadReceiptsChange}
+              aria-label="Read receipts"
+            />
           </div>
 
           <Separator />

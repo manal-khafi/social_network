@@ -10,6 +10,7 @@ import {
 import { Repeat, Bookmark, MoreVertical, Ban, Flag, Archive, Edit, Trash2 } from "lucide-react";
 import type { Post } from "../../../features/posts/postsSlice";
 import { formatTime } from "../../../utils/timeUtils";
+import { useTimeTicker } from "../../../hooks/useTimeTicker";
 
 interface PostHeaderProps {
   post: Post;
@@ -39,6 +40,8 @@ export default function PostHeader({
   handleBlock,
   handleReport,
 }: PostHeaderProps) {
+  useTimeTicker();
+
   return (
     <div className="flex items-start gap-3 mb-3">
       <Link to={profilePath}>

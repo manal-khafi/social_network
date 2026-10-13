@@ -1,3 +1,22 @@
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
+// Tolerated clock difference between this device and the server.
+const CLOCK_SKEW_MS = 5 * MINUTE;
+
+const formatDate = (date: Date, now: Date): string =>
+  date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(date.getFullYear() !== now.getFullYear() && { year: "numeric" }),
+  });
+
+/**
+ * Relative time for an ISO string / Date: "Just now", "5m ago", "3h ago",
+ * "2d ago", then the date itself ("Oct 6") from a week on. Computed at call
+ * time: pair it with useTimeTicker() so it is re-evaluated as time passes.
+ */
 export const formatTime = (dateInput?: string | Date | null): string => {
   if (!dateInput) return "—";
 
@@ -8,27 +27,13 @@ export const formatTime = (dateInput?: string | Date | null): string => {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
 
-  if (diff < 0) return "Just now";
+  // A timestamp well in the future has no meaningful "ago": show its date
+  // rather than a "Just now" that would never change.
+  if (diff < -CLOCK_SKEW_MS) return formatDate(date, now);
 
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  const isToday = date.toDateString() === now.toDateString();
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  const isYesterday = date.toDateString() === yesterday.toDateString();
-
-  if (isToday) {
-    if (seconds < 60) return "Just now";
-    if (minutes < 60) return `${minutes}m ago`;
-    return `${hours}h ago`;
-  }
-
-  if (isYesterday) return "Yesterday";
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
-  return `${Math.floor(days / 365)}y ago`;
+  if (diff < MINUTE) return "Just now";
+  if (diff < HOUR) return `${Math.floor(diff / MINUTE)}m ago`;
+  if (diff < DAY) return `${Math.floor(diff / HOUR)}h ago`;
+  if (diff < 7 * DAY) return `${Math.floor(diff / DAY)}d ago`;
+  return formatDate(date, now);
 };

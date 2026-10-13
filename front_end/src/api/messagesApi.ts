@@ -20,6 +20,8 @@ export interface ApiConversation {
   last_message: ApiMessage | null;
   last_message_at: string;
   unread_count: number;
+  /** When the other participant last read the chat; null if never, or if they turned read receipts off. */
+  other_last_read_at: string | null;
   is_archived: boolean;
 }
 
@@ -45,7 +47,13 @@ export const openDirectConversation = async (
 
 export const getConversation = async (
   conversationId: string
-): Promise<{ id: string; is_group: boolean; other_user: StoryUser | null; last_message_at: string }> => {
+): Promise<{
+  id: string;
+  is_group: boolean;
+  other_user: StoryUser | null;
+  other_last_read_at: string | null;
+  last_message_at: string;
+}> => {
   const res = await api.get(`/conversations/${conversationId}`);
   return res.data.data;
 };

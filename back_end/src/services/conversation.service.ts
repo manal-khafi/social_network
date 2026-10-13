@@ -10,6 +10,27 @@ const userSelect = {
   avatar_url: true,
 } as const;
 
+// The other participant, plus what is needed to decide whether their read
+// position may be shown (never returned to the client as is, see splitPeer).
+const peerSelect = { ...userSelect, allow_read_receipts: true } as const;
+
+type Peer = {
+  user_id: string;
+  last_read_at: Date | null;
+  user: { id: string; username: string; display_name: string | null; avatar_url: string | null; allow_read_receipts: boolean };
+};
+
+/**
+ * Splits the other participant into the public user object and the time they
+ * last read the conversation — null when they turned read receipts off.
+ */
+const splitPeer = (participants: Peer[], userId: string) => {
+  const peer = participants.find((p) => p.user_id !== userId);
+  if (!peer) return { other: null, otherLastReadAt: null };
+  const { allow_read_receipts, ...other } = peer.user;
+  return { other, otherLastReadAt: allow_read_receipts ? peer.last_read_at : null };
+};
+
 const messageInclude = {
   sender: { select: userSelect },
 } as const;
@@ -39,7 +60,7 @@ export class ConversationService {
       include: {
         conversation: {
           include: {
-            participants: { include: { user: { select: userSelect } } },
+            participants: { include: { user: { select: peerSelect } } },
           },
         },
       },
@@ -49,7 +70,7 @@ export class ConversationService {
     const result: Array<Record<string, unknown>> = [];
     for (const part of parts) {
       const conv = part.conversation;
-      const other = conv.participants.find((p) => p.user_id !== userId)?.user ?? null;
+      const { other, otherLastReadAt } = splitPeer(conv.participants, userId);
 
       const last = await prisma.message.findFirst({
         where: { conversation_id: conv.id, is_deleted: false },
@@ -73,6 +94,7 @@ export class ConversationService {
         last_message: last ? this.shape(last) : null,
         last_message_at: conv.last_message_at,
         unread_count: unread,
+        other_last_read_at: otherLastReadAt,
         is_archived: part.is_archived,
       });
     }
@@ -112,14 +134,15 @@ export class ConversationService {
     await this.assertParticipant(conversationId, userId);
     const conv = await prisma.conversation.findUnique({
       where: { id: conversationId },
-      include: { participants: { include: { user: { select: userSelect } } } },
+      include: { participants: { include: { user: { select: peerSelect } } } },
     });
     if (!conv) throw new AppError('Conversation not found', 404);
-    const other = conv.participants.find((p) => p.user_id !== userId)?.user ?? null;
+    const { other, otherLastReadAt } = splitPeer(conv.participants, userId);
     return {
       id: conv.id,
       is_group: conv.is_group,
       other_user: other,
+      other_last_read_at: otherLastReadAt,
       last_message_at: conv.last_message_at,
     };
   }
@@ -194,10 +217,31 @@ export class ConversationService {
 
   static async markRead(conversationId: string, userId: string) {
     await this.assertParticipant(conversationId, userId);
+    const lastReadAt = new Date();
+    // Always recorded: it also drives the reader's own unread counts.
     await prisma.conversationParticipant.update({
       where: { conversation_id_user_id: { conversation_id: conversationId, user_id: userId } },
-      data: { last_read_at: new Date() },
+      data: { last_read_at: lastReadAt },
     });
+
+    // Read receipt for the other participants, unless the reader turned them off.
+    const reader = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { allow_read_receipts: true },
+    });
+    if (reader?.allow_read_receipts) {
+      const participants = await prisma.conversationParticipant.findMany({
+        where: { conversation_id: conversationId, user_id: { not: userId } },
+        select: { user_id: true },
+      });
+      for (const p of participants) {
+        emitToUser(p.user_id, 'conversation:read', {
+          conversationId,
+          userId,
+          last_read_at: lastReadAt,
+        });
+      }
+    }
     return { success: true };
   }
 

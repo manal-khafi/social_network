@@ -19,6 +19,7 @@ export interface UserProfile {
   allow_comments?: boolean;
   allow_mentions?: boolean;
   show_activity_status?: boolean;
+  allow_read_receipts?: boolean;
 
   cover_image?: string | null;
   isBlocked?: boolean;
@@ -191,8 +192,16 @@ export const togglePrivacy = createAsyncThunk<
 
 // ✅ IMPORTANT: define this BEFORE createSlice (const is not hoisted)
 export const updatePrivacySettings = createAsyncThunk<
-  Pick<UserProfile, "is_private" | "allow_comments" | "allow_mentions" | "show_activity_status">,
-  Partial<Pick<UserProfile, "is_private" | "allow_comments" | "allow_mentions" | "show_activity_status">>,
+  Pick<
+    UserProfile,
+    "is_private" | "allow_comments" | "allow_mentions" | "show_activity_status" | "allow_read_receipts"
+  >,
+  Partial<
+    Pick<
+      UserProfile,
+      "is_private" | "allow_comments" | "allow_mentions" | "show_activity_status" | "allow_read_receipts"
+    >
+  >,
   { rejectValue: string }
 >("user/updatePrivacySettings", async (payload, { rejectWithValue }) => {
   try {

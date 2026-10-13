@@ -7,6 +7,7 @@ import {
   markAsRead,
 } from '../../features/notifications/notificationsSlice';
 import { formatTime } from '../../utils/timeUtils';
+import { useTimeTicker } from '../../hooks/useTimeTicker';
 import { acceptFollowRequest, denyFollowRequest, fetchFollowRequests } from '../../features/user/userSlice';
 import { Card } from '../../Components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
@@ -16,6 +17,7 @@ import { Heart, MessageCircle, UserPlus, UserCheck, Repeat, AtSign, Bell, Check,
 import { toast } from 'sonner';
 
 export default function NotificationsView() {
+  useTimeTicker();
   const { notifications, nextCursor, status, unreadCount } = useAppSelector((state) => state.notifications);
   const isLoading = status === 'loading';
   const { followRequests } = useAppSelector((state) => state.user);

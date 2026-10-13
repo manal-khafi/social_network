@@ -16,6 +16,7 @@ import { Smile } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { toast } from "sonner";
 import { formatTime } from "../../../utils/timeUtils";
+import { useTimeTicker } from "../../../hooks/useTimeTicker";
 import { PATHS } from "../../../routes/paths";
 
 interface CommentItemProps {
@@ -35,6 +36,7 @@ export default function CommentItem({
   parentCommentId,
   commentsAllowed,
 }: CommentItemProps) {
+  useTimeTicker();
   const dispatch = useAppDispatch();
   const { user: authUser } = useAppSelector((state) => state.auth);
 

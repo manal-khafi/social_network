@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import {
@@ -12,6 +12,7 @@ import {
   fetchMessages,
   markRead,
   openDirectByUserId,
+  isSeenBy,
 } from '../../features/messages/messagesSlice';
 import { blockUser } from '../../features/user/userSlice';
 import type { Message, MessageLocation } from '../../features/messages/messagesSlice';
@@ -256,6 +257,17 @@ export default function ChatView() {
     }
   };
 
+  // Read receipt: the last of my messages the other participant has read.
+  // (otherLastReadAt stays empty when they turned read receipts off.)
+  let seenMessageId: string | undefined;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.senderId === myId && m.type !== 'call' && isSeenBy(conversation?.otherLastReadAt, m.createdAt)) {
+      seenMessageId = m.id;
+      break;
+    }
+  }
+
   const renderMessage = (msg: Message) => {
     const isSender = msg.senderId === myId;
 
@@ -281,8 +293,8 @@ export default function ChatView() {
     }
 
     return (
+      <Fragment key={msg.id}>
       <div
-        key={msg.id}
         className={`flex ${isSender ? 'justify-end' : 'justify-start'} mb-2`}
       >
         <div
@@ -368,6 +380,18 @@ export default function ChatView() {
           </div>
         </div>
       </div>
+      {msg.id === seenMessageId && (
+        <div className="flex justify-end items-center gap-1 -mt-1 mb-2 text-xs text-muted-foreground">
+          {conversation?.avatar && (
+            <Avatar className="w-4 h-4">
+              <AvatarImage src={conversation.avatar} />
+              <AvatarFallback />
+            </Avatar>
+          )}
+          <span>Seen</span>
+        </div>
+      )}
+      </Fragment>
     );
   };
 
