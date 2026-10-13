@@ -98,6 +98,26 @@ const rel = (iso: string) => {
   return `${Math.floor(s / 86400)}d`;
 };
 
+// The API has no location message type, so a shared location travels as a text
+// message whose content is a geo: URI ("geo:LAT,LNG").
+const GEO_PREFIX = "geo:";
+
+export const isLocationContent = (content: string | null | undefined): boolean =>
+  !!content && content.startsWith(GEO_PREFIX);
+
+export const encodeLocation = (lat: number, lng: number): string =>
+  `${GEO_PREFIX}${lat.toFixed(6)},${lng.toFixed(6)}`;
+
+/** Coordinates of a "geo:LAT,LNG" content, or null when it can't be parsed. */
+export const parseLocation = (content: string): { lat: number; lng: number } | null => {
+  const match = /^geo:(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.exec(content.trim());
+  if (!match) return null;
+  const lat = Number(match[1]);
+  const lng = Number(match[2]);
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+  return { lat, lng };
+};
+
 const summarize = (m: ApiMessage | null): string => {
   if (!m) return "";
   if (m.message_type === "call") {
@@ -106,6 +126,7 @@ const summarize = (m: ApiMessage | null): string => {
   }
   if (m.message_type === "image") return "Photo";
   if (m.message_type === "video") return "Video";
+  if (m.message_type === "text" && isLocationContent(m.content)) return "Location";
   return m.content ?? "";
 };
 
@@ -121,8 +142,25 @@ const mapConversation = (c: ApiConversation): Conversation => ({
   isOnline: false,
 });
 
+const mapLocationMessage = (m: ApiMessage): Message => {
+  const coords = parseLocation(m.content ?? "");
+  return {
+    id: m.id,
+    senderId: m.sender_id,
+    content: "",
+    type: "location",
+    location: coords ? { name: "Shared location", ...coords } : undefined,
+    timestamp: rel(m.created_at),
+    createdAt: m.created_at,
+    isRead: true,
+  };
+};
+
 // Image / video messages carry the media URL as their content.
-const mapMessage = (m: ApiMessage): Message => ({
+const mapMessage = (m: ApiMessage): Message =>
+  m.message_type === "text" && isLocationContent(m.content) ? mapLocationMessage(m) : mapMediaMessage(m);
+
+const mapMediaMessage = (m: ApiMessage): Message => ({
   id: m.id,
   senderId: m.sender_id,
   content: m.message_type === "image" || m.message_type === "video" ? "" : m.content ?? "",
@@ -193,7 +231,13 @@ export const sendMessage = createAsyncThunk(
         : payload.type === "video" && payload.video
         ? "video"
         : null;
-    const content = (mediaType ? payload[mediaType] ?? "" : payload.content ?? "").trim();
+    const content = (
+      mediaType
+        ? payload[mediaType] ?? ""
+        : payload.type === "location" && payload.location
+        ? encodeLocation(payload.location.lat, payload.location.lng)
+        : payload.content ?? ""
+    ).trim();
     if (!content) return rejectWithValue("empty");
     const m = await messagesApi.sendMessage(payload.conversationId, content, mediaType ?? "text");
     return mapMessage(m);
@@ -291,7 +335,14 @@ const messagesSlice = createSlice({
         if (!arr.some((x) => x.id === m.id)) state.messages[convId] = [...arr, m];
         const conv = state.conversations.find((c) => c.id === convId);
         if (conv) {
-          conv.lastMessage = m.type === "text" ? m.content : m.type === "video" ? "Video" : "Photo";
+          conv.lastMessage =
+            m.type === "text"
+              ? m.content
+              : m.type === "location"
+              ? "Location"
+              : m.type === "video"
+              ? "Video"
+              : "Photo";
           conv.timestamp = "now";
           state.conversations = [conv, ...state.conversations.filter((c) => c.id !== conv.id)];
         }

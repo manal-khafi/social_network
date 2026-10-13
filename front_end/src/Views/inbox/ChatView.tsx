@@ -14,7 +14,7 @@ import {
   openDirectByUserId,
 } from '../../features/messages/messagesSlice';
 import { blockUser } from '../../features/user/userSlice';
-import type { Message } from '../../features/messages/messagesSlice';
+import type { Message, MessageLocation } from '../../features/messages/messagesSlice';
 import { useCall } from '../../features/call/CallProvider';
 import { 
   ArrowLeft, Send, Smile, Image as ImageIcon, Mic, Paperclip, 
@@ -179,18 +179,34 @@ export default function ChatView() {
   };
 
   const handleLocationSend = () => {
-    if (conversationId) {
-      dispatch(sendMessage({ 
-        conversationId, 
-        content: 'Shared location', 
-        type: 'location',
-        location: {
-          name: 'Current Location',
-          lat: 40.7128,
-          lng: -74.0060
-        }
-      }));
+    if (!conversationId) return;
+    setShowMoreOptions(false);
+    if (!navigator.geolocation) {
+      toast.error('Location is not available in this browser');
+      return;
     }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        dispatch(sendMessage({
+          conversationId,
+          content: 'Shared location',
+          type: 'location',
+          location: {
+            name: 'Shared location',
+            lat: coords.latitude,
+            lng: coords.longitude
+          }
+        }));
+      },
+      (err) => {
+        toast.error(
+          err.code === err.PERMISSION_DENIED
+            ? 'Allow location access to share your location'
+            : 'Could not get your location'
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const toggleRecording = () => {
@@ -320,17 +336,7 @@ export default function ChatView() {
             </div>
           )}
           
-          {msg.type === 'location' && msg.location && (
-            <div className="min-w-[250px]">
-              <div className="flex items-center gap-2 mb-2">
-                <MapPin className="w-4 h-4" />
-                <p className="font-semibold">{msg.location.name}</p>
-              </div>
-              <div className="bg-muted rounded h-32 flex items-center justify-center">
-                <MapPin className="w-8 h-8 opacity-50" />
-              </div>
-            </div>
-          )}
+          {msg.type === 'location' && <LocationCard location={msg.location} />}
           
           {msg.type === 'voice' && msg.voiceDuration && (
             <div className="flex items-center gap-3 min-w-[200px]">
@@ -658,6 +664,72 @@ export default function ChatView() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+const MAP_ZOOM = 15;
+
+/**
+ * Map card for a shared location: the OpenStreetMap tile containing the point
+ * with a pin on it, linking to the full map. Falls back to a plain card when
+ * the message has no usable coordinates.
+ */
+function LocationCard({ location }: { location?: MessageLocation }) {
+  if (!location) {
+    return (
+      <div className="flex items-center gap-2 min-w-[200px]">
+        <MapPin className="w-4 h-4" />
+        <p className="font-semibold">Location unavailable</p>
+      </div>
+    );
+  }
+
+  const { lat, lng } = location;
+  // Web Mercator: fractional tile coordinates of the point at MAP_ZOOM.
+  const n = 2 ** MAP_ZOOM;
+  const latRad = (lat * Math.PI) / 180;
+  const x = ((lng + 180) / 360) * n;
+  const y = ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n;
+  const tileX = Math.min(n - 1, Math.max(0, Math.floor(x)));
+  const tileY = Math.min(n - 1, Math.max(0, Math.floor(y)));
+  const mapUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=${MAP_ZOOM}/${lat}/${lng}`;
+
+  return (
+    <div className="w-[250px] max-w-full">
+      <div className="flex items-center gap-2 mb-2">
+        <MapPin className="w-4 h-4" />
+        <p className="font-semibold">Shared location</p>
+      </div>
+      <a
+        href={mapUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative block aspect-square overflow-hidden rounded-lg bg-muted"
+        aria-label="Open location in OpenStreetMap"
+      >
+        <img
+          src={`https://tile.openstreetmap.org/${MAP_ZOOM}/${tileX}/${tileY}.png`}
+          alt="Map"
+          loading="lazy"
+          className="h-full w-full"
+        />
+        <MapPin
+          className="absolute w-7 h-7 -translate-x-1/2 -translate-y-full text-red-600 fill-red-200 drop-shadow"
+          style={{ left: `${(x - tileX) * 100}%`, top: `${(y - tileY) * 100}%` }}
+        />
+        <span className="absolute bottom-0 right-0 bg-white/80 px-1 text-[10px] text-black">
+          © OpenStreetMap
+        </span>
+      </a>
+      <a
+        href={mapUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-1 inline-block text-sm underline"
+      >
+        View location
+      </a>
     </div>
   );
 }
