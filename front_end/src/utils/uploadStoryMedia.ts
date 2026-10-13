@@ -1,5 +1,4 @@
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { storage, auth } from "../config/firebaseConfig";
+import { uploadFile, type UploadFolder } from "../api/upload";
 
 export interface UploadedStoryMedia {
   url: string;
@@ -118,33 +117,24 @@ function readImageSize(file: File): Promise<{ width: number; height: number }> {
 }
 
 /**
- * Uploads an image or video to Firebase Storage under users/<uid>/<folder>/…
- * and returns its URL plus metadata (image downscaled to a sane size; videos
+ * Uploads an image or video through the backend (see api/upload.ts) and
+ * returns its URL plus metadata (image downscaled to a sane size; videos
  * get a poster frame + duration and are rejected past MAX_VIDEO_SEC).
  */
 export async function uploadMedia(
   file: File,
-  folder: string,
-  ownerId?: string
+  folder: UploadFolder
 ): Promise<UploadedStoryMedia> {
-  // Email/password users authenticate via the backend JWT, not Firebase, so
-  // fall back to the app user id (or "anon") for the storage path.
-  const uid = auth.currentUser?.uid ?? ownerId ?? "anon";
-
   const isVideo = file.type.startsWith("video/");
   const isImage = file.type.startsWith("image/");
   if (!isVideo && !isImage) throw new Error("Choose an image or a video");
   if (isImage && file.size > MAX_IMAGE_BYTES) throw new Error("Image trop lourde (max 25 Mo)");
   if (isVideo && file.size > MAX_VIDEO_BYTES) throw new Error("Vidéo trop lourde (max 100 Mo)");
 
-  const base = `users/${uid}/${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
   if (isImage) {
     const { width, height } = await readImageSize(file);
     const compressed = await compressImage(file);
-    const fileRef = ref(storage, `${base}.jpg`);
-    await uploadBytes(fileRef, compressed, { contentType: "image/jpeg" });
-    const url = await getDownloadURL(fileRef);
+    const url = await uploadFile(compressed, folder, "image.jpg");
     return { url, type: "image", width, height };
   }
 
@@ -156,16 +146,11 @@ export async function uploadMedia(
     );
   }
 
-  const ext = file.name.split(".").pop() || "mp4";
-  const fileRef = ref(storage, `${base}.${ext}`);
-  await uploadBytes(fileRef, file);
-  const url = await getDownloadURL(fileRef);
+  const url = await uploadFile(file, folder);
 
   let thumbnailUrl: string | undefined;
   if (meta.poster) {
-    const posterRef = ref(storage, `${base}-poster.jpg`);
-    await uploadBytes(posterRef, meta.poster);
-    thumbnailUrl = await getDownloadURL(posterRef);
+    thumbnailUrl = await uploadFile(meta.poster, folder, "poster.jpg");
   }
 
   return {
@@ -179,9 +164,7 @@ export async function uploadMedia(
 }
 
 /** Story media (folder: stories). */
-export const uploadStoryMedia = (file: File, ownerId?: string) =>
-  uploadMedia(file, "stories", ownerId);
+export const uploadStoryMedia = (file: File) => uploadMedia(file, "stories");
 
 /** Post media (folder: posts). */
-export const uploadPostMedia = (file: File, ownerId?: string) =>
-  uploadMedia(file, "posts", ownerId);
+export const uploadPostMedia = (file: File) => uploadMedia(file, "posts");

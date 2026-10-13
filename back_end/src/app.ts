@@ -26,6 +26,7 @@ import { authMiddleware } from "./Middleware/authMiddlware";
 import storyRoutes from "./Routes/story.routes";
 import conversationRoutes from "./Routes/conversationRoutes";
 import notificationRoutes from "./Routes/Notification";
+import UploadRouter from "./Routes/Upload";
 import { getIceServers } from "./Controllers/rtc.controller";
 import { errorHandler } from "./util/error";
 
@@ -36,8 +37,8 @@ dotenv.config();
 // module does not open a port, so tests can drive it with supertest. The HTTP
 // server, Socket.IO and the email service are started in ./index.ts.
 const app = express();
-// JSON / urlencoded bodies only carry text and media URLs (files go straight to
-// Firebase Storage, multipart uploads are handled by multer), so keep this small.
+// JSON / urlencoded bodies only carry text and media URLs (files are multipart
+// uploads handled by multer, see Routes/Upload.ts), so keep this small.
 const bodyLimit = process.env.BODY_LIMIT || "1mb";
 
 // Running behind nginx / a load balancer: trust the first proxy hop so that
@@ -119,6 +120,7 @@ app.use('/api/stories', storyRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/notifications', authMiddleware, notificationRoutes);
 app.get('/api/rtc/ice-servers', authMiddleware, getIceServers);
+app.use('/api/upload', UploadRouter);
 
 app.use("/api/communities", authMiddleware, communityRoutes);
 

@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { Upload } from "lucide-react";
 import { getCommunityById, getCommunityMembers, updateCommunity, getCommunityRequests, approveJoinRequest, rejectJoinRequest, getCommunityRules, createCommunityRule, updateCommunityRule, deleteCommunityRule, checkMembershipStatus, joinCommunity, leaveCommunity } from "../../api/axios";
-import { storage } from "../../config/firebaseConfig";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-import { v4 as uuidv4 } from "uuid";
+import { uploadFile } from "../../api/upload";
 import { useAppSelector } from "../../hooks";
 import { toast } from "sonner";
 import type { Community, CommunityRule, JoinRequest, Member } from "./types";
@@ -175,18 +173,6 @@ export function useCommunityPage(communityId: string | number) {
     }
   };
 
-  const uploadImageToFirebase = async (file: File, path: string): Promise<string> => {
-    try {
-      const fileRef = storageRef(storage, `communities/${path}/${Date.now()}-${uuidv4()}`);
-      await uploadBytes(fileRef, file);
-      const downloadUrl = await getDownloadURL(fileRef);
-      return downloadUrl;
-    } catch (error) {
-      console.error("Error uploading image to Firebase:", error);
-      throw error;
-    }
-  };
-
   const handleApproveRequest = async (requestId: string, userId: string) => {
     try {
       await approveJoinRequest(communityId, requestId, userId);
@@ -328,12 +314,12 @@ export function useCommunityPage(communityId: string | number) {
 
       // Upload cover image if selected
       if (coverImageFile) {
-        bannerUrl = await uploadImageToFirebase(coverImageFile, community.id);
+        bannerUrl = await uploadFile(coverImageFile, "communities");
       }
 
       // Upload logo image if selected
       if (logoImageFile) {
-        avatarUrl = await uploadImageToFirebase(logoImageFile, community.id);
+        avatarUrl = await uploadFile(logoImageFile, "communities");
       }
 
       // Update community with new data and image URLs

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../../hooks';
+import { useAppDispatch } from '../../hooks';
 import { updatePost } from '../../features/posts/postsSlice';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
@@ -20,7 +20,6 @@ interface EditPostDialogProps {
 
 export default function EditPostDialog({ post, open, onOpenChange }: EditPostDialogProps) {
   const dispatch = useAppDispatch();
-  const authUser = useAppSelector((s) => s.auth.user);
   const [content, setContent] = useState(post.content);
   const [images, setImages] = useState<string[]>(post.images || []);
   const [uploading, setUploading] = useState(0);
@@ -45,7 +44,7 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
     setUploading((n) => n + files.length);
     for (const file of files) {
       try {
-        const { url } = await uploadPostMedia(file, authUser?.id);
+        const { url } = await uploadPostMedia(file);
         setImages((prev) => [...prev, url]);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Upload failed');

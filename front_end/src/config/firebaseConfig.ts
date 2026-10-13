@@ -8,7 +8,6 @@ import {
   setPersistence,
   signOut,
 } from "firebase/auth";
-import { getStorage } from "firebase/storage"; // ✅ ADD THIS
 
 // Firebase configuration. Values come from VITE_FIREBASE_* at build time and
 // fall back to the existing project so local builds keep working unconfigured.
@@ -27,9 +26,6 @@ const app = initializeApp(firebaseConfig);
 // 🔐 Auth
 export const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence);
-
-// 📦 Storage (FOR AVATAR / COVER UPLOADS)
-export const storage = getStorage(app); // ✅ THIS IS WHAT YOU NEED
 
 // Providers
 const googleProvider = new GoogleAuthProvider();

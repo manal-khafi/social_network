@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import { useAppDispatch, useAppSelector } from "../../hooks";
+import { useAppDispatch } from "../../hooks";
 import { createStory } from "../../features/stories/storiesSlice";
 import { uploadStoryMedia } from "../../utils/uploadStoryMedia";
 import type { StoryOverlay, StoryVisibility, SharedPostRef } from "../../api/storiesApi";
@@ -30,7 +30,6 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 
 export default function StoryComposer({ open, onClose, sharedPost = null }: Props) {
   const dispatch = useAppDispatch();
-  const currentUserId = useAppSelector((s) => s.user.currentUser?.id);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [mode, setMode] = useState<Mode>(sharedPost ? "text" : "choose");
@@ -115,7 +114,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
   const handleFile = async (file: File) => {
     setUploading(true);
     try {
-      const result = await uploadStoryMedia(file, currentUserId);
+      const result = await uploadStoryMedia(file);
       setMedia({
         url: result.url,
         type: result.type,

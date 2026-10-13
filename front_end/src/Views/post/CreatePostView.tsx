@@ -88,7 +88,7 @@ export default function CreatePostView() {
     setUploading((n) => n + files.length);
     for (const file of files) {
       try {
-        const { url } = await uploadPostMedia(file, authUser?.id);
+        const { url } = await uploadPostMedia(file);
         setMedia((prev) => [...prev, url]);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Upload failed");

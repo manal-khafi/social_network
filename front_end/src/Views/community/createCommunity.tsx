@@ -14,9 +14,7 @@ import { Label } from "../../Components/Community/communityLabel";
 import { Textarea } from "../../Components/Community/communityTextArea";
 import { toast } from "sonner";
 import { createCommunity } from "../../api/axios";
-import { storage } from "../../config/firebaseConfig";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-import { v4 as uuidv4 } from "uuid";
+import { uploadFile } from "../../api/upload";
 
 const COMMUNITY_TYPES = [
   "tech",
@@ -90,15 +88,11 @@ export function CreateCommunity() {
       let avatarUrl: string | undefined;
 
       if (imageFile) {
-        const refImg = storageRef(storage, `communities/${uuidv4()}-banner`);
-        await uploadBytes(refImg, imageFile);
-        imageUrl = await getDownloadURL(refImg);
+        imageUrl = await uploadFile(imageFile, "communities");
       }
 
       if (avatarFile) {
-        const refAvatar = storageRef(storage, `communities/${uuidv4()}-avatar`);
-        await uploadBytes(refAvatar, avatarFile);
-        avatarUrl = await getDownloadURL(refAvatar);
+        avatarUrl = await uploadFile(avatarFile, "communities");
       }
 
       const response = await createCommunity({
