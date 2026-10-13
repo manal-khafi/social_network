@@ -7,6 +7,8 @@ router.use(authMiddleware);
 
 router.get("/", ConversationController.list);
 router.post("/", ConversationController.openDirect);
+// Must stay above "/:id", which would otherwise capture it.
+router.get("/unread-count", ConversationController.unreadCount);
 router.get("/:id", ConversationController.getOne);
 router.get("/:id/messages", ConversationController.getMessages);
 router.post("/:id/messages", ConversationController.sendMessage);

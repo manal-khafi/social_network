@@ -104,6 +104,14 @@ export default function ChatView() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // A message that arrives while this chat is open has been read: tell the
+  // server, or it would count as unread again after a reload.
+  const lastMessage = messages[messages.length - 1];
+  const lastIncomingId = lastMessage && lastMessage.senderId !== myId ? lastMessage.id : undefined;
+  useEffect(() => {
+    if (conversationId && lastIncomingId) dispatch(markRead(conversationId));
+  }, [conversationId, lastIncomingId, dispatch]);
+
   const clearAttachment = () => {
     setAttachment((prev) => {
       if (prev) URL.revokeObjectURL(prev.previewUrl);

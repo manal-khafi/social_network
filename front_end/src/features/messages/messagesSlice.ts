@@ -79,6 +79,8 @@ interface MessagesState {
   archivedConversations: Conversation[];
   messages: { [conversationId: string]: Message[] };
   currentConversation: string | null;
+  /** Ids of the conversations with unread messages (badge on the inbox icon). */
+  unreadConversationIds: string[];
   status: "idle" | "loading" | "succeeded" | "failed";
 }
 
@@ -87,6 +89,7 @@ const initialState: MessagesState = {
   archivedConversations: [],
   messages: {},
   currentConversation: null,
+  unreadConversationIds: [],
   status: "idle",
 };
 
@@ -252,6 +255,11 @@ export const fetchArchivedConversations = createAsyncThunk(
   }
 );
 
+export const fetchUnreadConversationCount = createAsyncThunk(
+  "messages/fetchUnreadConversationCount",
+  async () => (await messagesApi.getUnreadConversations()).conversation_ids
+);
+
 export const markRead = createAsyncThunk("messages/markRead", async (conversationId: string) => {
   await messagesApi.markConversationRead(conversationId);
   return conversationId;
@@ -290,6 +298,9 @@ const messagesSlice = createSlice({
     setCurrentConversation: (state, action: PayloadAction<string | null>) => {
       state.currentConversation = action.payload;
       if (action.payload) {
+        state.unreadConversationIds = state.unreadConversationIds.filter(
+          (id) => id !== action.payload
+        );
         const c = state.conversations.find((x) => x.id === action.payload);
         if (c) c.unreadCount = 0;
       }
@@ -300,6 +311,13 @@ const messagesSlice = createSlice({
       const list = state.messages[m.conversation_id] ?? [];
       if (list.some((x) => x.id === m.id)) return;
       state.messages[m.conversation_id] = [...list, mapMessage(m)];
+
+      if (
+        state.currentConversation !== m.conversation_id &&
+        !state.unreadConversationIds.includes(m.conversation_id)
+      ) {
+        state.unreadConversationIds.push(m.conversation_id);
+      }
 
       const conv = state.conversations.find((c) => c.id === m.conversation_id);
       if (conv) {
@@ -350,6 +368,15 @@ const messagesSlice = createSlice({
       .addCase(markRead.fulfilled, (state, action) => {
         const c = state.conversations.find((x) => x.id === action.payload);
         if (c) c.unreadCount = 0;
+        state.unreadConversationIds = state.unreadConversationIds.filter(
+          (id) => id !== action.payload
+        );
+      })
+      .addCase(fetchUnreadConversationCount.fulfilled, (state, action) => {
+        // The open conversation is being read right now.
+        state.unreadConversationIds = action.payload.filter(
+          (id) => id !== state.currentConversation
+        );
       })
       .addCase(fetchArchivedConversations.fulfilled, (state, action) => {
         state.archivedConversations = action.payload;
@@ -390,6 +417,9 @@ const messagesSlice = createSlice({
 });
 
 export const { setCurrentConversation, receiveMessage } = messagesSlice.actions;
+
+export const selectUnreadConversationCount = (s: RootState) =>
+  s.messages.unreadConversationIds.length;
 
 export const selectConversation = (id: string | undefined) => (s: RootState) =>
   s.messages.conversations.find((c) => c.id === id);

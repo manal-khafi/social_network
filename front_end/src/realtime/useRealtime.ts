@@ -12,7 +12,11 @@ import {
   notificationsRemoved,
 } from "../features/notifications/notificationsSlice";
 import type { Notification } from "../features/notifications/notificationsSlice";
-import { isLocationContent, receiveMessage } from "../features/messages/messagesSlice";
+import {
+  fetchUnreadConversationCount,
+  isLocationContent,
+  receiveMessage,
+} from "../features/messages/messagesSlice";
 
 /**
  * Opens the realtime connection while the user is authenticated and routes
@@ -116,8 +120,10 @@ export function useRealtime() {
 
     connectSocket();
 
-    // Badge in the header / sidebar: start from the server's unread count.
+    // Badges in the header / sidebar / bottom nav: start from the server's
+    // unread counts.
     dispatch(fetchUnreadCount());
+    dispatch(fetchUnreadConversationCount());
 
     return () => {
       socket.off("new_notification", onNotification);

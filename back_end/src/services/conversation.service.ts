@@ -79,6 +79,35 @@ export class ConversationService {
     return result;
   }
 
+  /**
+   * Non-archived conversations holding at least one message from someone else
+   * that arrived after the user last read them (same rule as unread_count in
+   * list()). Feeds the badge on the inbox icon.
+   */
+  static async unreadConversations(userId: string) {
+    const parts = await prisma.conversationParticipant.findMany({
+      where: { user_id: userId, is_archived: false },
+      select: { conversation_id: true, last_read_at: true },
+    });
+
+    const unread = await Promise.all(
+      parts.map((part) =>
+        prisma.message.findFirst({
+          where: {
+            conversation_id: part.conversation_id,
+            sender_id: { not: userId },
+            is_deleted: false,
+            ...(part.last_read_at ? { created_at: { gt: part.last_read_at } } : {}),
+          },
+          select: { id: true },
+        })
+      )
+    );
+
+    const conversationIds = parts.filter((_, i) => unread[i]).map((p) => p.conversation_id);
+    return { count: conversationIds.length, conversation_ids: conversationIds };
+  }
+
   static async getOne(conversationId: string, userId: string) {
     await this.assertParticipant(conversationId, userId);
     const conv = await prisma.conversation.findUnique({

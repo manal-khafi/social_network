@@ -16,6 +16,12 @@ export class ConversationController {
     return res.json({ success: true, data });
   }
 
+  /** GET /conversations/unread-count -> { count, conversation_ids } */
+  static async unreadCount(req: Request, res: Response) {
+    const data = await ConversationService.unreadConversations(uid(req));
+    return res.json(data);
+  }
+
   /** POST /conversations  { user_id } -> open/create a DM */
   static async openDirect(req: Request, res: Response) {
     const otherUserId = req.body?.user_id;

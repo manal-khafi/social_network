@@ -3,6 +3,7 @@ import { Home, Users, PlusCircle, Mail, User, Settings, LogOut, Heart, Search } 
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { logoutUser } from '../../features/auth/authSlice';
+import { selectUnreadConversationCount } from '../../features/messages/messagesSlice';
 import { PATHS } from '../../routes/paths';
 import { Skeleton } from '../ui/skeleton';
 import { Input } from '../ui/input';
@@ -16,6 +17,7 @@ export default function DesktopSidebar() {
   const { currentUser } = useAppSelector((state) => state.user);
   const { user: authUser } = useAppSelector((state) => state.auth);
   const { unreadCount } = useAppSelector((state) => state.notifications);
+  const unreadConversations = useAppSelector(selectUnreadConversationCount);
   const logoUrl = new URL('../../../logo.png', import.meta.url).href;
 
   // Use detailed profile if available, otherwise fallback to basic auth user
@@ -25,7 +27,7 @@ export default function DesktopSidebar() {
     { path: PATHS.FEED, icon: Home, label: 'Home' },
     { path: PATHS.COMMUNITY, icon: Users, label: 'Community' },
     { path: PATHS.CREATE_POST, icon: PlusCircle, label: 'Create' },
-    { path: PATHS.INBOX, icon: Mail, label: 'Inbox' },
+    { path: PATHS.INBOX, icon: Mail, label: 'Inbox', badge: unreadConversations },
     { path: PATHS.NOTIFICATIONS, icon: Heart, label: 'Notifications', badge: unreadCount },
     { path: PATHS.PROFILE_ME, icon: User, label: 'Profile' },
   ];

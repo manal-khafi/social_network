@@ -28,6 +28,14 @@ export const listConversations = async (archived = false): Promise<ApiConversati
   return res.data.data;
 };
 
+export const getUnreadConversations = async (): Promise<{
+  count: number;
+  conversation_ids: string[];
+}> => {
+  const res = await api.get("/conversations/unread-count");
+  return res.data;
+};
+
 export const openDirectConversation = async (
   userId: string
 ): Promise<{ id: string; other_user: StoryUser | null }> => {
