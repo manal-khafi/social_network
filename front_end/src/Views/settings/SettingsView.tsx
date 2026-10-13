@@ -3,7 +3,7 @@ import {
   ChevronRight, User, Bell, Lock, Palette, UserX, Heart, Archive, Activity, Info, LogOut, Star
 } from 'lucide-react';
 import { Card } from '../../Components/ui/card';
-import { useAppDispatch } from '../../hooks';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import { logoutUser } from '../../features/auth/authSlice';
 import { PATHS } from '../../routes/paths';
 import { Separator } from '../../Components/ui/separator';
@@ -90,7 +90,10 @@ export default function SettingsView() {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
 
+  const isLoggingOut = useAppSelector((state) => state.auth.isLoggingOut);
+
   const handleLogout = () => {
+    if (isLoggingOut) return;
     dispatch(logoutUser()).then(() => {
       navigate(PATHS.AUTH, { replace: true });
     });
@@ -125,7 +128,8 @@ export default function SettingsView() {
         <Separator className="my-4" />
 
         <Card
-          className="hover:bg-muted/50 transition-colors cursor-pointer"
+          className={`hover:bg-muted/50 transition-colors cursor-pointer ${isLoggingOut ? 'opacity-50 pointer-events-none' : ''}`}
+          aria-disabled={isLoggingOut}
           onClick={handleLogout}
         >
           <div className="p-4 flex items-center gap-4">

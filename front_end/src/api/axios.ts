@@ -15,8 +15,15 @@ const readPersistedAuth = (): { token: string | null } => {
   }
 };
 
-const rawBaseURL = import.meta.env.VITE_API_URL || "http://localhost:3500";
+// Production builds default to the same origin (/api): nginx in Docker, or a
+// rewrite rule on the static host, forwards it to the backend, which keeps the
+// refresh-token cookie first-party. Local dev talks to the API directly.
+const rawBaseURL =
+  import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "/api" : "http://localhost:3500");
 const baseURL = rawBaseURL.endsWith("/api") ? rawBaseURL : `${rawBaseURL}/api`;
+
+/** Origin that serves backend files such as /uploads ("" = same origin as the page). */
+export const API_ORIGIN = baseURL.replace(/\/api$/, "");
 
 const api = axios.create({
   baseURL,
@@ -59,8 +66,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     // If backend rotates token, capture it
+    // Ignored once signed out: a request still in flight at logout must not
+    // restore the session with its rotated token.
     const newToken = response.headers?.["x-access-token"];
-    if (newToken) {
+    if (newToken && store.getState().auth.token) {
       const currentUser = store.getState().auth.user;
       store.dispatch(setAuth({ token: newToken, user: currentUser ?? null }));
     }

@@ -16,6 +16,10 @@ export const sessionUserInclude = {
 
 export type SessionUser = Prisma.UserGetPayload<{ include: typeof sessionUserInclude }>;
 
+// SameSite=Lax: the browser only sends the cookie on same-site requests, so the
+// frontend must reach the API through its own origin (/api behind nginx in
+// Docker, or a rewrite rule on the static host; see DEPLOYMENT.md). A frontend
+// that calls the API on another site would not get its session refreshed.
 const refreshCookieOptions = () => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",

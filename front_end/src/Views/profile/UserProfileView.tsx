@@ -8,6 +8,7 @@ import { useCall } from '../../features/call/CallProvider';
 import { Button } from '../../Components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../Components/ui/tabs';
 import { toast } from 'sonner';
+import { API_ORIGIN } from '../../api/axios';
 import { useTranslation } from 'react-i18next';
 import PostCard from '../../Components/post/PostCard';
 import ProfileHeaderLayout from '../../Components/Profile/ProfileHeaderLayout';
@@ -147,7 +148,6 @@ export default function UserProfileView() {
   const followersCount = user.followersCount ?? 0;
   const followingCount = user.followingCount ?? 0;
 
-  const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:3500").replace(/\/api$/, "");
   const makeUrl = (url?: string | null) => {
     if (!url) return null;
     return url.startsWith("http") ? url : `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;

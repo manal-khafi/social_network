@@ -81,6 +81,21 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
+// CSRF guard, on top of the refresh cookie being SameSite=Lax. That cookie can
+// authenticate a request on its own, so a state-changing request coming from a
+// browser page must come from an allowed origin or from the API's own origin.
+// CORS alone does not stop these: the browser still sends "simple" form posts.
+// Requests without an Origin header (server-to-server, curl) are unaffected.
+// Note: behind a rewrite proxy the page's origin is the frontend's, so it must
+// be listed in ALLOWED_ORIGINS even though the browser sees a single origin.
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (!origin || ["GET", "HEAD", "OPTIONS"].includes(req.method)) return next();
+  const sameOrigin = origin === `${req.protocol}://${req.get("host")}`;
+  if (sameOrigin || allowedOrigins.includes(origin)) return next();
+  return res.status(403).json({ success: false, message: "Origin not allowed" });
+});
+
 app.use(express.json({ limit: bodyLimit }));
 app.use(express.urlencoded({ extended: true, limit: bodyLimit }));
 app.use(cookieParser());

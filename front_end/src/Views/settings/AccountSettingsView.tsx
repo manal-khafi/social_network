@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../hooks";
-import { logout } from "../../features/auth/authSlice";
+import { logout, logoutUser } from "../../features/auth/authSlice";
+import { PATHS } from "../../routes/paths";
 import {
   ArrowLeft,
   Lock,
@@ -45,6 +46,7 @@ export default function AccountSettingsView() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { currentUser, status: userStatus } = useAppSelector((state) => state.user);
+  const isLoggingOut = useAppSelector((state) => state.auth.isLoggingOut);
   const {
     isEnabled: is2FAEnabled,
     qrCodeDataUrl,
@@ -184,7 +186,7 @@ export default function AccountSettingsView() {
 
       toast.success(t("account.accountDeactivated"));
       dispatch(logout());
-      navigate("/login");
+      navigate(PATHS.AUTH, { replace: true });
     } catch (err: any) {
       const msg =
         err?.response?.data?.message || err?.message || t("account.failedToDeactivateAccount");
@@ -216,7 +218,7 @@ export default function AccountSettingsView() {
 
       toast.success(t("account.accountDeleted"));
       dispatch(logout());
-      navigate("/login");
+      navigate(PATHS.AUTH, { replace: true });
     } catch (err: any) {
       const msg =
         err?.response?.data?.message || err?.message || t("account.failedToDeleteAccount");
@@ -319,10 +321,9 @@ export default function AccountSettingsView() {
             variant="outline"
             className="w-full justify-start"
             onClick={() => {
-              dispatch(logout());
-              navigate("/login");
+              dispatch(logoutUser()).then(() => navigate(PATHS.AUTH, { replace: true }));
             }}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isLoggingOut}
           >
             <LogOut className="w-4 h-4 me-2" />
             {t("account.logout")}

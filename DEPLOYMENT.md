@@ -81,6 +81,34 @@ docker compose up -d
 
 Migrations run automatically on backend start.
 
+## Render (static site + web service)
+
+The frontend (static site) and the API (web service) get two different
+`onrender.com` hostnames, which browsers treat as two separate sites. The
+refresh-token cookie is `SameSite=Lax`, so the frontend must call the API
+through **its own origin**. Add these rewrite rules to the static site
+(Dashboard > the static site > Redirects/Rewrites), above the SPA fallback:
+
+| Source | Destination | Action |
+|---|---|---|
+| `/api/*` | `https://<backend>.onrender.com/api/*` | Rewrite |
+| `/uploads/*` | `https://<backend>.onrender.com/uploads/*` | Rewrite |
+| `/*` | `/index.html` | Rewrite |
+
+Render reads these rules from the dashboard (or `routes:` in a Blueprint), not
+from a `_redirects` file, and uses `*` in the destination rather than `:splat`.
+
+Static site environment:
+
+- `VITE_API_URL` unset or `/api` (a production build defaults to `/api`)
+- `VITE_SOCKET_URL=https://<backend>.onrender.com` - Socket.IO connects to the
+  web service directly: it authenticates with the access token, not the cookie,
+  and WebSocket upgrades through a static-site rewrite are not documented
+
+Web service environment: `NODE_ENV=production`, and `ALLOWED_ORIGINS` set to the
+static site's URL (needed by the Socket.IO connection and by the origin check
+on write requests).
+
 ## Local development (unchanged)
 
 Run services directly without Docker:

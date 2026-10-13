@@ -29,6 +29,7 @@ import {
 } from "../../Components/ui/dropdown-menu";
 import PostCard from "../../Components/post/PostCard";
 import { toast } from "sonner";
+import { API_ORIGIN } from "../../api/axios";
 import { useTranslation } from "react-i18next";
 
 export default function MyProfileView() {
@@ -36,7 +37,7 @@ export default function MyProfileView() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const { user: authUser, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { user: authUser, isAuthenticated, isLoggingOut } = useAppSelector((state) => state.auth);
   const { currentUser, followers, following, status: profileStatus } = useAppSelector(
     (state) => state.user
   );
@@ -77,12 +78,10 @@ export default function MyProfileView() {
   }, [dispatch, followingOpen, currentUser?.id]);
 
   const handleLogout = () => {
-    dispatch(logoutUser());
-    navigate(PATHS.AUTH);
+    dispatch(logoutUser()).then(() => navigate(PATHS.AUTH, { replace: true }));
   };
 
   const user = currentUser ?? authUser;
-  const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:3500").replace(/\/api$/, "");
 
   const makeUrl = (url?: string | null) => {
     if (!url) return null;
@@ -209,7 +208,11 @@ export default function MyProfileView() {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
-                  <button className="flex items-center cursor-pointer w-full" onClick={handleLogout}>
+                  <button
+                    className="flex items-center cursor-pointer w-full disabled:opacity-50"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                  >
                     <LogOut className="w-4 h-4 me-2" />
                     {t("settings.logout")}
                   </button>

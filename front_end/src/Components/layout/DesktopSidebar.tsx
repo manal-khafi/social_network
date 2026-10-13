@@ -17,7 +17,7 @@ export default function DesktopSidebar() {
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useAppDispatch();
   const { currentUser } = useAppSelector((state) => state.user);
-  const { user: authUser } = useAppSelector((state) => state.auth);
+  const { user: authUser, isLoggingOut } = useAppSelector((state) => state.auth);
   const { unreadCount } = useAppSelector((state) => state.notifications);
   const unreadConversations = useAppSelector(selectUnreadConversationCount);
   const logoUrl = new URL('../../../logo.png', import.meta.url).href;
@@ -159,8 +159,9 @@ export default function DesktopSidebar() {
 
           <button
             onClick={handleLogout}
+            disabled={isLoggingOut}
             title={t('nav.logout')}
-            className="w-full flex items-center justify-center px-2 py-3 rounded-lg transition-all hover:bg-muted text-foreground group-hover:justify-start group-hover:gap-4 group-hover:px-4"
+            className="w-full flex items-center justify-center px-2 py-3 rounded-lg transition-all hover:bg-muted text-foreground group-hover:justify-start group-hover:gap-4 group-hover:px-4 disabled:opacity-50 disabled:pointer-events-none"
           >
             <LogOut className="w-6 h-6" />
             <span className="hidden font-medium group-hover:inline">{t('nav.logout')}</span>

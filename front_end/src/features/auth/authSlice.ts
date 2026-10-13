@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "../../api/axios";
 import type { FirebaseUserSafe } from "../../utils/authUtils";
+import { firebaseSignOut } from "../../config/firebaseConfig";
 
 export interface User {
   id: string;
@@ -58,6 +59,8 @@ interface AuthState {
   token: string | null;
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
+  /** True while logoutUser is running: disables the logout buttons. */
+  isLoggingOut: boolean;
 }
 
 const persisted = loadPersistedAuth();
@@ -69,6 +72,7 @@ const initialState: AuthState = {
   token: persisted.token,
   status: "idle",
   error: null,
+  isLoggingOut: false,
 };
 
 export const fetchMe = createAsyncThunk(
@@ -85,17 +89,35 @@ export const fetchMe = createAsyncThunk(
   }
 );
 
-export const logoutUser = createAsyncThunk(
+// Don't keep the user waiting on a slow or sleeping server to sign out.
+const LOGOUT_TIMEOUT_MS = 8000;
+
+/**
+ * Full sign-out. The server is asked to revoke the session (token_version bump,
+ * refresh cookie cleared) and the local session is cleared whatever the answer,
+ * so a failed or slow request never leaves the user signed in on this device.
+ */
+export const logoutUser = createAsyncThunk<void, void, { state: { auth: AuthState } }>(
   "auth/logoutUser",
   async (_, { dispatch }) => {
     try {
-      await api.post("/authentication/logout");
+      await api.post("/authentication/logout", null, { timeout: LOGOUT_TIMEOUT_MS });
     } catch (error) {
       console.error("Logout API failed", error);
     } finally {
+      // Google / Facebook users also hold a Firebase session in this browser.
+      await firebaseSignOut().catch(() => undefined);
+      // Onboarding draft of the account that is leaving.
+      try {
+        localStorage.removeItem("setupWizardData");
+      } catch {
+        // ignore storage errors
+      }
       dispatch(authSlice.actions.logout());
     }
-  }
+  },
+  // A second click while a logout is in flight does nothing.
+  { condition: (_, { getState }) => !getState().auth.isLoggingOut }
 );
 
 const authSlice = createSlice({
@@ -147,12 +169,16 @@ const authSlice = createSlice({
       state.token = null;
       state.status = "idle";
       state.error = null;
+      state.isLoggingOut = false;
       persistAuth(null, null);
     },
   },
 
   extraReducers: (builder) => {
     builder
+      .addCase(logoutUser.pending, (state) => {
+        state.isLoggingOut = true;
+      })
       .addCase(fetchMe.pending, (state) => {
         state.status = "loading";
       })
