@@ -16,8 +16,19 @@ const {
   EMAIL_VERIFY_EXPIRES_IN
 } = process.env;
 
-if (!AUTH_SECRET || !AUTH_REFRESH_SECRET || !RESET_SECRET || !EMAIL_VERIFY_SECRET) {
-  throw new Error("JWT secrets are missing in environment variables!");
+// Name the missing variables: "secrets are missing" alone gives no clue which
+// one to add on the host (an empty value counts as missing).
+const missingSecrets = Object.entries({
+  AUTH_SECRET,
+  AUTH_REFRESH_SECRET,
+  RESET_SECRET,
+  EMAIL_VERIFY_SECRET,
+})
+  .filter(([, value]) => !value?.trim())
+  .map(([name]) => name);
+
+if (!AUTH_SECRET || !AUTH_REFRESH_SECRET || !RESET_SECRET || !EMAIL_VERIFY_SECRET || missingSecrets.length > 0) {
+  throw new Error(`JWT secrets are missing in environment variables: ${missingSecrets.join(", ")}`);
 }
 
 const accessSecret: Secret = AUTH_SECRET;
