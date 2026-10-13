@@ -122,7 +122,12 @@ export class ConversationService {
     const content = (data.content ?? '').trim();
     if (!content) throw new AppError('Message is empty', 400);
 
-    const type = data.message_type === 'image' ? 'image' : 'text';
+    // Media messages carry the uploaded file's URL as their content.
+    const type =
+      data.message_type === 'image' || data.message_type === 'video' ? data.message_type : 'text';
+    if (type !== 'text' && !/^https?:\/\/\S+$/.test(content)) {
+      throw new AppError('Media message must be a URL', 400);
+    }
 
     const message = await prisma.message.create({
       data: {

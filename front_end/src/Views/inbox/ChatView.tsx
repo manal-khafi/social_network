@@ -19,7 +19,7 @@ import { useCall } from '../../features/call/CallProvider';
 import { 
   ArrowLeft, Send, Smile, Image as ImageIcon, Mic, Paperclip, 
   Phone, Video, MoreVertical, CheckCheck, Check, MapPin, 
-  Calendar, BarChart3, Play, Archive, Ban, Trash2, UserCircle
+  Calendar, BarChart3, Play, Archive, Ban, Trash2, UserCircle, X, Loader2
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { Input } from '../../Components/ui/input';
@@ -29,6 +29,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../Components/ui/pop
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../../Components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import EmojiPicker from 'emoji-picker-react';
+import { uploadPostMedia } from '../../utils/uploadStoryMedia';
+
+// The chat is a full-screen layer at z-[60]; portalled popovers, menus and
+// dialogs default to z-50 and would open behind it.
+const ABOVE_CHAT = 'z-[70]';
 
 const STICKERS = [
   '👍', '❤️', '😂', '😮', '😢', '🙏', '👏', '🔥', '🎉', '💯'
@@ -42,6 +47,9 @@ export default function ChatView() {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [attachment, setAttachment] = useState<{ file: File; previewUrl: string } | null>(null);
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -96,9 +104,44 @@ export default function ChatView() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = () => {
-    if (message.trim() && conversationId) {
-      dispatch(sendMessage({ conversationId, content: message, type: 'text' }));
+  const clearAttachment = () => {
+    setAttachment((prev) => {
+      if (prev) URL.revokeObjectURL(prev.previewUrl);
+      return null;
+    });
+  };
+
+  // Drop the pending attachment (and its preview URL) when leaving the chat.
+  useEffect(() => clearAttachment, [conversationId]);
+
+  const handleSend = async () => {
+    if (!conversationId || isSending) return;
+    const text = message.trim();
+    if (!text && !attachment) return;
+
+    if (attachment) {
+      setIsSending(true);
+      try {
+        const { url, type } = await uploadPostMedia(attachment.file);
+        await dispatch(
+          sendMessage({
+            conversationId,
+            content: '',
+            type,
+            ...(type === 'video' ? { video: url } : { image: url }),
+          })
+        ).unwrap();
+        clearAttachment();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Failed to send attachment');
+        return;
+      } finally {
+        setIsSending(false);
+      }
+    }
+
+    if (text) {
+      dispatch(sendMessage({ conversationId, content: text, type: 'text' }));
       setMessage('');
     }
   };
@@ -116,26 +159,23 @@ export default function ChatView() {
   };
 
   const handleImageSend = () => {
+    setShowMoreOptions(false);
     fileInputRef.current?.click();
   };
 
+  // Picking a file only stages it (preview above the input); it is uploaded
+  // and sent by handleSend.
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && conversationId) {
-      // In a real app, this would upload the file and get a URL
-      const imageUrl = URL.createObjectURL(file);
-      dispatch(sendMessage({ 
-        conversationId, 
-        content: 'Sent an image', 
-        type: 'image',
-        image: imageUrl
-      }));
-      toast.success('Image sent');
-      // Reset the input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+    // Reset the input so the same file can be picked again
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      toast.error('Choose an image or a video');
+      return;
     }
+    clearAttachment();
+    setAttachment({ file, previewUrl: URL.createObjectURL(file) });
   };
 
   const handleLocationSend = () => {
@@ -237,8 +277,12 @@ export default function ChatView() {
           {msg.type === 'image' && msg.image && (
             <div>
               <img src={msg.image} alt="Shared" className="rounded-lg max-w-full" />
-              <p className="mt-1 text-sm">{msg.content}</p>
+              {msg.content && <p className="mt-1 text-sm">{msg.content}</p>}
             </div>
+          )}
+
+          {msg.type === 'video' && msg.video && (
+            <video src={msg.video} controls playsInline className="rounded-lg max-w-full" />
           )}
           
           {msg.type === 'poll' && msg.poll && (
@@ -377,7 +421,7 @@ export default function ChatView() {
               <MoreVertical className="w-5 h-5" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
+          <DropdownMenuContent className={`w-56 ${ABOVE_CHAT}`}>
             <DropdownMenuItem
               onClick={() => {
                 if (!conversationId) return;
@@ -435,10 +479,36 @@ export default function ChatView() {
           </div>
         )}
         
+        {attachment && (
+          <div className="mb-2 flex items-center gap-3">
+            <div className="relative">
+              {attachment.file.type.startsWith('video/') ? (
+                <video src={attachment.previewUrl} muted className="h-20 w-20 rounded-lg object-cover" />
+              ) : (
+                <img src={attachment.previewUrl} alt="Attachment preview" className="h-20 w-20 rounded-lg object-cover" />
+              )}
+              {isSending ? (
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40">
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                </div>
+              ) : (
+                <button
+                  onClick={clearAttachment}
+                  className="absolute -top-2 -right-2 rounded-full bg-foreground p-1 text-background"
+                  aria-label="Remove attachment"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            <span className="text-sm text-muted-foreground truncate">{attachment.file.name}</span>
+          </div>
+        )}
+
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           onChange={handleFileChange}
           className="hidden"
         />
@@ -453,17 +523,18 @@ export default function ChatView() {
             <ImageIcon className="w-5 h-5" />
           </Button>
 
-          <Popover>
+          <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="text-muted-foreground hover:text-foreground shrink-0"
+                aria-label="Emoji"
               >
                 <Smile className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 border-0" align="start" side="top">
+            <PopoverContent className={`w-auto p-0 border-0 ${ABOVE_CHAT}`} align="start" side="top">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
                 width={350}
@@ -478,11 +549,12 @@ export default function ChatView() {
                 variant="ghost"
                 size="icon"
                 className="text-muted-foreground hover:text-foreground shrink-0"
+                aria-label="Attach"
               >
                 <Paperclip className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent side="top" className="w-80">
+            <PopoverContent side="top" className={`w-80 ${ABOVE_CHAT}`}>
               <div className="grid grid-cols-3 gap-2">
                 <button 
                   onClick={handleImageSend}
@@ -491,7 +563,7 @@ export default function ChatView() {
                   <div className="p-3 bg-primary rounded-full">
                     <ImageIcon className="w-5 h-5 text-primary-foreground" />
                   </div>
-                  <span className="text-xs">Photo</span>
+                  <span className="text-xs">Photo / Video</span>
                 </button>
                 
                 <Dialog>
@@ -503,7 +575,7 @@ export default function ChatView() {
                       <span className="text-xs">Poll</span>
                     </button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className={ABOVE_CHAT}>
                     <DialogHeader>
                       <DialogTitle>Create Poll</DialogTitle>
                     </DialogHeader>
@@ -520,7 +592,7 @@ export default function ChatView() {
                       <span className="text-xs">Event</span>
                     </button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className={ABOVE_CHAT}>
                     <DialogHeader>
                       <DialogTitle>Share Event</DialogTitle>
                     </DialogHeader>
@@ -565,13 +637,14 @@ export default function ChatView() {
             disabled={isRecording}
           />
           
-          {message.trim() ? (
+          {message.trim() || attachment ? (
             <Button
               onClick={handleSend}
               size="icon"
+              disabled={isSending}
               className="bg-[#d6955b] hover:bg-[#c58549] shrink-0"
             >
-              <Send className="w-5 h-5" />
+              {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
             </Button>
           ) : (
             <Button

@@ -90,6 +90,10 @@ export function useRealtime() {
       if (m?.conversation_id) dispatch(receiveMessage(m));
       const who = m?.sender?.username ? `@${m.sender.username}` : "New message";
       if (m?.message_type === "call") return; // call log; the call UI already handled it
+      // Image / video messages carry the media URL as content; don't toast it.
+      const media =
+        m?.message_type === "image" ? "a photo" : m?.message_type === "video" ? "a video" : null;
+      if (media) return void toast(`${who} sent you ${media}`);
       toast(m?.shared_story_id ? `${who} sent you a story` : `${who}: ${m?.content ?? ""}`);
     };
 

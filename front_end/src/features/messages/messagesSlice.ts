@@ -41,6 +41,7 @@ export interface MessageLocation {
 export interface MessageExtras {
   sticker?: string;
   image?: string;
+  video?: string;
   poll?: MessagePoll;
   event?: MessageEvent;
   location?: MessageLocation;
@@ -104,6 +105,7 @@ const summarize = (m: ApiMessage | null): string => {
     return m.call_meta?.status === "missed" ? `Missed ${t.toLowerCase()}` : t;
   }
   if (m.message_type === "image") return "Photo";
+  if (m.message_type === "video") return "Video";
   return m.content ?? "";
 };
 
@@ -119,10 +121,13 @@ const mapConversation = (c: ApiConversation): Conversation => ({
   isOnline: false,
 });
 
+// Image / video messages carry the media URL as their content.
 const mapMessage = (m: ApiMessage): Message => ({
   id: m.id,
   senderId: m.sender_id,
-  content: m.content ?? "",
+  content: m.message_type === "image" || m.message_type === "video" ? "" : m.content ?? "",
+  image: m.message_type === "image" ? m.content ?? undefined : undefined,
+  video: m.message_type === "video" ? m.content ?? undefined : undefined,
   type: m.message_type,
   timestamp: rel(m.created_at),
   createdAt: m.created_at,
@@ -176,14 +181,21 @@ export const fetchConversation = createAsyncThunk(
 export const sendMessage = createAsyncThunk(
   "messages/sendMessage",
   async (
-    // Only conversationId and content are sent; the extras are accepted so the
-    // composer can describe richer messages, but the API ignores them for now.
+    // Text messages send their content; image / video messages send the uploaded
+    // media URL. The other extras are accepted so the composer can describe
+    // richer messages, but the API ignores them for now.
     payload: { conversationId: string; content: string; type?: MessageType } & MessageExtras,
     { rejectWithValue }
   ) => {
-    const content = (payload.content ?? "").trim();
+    const mediaType =
+      payload.type === "image" && payload.image
+        ? "image"
+        : payload.type === "video" && payload.video
+        ? "video"
+        : null;
+    const content = (mediaType ? payload[mediaType] ?? "" : payload.content ?? "").trim();
     if (!content) return rejectWithValue("empty");
-    const m = await messagesApi.sendMessage(payload.conversationId, content);
+    const m = await messagesApi.sendMessage(payload.conversationId, content, mediaType ?? "text");
     return mapMessage(m);
   }
 );
@@ -279,7 +291,7 @@ const messagesSlice = createSlice({
         if (!arr.some((x) => x.id === m.id)) state.messages[convId] = [...arr, m];
         const conv = state.conversations.find((c) => c.id === convId);
         if (conv) {
-          conv.lastMessage = m.type === "text" ? m.content : "Photo";
+          conv.lastMessage = m.type === "text" ? m.content : m.type === "video" ? "Video" : "Photo";
           conv.timestamp = "now";
           state.conversations = [conv, ...state.conversations.filter((c) => c.id !== conv.id)];
         }

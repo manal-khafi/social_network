@@ -53,7 +53,7 @@ export const getMessages = async (
 export const sendMessage = async (
   conversationId: string,
   content: string,
-  messageType: "text" | "image" = "text"
+  messageType: "text" | "image" | "video" = "text"
 ): Promise<ApiMessage> => {
   const res = await api.post(`/conversations/${conversationId}/messages`, {
     content,
