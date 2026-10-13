@@ -263,7 +263,7 @@ social_network/
 │   │   ├── config/              # Prisma client, Firebase Admin, email
 │   │   ├── util/                # JWT, encryption, logger, errors
 │   │   └── __tests__/           # Vitest unit and integration tests
-│   ├── Dockerfile
+│   ├── Dockerfile.local         # local Docker Compose only (not used by Render)
 │   └── docker-entrypoint.sh     # waits for the DB, migrates, seeds roles, starts
 ├── front_end/
 │   ├── src/

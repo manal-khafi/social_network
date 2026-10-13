@@ -7,6 +7,6 @@ generated
 *.log
 .git
 .gitignore
-Dockerfile
+Dockerfile.local
 .dockerignore
 uploads
