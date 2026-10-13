@@ -38,9 +38,9 @@ export function JoinRequestDialog({
             value={joinMessage}
             onChange={(e) => setJoinMessage(e.target.value)}
             rows={4}
-            className="w-full border-2 focus:border-[#226d68] resize-none"
+            className="w-full border-2 focus:border-secondary dark:focus:border-primary resize-none"
           />
-          <p className="text-xs text-gray-500 mt-2">{t("communities.charactersCount", { n: joinMessage.length })}</p>
+          <p className="text-xs text-muted-foreground mt-2">{t("communities.charactersCount", { n: joinMessage.length })}</p>
         </div>
         <DialogFooter>
           <Button

@@ -23,25 +23,25 @@ export function EditRuleForm({
   return (
     <div className="space-y-3">
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">{t("communities.title2")}</label>
+        <label className="text-sm font-medium text-foreground mb-1 block">{t("communities.title2")}</label>
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="border-2 border-[#226d68]/30 focus:border-[#18534f]"
+          className="border-2 border-border focus:border-primary"
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">{t("communities.description2")}</label>
+        <label className="text-sm font-medium text-foreground mb-1 block">{t("communities.description2")}</label>
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="border-2 border-[#226d68]/30 focus:border-[#18534f] min-h-[80px]"
+          className="border-2 border-border focus:border-primary min-h-[80px]"
         />
       </div>
       <div className="flex gap-2">
         <Button
           onClick={() => onSave(rule.id, title, description)}
-          className="flex-1 bg-[#18534f] hover:bg-[#226d68] text-white"
+          className="flex-1 bg-primary hover:bg-secondary dark:hover:bg-primary/80 text-white"
           disabled={!title.trim() || !description.trim()}
         >
           <Check className="h-4 w-4 me-1" />

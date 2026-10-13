@@ -27,17 +27,17 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
 
   if (page.loading) {
     return (
-      <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
-        <p className="text-gray-600">{t("communities.loadingCommunity")}</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">{t("communities.loadingCommunity")}</p>
       </div>
     );
   }
 
   if (!community) {
     return (
-      <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">{t("communities.notFound")}</p>
+          <p className="text-muted-foreground mb-4">{t("communities.notFound")}</p>
           <Button onClick={onBack} className="bg-[#d6955b] hover:bg-[#c5844a] text-white">
             <ArrowLeft className="me-2 h-4 w-4" />
             {t("actions.back")}
@@ -48,7 +48,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#ecf8f6]">
+    <div className="min-h-screen bg-background">
       {/* Header with Banner */}
       <CommunityBanner community={community} />
 
@@ -73,23 +73,23 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
 
         {/* Tabs */}
         <Tabs defaultValue="members" className="pb-12">
-          <TabsList className={`w-full h-11 sm:h-12 bg-white border-2 shadow-sm grid ${page.isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
-            <TabsTrigger value="members" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
+          <TabsList className={`w-full h-11 sm:h-12 bg-card border-2 shadow-sm grid ${page.isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
+            <TabsTrigger value="members" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
               {t("communities.members")}
             </TabsTrigger>
-            <TabsTrigger value="about" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
+            <TabsTrigger value="about" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
               {t("communities.about")}
             </TabsTrigger>
             {page.isAdmin && (
-              <TabsTrigger value="admin" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
+              <TabsTrigger value="admin" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
                 {t("communities.admin")}
               </TabsTrigger>
             )}
             {page.isAdmin && (
-              <TabsTrigger value="settings" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
+              <TabsTrigger value="settings" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
                 {t("nav.settings")}
               </TabsTrigger>
@@ -174,9 +174,9 @@ export function CommunityPageWrapper({ onBack }: { onBack?: () => void }) {
 
   if (!communityId) {
     return (
-      <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">{t("communities.notFound")}</p>
+          <p className="text-muted-foreground mb-4">{t("communities.notFound")}</p>
           <Button onClick={() => navigate('/community/list')} className="bg-[#d6955b] hover:bg-[#c5844a] text-white">
             <ArrowLeft className="me-2 h-4 w-4" />
             {t("communities.backToCommunities")}

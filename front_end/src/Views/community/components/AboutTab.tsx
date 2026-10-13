@@ -24,47 +24,47 @@ export function AboutTab({
           <div className="space-y-6">
             <div>
               <h3 className="text-xl font-semibold mb-3">{t("communities.aboutName", { name: community.name })}</h3>
-              <p className="text-gray-600 leading-relaxed">{community.bio || community.description}</p>
+              <p className="text-muted-foreground leading-relaxed">{community.bio || community.description}</p>
             </div>
 
             <div className="border-t pt-6">
               <h4 className="font-semibold mb-3">{t("communities.statistics")}</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-gradient-to-br from-[#ecf8f6] to-white border-[#226d68]">
+                <Card className="bg-gradient-to-br from-muted to-card border-secondary dark:border-primary">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <Users className="h-8 w-8 text-[#18534f]" />
+                      <Users className="h-8 w-8 text-primary dark:text-foreground" />
                       <div>
-                        <p className="text-2xl font-bold text-[#18534f]">
+                        <p className="text-2xl font-bold text-primary dark:text-foreground">
                           {(community._count?.members || members.length).toLocaleString()}
                         </p>
-                        <p className="text-sm text-[#226d68]">{t("communities.members")}</p>
+                        <p className="text-sm text-secondary dark:text-muted-foreground">{t("communities.members")}</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-[#feeaa1] to-white border-[#d6955b]">
+                <Card className="bg-gradient-to-br from-accent dark:from-accent/20 to-card border-[#d6955b]">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <Hash className="h-8 w-8 text-[#18534f]" />
+                      <Hash className="h-8 w-8 text-primary dark:text-foreground" />
                       <div>
-                        <p className="text-2xl font-bold text-[#18534f]">{community.type || t("communities.noCategory")}</p>
-                        <p className="text-sm text-[#226d68]">{t("communities.category")}</p>
+                        <p className="text-2xl font-bold text-primary dark:text-foreground">{community.type || t("communities.noCategory")}</p>
+                        <p className="text-sm text-secondary dark:text-muted-foreground">{t("communities.category")}</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-[#ecf8f6] to-white border-[#d6955b]">
+                <Card className="bg-gradient-to-br from-muted to-card border-[#d6955b]">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
                       <TrendingUp className="h-8 w-8 text-[#d6955b]" />
                       <div>
-                        <p className="text-2xl font-bold text-[#18534f]">
+                        <p className="text-2xl font-bold text-primary dark:text-foreground">
                           {community.createdAt ? new Date(community.createdAt).toLocaleDateString(i18n.language) : "N/A"}
                         </p>
-                        <p className="text-sm text-[#226d68]">{t("communities.createdOn")}</p>
+                        <p className="text-sm text-secondary dark:text-muted-foreground">{t("communities.createdOn")}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -74,10 +74,10 @@ export function AboutTab({
 
             <div className="border-t pt-6">
               <h4 className="font-semibold mb-3">{t("communities.rules")}</h4>
-              <ul className="space-y-2 text-gray-600">
+              <ul className="space-y-2 text-muted-foreground">
                 {rules.map((rule, index) => (
                   <li key={rule.id} className="flex items-start gap-2">
-                    <span className="text-[#18534f] font-bold">{index + 1}.</span>
+                    <span className="text-primary dark:text-foreground font-bold">{index + 1}.</span>
                     <span>{rule.description}</span>
                   </li>
                 ))}

@@ -28,7 +28,7 @@ export function CommunityInfoCard({
           <div className="flex flex-col gap-4">
             <div className="flex-1">
               <div className="flex items-start gap-3">
-                <Avatar className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl border-4 border-white shadow-lg flex-shrink-0">
+                <Avatar className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl border-4 border-card shadow-lg flex-shrink-0">
                   <AvatarImage src={community.avatar_url} alt={community.name} />
                   <AvatarFallback className="bg-gradient-to-br from-[#18534f] to-[#226d68] text-white text-2xl sm:text-3xl font-bold">
                     {community.name.charAt(0)}
@@ -36,24 +36,24 @@ export function CommunityInfoCard({
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 sm:mb-2 flex-wrap">
-                    <h1 className="text-xl sm:text-3xl font-bold text-gray-900 truncate">{community.name}</h1>
-                    <Badge variant="secondary" className="bg-[#feeaa1] text-[#18534f] border-[#feeaa1] text-xs">
+                    <h1 className="text-xl sm:text-3xl font-bold text-foreground truncate">{community.name}</h1>
+                    <Badge variant="secondary" className="bg-accent dark:bg-accent/20 text-primary dark:text-foreground border-accent dark:border-accent/30 text-xs">
                       <Hash className="h-3 w-3 me-1" />
                       {community.type || t("communities.noCategory")}
                     </Badge>
                   </div>
-                  <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-4 line-clamp-2">{community.bio || community.description}</p>
-                  <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-500">
+                  <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-4 line-clamp-2">{community.bio || community.description}</p>
+                  <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       <span>
-                        <span className="font-semibold text-gray-900">{(community._count?.members || members.length).toLocaleString()}</span>{" "}
+                        <span className="font-semibold text-foreground">{(community._count?.members || members.length).toLocaleString()}</span>{" "}
                         members
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#d6955b]" />
-                      <span className="font-semibold text-gray-900">{t("communities.trending")}</span>
+                      <span className="font-semibold text-foreground">{t("communities.trending")}</span>
                     </div>
                   </div>
                 </div>

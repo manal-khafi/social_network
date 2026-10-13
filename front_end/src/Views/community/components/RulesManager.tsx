@@ -44,35 +44,35 @@ export function RulesManager({
           <h3 className="text-xl font-semibold mb-2">
             {t("communities.manageRulesCount", { n: rules.length })}
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {t("communities.defineAndManageYourCommunitysRules")}
           </p>
         </div>
 
         {/* Add New Rule Form */}
-        <div className="mb-6 p-4 bg-[#ecf8f6] rounded-lg border-2 border-[#226d68]/20">
-          <h4 className="font-semibold mb-3 text-[#18534f]">{t("communities.addANewRule")}</h4>
+        <div className="mb-6 p-4 bg-muted rounded-lg border-2 border-border">
+          <h4 className="font-semibold mb-3 text-primary dark:text-foreground">{t("communities.addANewRule")}</h4>
           <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+              <label className="text-sm font-medium text-foreground mb-1 block">
                 {t("communities.ruleTitle")}
               </label>
               <Input
                 value={newRuleTitle}
                 onChange={(e) => setNewRuleTitle(e.target.value)}
                 placeholder={t("communities.eGRespect")}
-                className="border-2 border-[#226d68]/30 focus:border-[#18534f]"
+                className="border-2 border-border focus:border-primary"
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+              <label className="text-sm font-medium text-foreground mb-1 block">
                 {t("communities.description2")}
               </label>
               <Textarea
                 value={newRuleDescription}
                 onChange={(e) => setNewRuleDescription(e.target.value)}
                 placeholder={t("communities.describeTheRuleInDetail")}
-                className="border-2 border-[#226d68]/30 focus:border-[#18534f] min-h-[80px]"
+                className="border-2 border-border focus:border-primary min-h-[80px]"
               />
             </div>
             <Button
@@ -90,7 +90,7 @@ export function RulesManager({
         <ScrollArea className="h-[400px] pe-4">
           <div className="space-y-3">
             {rules.map((rule, index) => (
-              <Card key={rule.id} className="border-2 border-[#226d68]/20 hover:border-[#226d68] transition-colors">
+              <Card key={rule.id} className="border-2 border-border hover:border-secondary dark:hover:border-primary transition-colors">
                 <CardContent className="p-4">
                   {editingRuleId === rule.id ? (
                     <EditRuleForm
@@ -102,19 +102,19 @@ export function RulesManager({
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#18534f] text-white text-sm font-bold">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-sm font-bold">
                             {index + 1}
                           </span>
-                          <h4 className="font-semibold text-gray-900">{rule.title}</h4>
+                          <h4 className="font-semibold text-foreground">{rule.title}</h4>
                         </div>
-                        <p className="text-sm text-gray-600 ms-8">{rule.description}</p>
+                        <p className="text-sm text-muted-foreground ms-8">{rule.description}</p>
                       </div>
                       <div className="flex gap-2">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleEditRule(rule.id)}
-                          className="border-2 border-[#226d68] text-[#18534f] hover:bg-[#ecf8f6]"
+                          className="border-2 border-secondary dark:border-primary text-primary dark:text-foreground hover:bg-muted"
                         >
                           <Edit2 className="h-4 w-4" />
                         </Button>
@@ -122,7 +122,7 @@ export function RulesManager({
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteRule(rule.id)}
-                          className="border-2 border-red-500 text-red-500 hover:bg-red-50"
+                          className="border-2 border-red-500 text-red-500 hover:bg-destructive/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

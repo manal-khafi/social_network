@@ -132,18 +132,18 @@ export function CreateCommunity() {
   };
 
   return (
-    <div className="min-h-screen w-screen bg-[#ecf8f6]">
+    <div className="min-h-screen w-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#ecf8f6]/80 backdrop-blur-md border-b">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
           <Button variant="ghost" onClick={() => navigate("/home/community/list")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-[#18534f]">
+            <h1 className="text-2xl font-bold text-primary dark:text-foreground">
               {t("communities.create")}
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               {t("communities.shareYourPassionWithTheWorld")}
             </p>
           </div>
@@ -151,7 +151,7 @@ export function CreateCommunity() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <Card className="border-2 shadow-xl bg-[#ecf8f6]">
+        <Card className="border-2 shadow-xl bg-card">
           <CardHeader>
             <CardTitle>{t("communities.communityDetails")}</CardTitle>
             <CardDescription>
@@ -183,7 +183,7 @@ export function CreateCommunity() {
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute z-50 bg-white border rounded w-full">
+                  <div className="absolute z-50 bg-card border rounded w-full">
                     {COMMUNITY_TYPES.map((ct) => (
                       <button
                         key={ct}
@@ -192,7 +192,7 @@ export function CreateCommunity() {
                           setType(ct);
                           setIsDropdownOpen(false);
                         }}
-                        className="block w-full px-4 py-2 text-start hover:bg-gray-100"
+                        className="block w-full px-4 py-2 text-start hover:bg-muted"
                       >
                         {t(`communities.${ct}`)}
                       </button>
