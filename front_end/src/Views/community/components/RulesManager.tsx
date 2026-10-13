@@ -40,25 +40,25 @@ export function RulesManager({
       <CardContent className="p-6">
         <div className="mb-6">
           <h3 className="text-xl font-semibold mb-2">
-            Gestion des règles ({rules.length})
+            Manage rules ({rules.length})
           </h3>
           <p className="text-sm text-gray-600">
-            Définissez et gérez les règles de votre communauté
+            Define and manage your community's rules
           </p>
         </div>
 
         {/* Add New Rule Form */}
         <div className="mb-6 p-4 bg-[#ecf8f6] rounded-lg border-2 border-[#226d68]/20">
-          <h4 className="font-semibold mb-3 text-[#18534f]">Ajouter une nouvelle règle</h4>
+          <h4 className="font-semibold mb-3 text-[#18534f]">Add a new rule</h4>
           <div className="space-y-3">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Titre de la règle
+                Rule title
               </label>
               <Input
                 value={newRuleTitle}
                 onChange={(e) => setNewRuleTitle(e.target.value)}
-                placeholder="Ex: Respect"
+                placeholder="e.g. Respect"
                 className="border-2 border-[#226d68]/30 focus:border-[#18534f]"
               />
             </div>
@@ -79,7 +79,7 @@ export function RulesManager({
               disabled={!newRuleTitle.trim() || !newRuleDescription.trim()}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter la règle
+              Add rule
             </Button>
           </div>
         </div>

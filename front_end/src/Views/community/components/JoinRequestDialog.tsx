@@ -25,9 +25,9 @@ export function JoinRequestDialog({
     <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Rejoindre {community?.name}</DialogTitle>
+          <DialogTitle>Join {community?.name}</DialogTitle>
           <DialogDescription>
-            Ajoutez un message pour accompagner votre demande d'adhésion (optionnel)
+            Add a message to go with your join request (optional)
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
@@ -38,7 +38,7 @@ export function JoinRequestDialog({
             rows={4}
             className="w-full border-2 focus:border-[#226d68] resize-none"
           />
-          <p className="text-xs text-gray-500 mt-2">{joinMessage.length} caractères</p>
+          <p className="text-xs text-gray-500 mt-2">{joinMessage.length} characters</p>
         </div>
         <DialogFooter>
           <Button
@@ -49,13 +49,13 @@ export function JoinRequestDialog({
             }}
             className="border-2"
           >
-            Annuler
+            Cancel
           </Button>
           <Button
             onClick={handleSubmitJoinRequest}
             className="bg-[#d6955b] hover:bg-[#c5844a] text-white"
           >
-            Envoyer la demande
+            Send request
           </Button>
         </DialogFooter>
       </DialogContent>

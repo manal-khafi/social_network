@@ -26,7 +26,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
   if (page.loading) {
     return (
       <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
-        <p className="text-gray-600">Chargement de la communauté...</p>
+        <p className="text-gray-600">Loading community...</p>
       </div>
     );
   }
@@ -35,10 +35,10 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
     return (
       <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Communauté non trouvée</p>
+          <p className="text-gray-600 mb-4">Community not found</p>
           <Button onClick={onBack} className="bg-[#d6955b] hover:bg-[#c5844a] text-white">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour
+            Back
           </Button>
         </div>
       </div>
@@ -74,11 +74,11 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
           <TabsList className={`w-full h-11 sm:h-12 bg-white border-2 shadow-sm grid ${page.isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="members" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
               <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Membres
+              Members
             </TabsTrigger>
             <TabsTrigger value="about" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
               <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              À propos
+              About
             </TabsTrigger>
             {page.isAdmin && (
               <TabsTrigger value="admin" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
@@ -89,7 +89,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
             {page.isAdmin && (
               <TabsTrigger value="settings" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-[#18534f] data-[state=active]:text-white">
                 <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                Paramètres
+                Settings
               </TabsTrigger>
             )}
           </TabsList>
@@ -173,10 +173,10 @@ export function CommunityPageWrapper({ onBack }: { onBack?: () => void }) {
     return (
       <div className="min-h-screen bg-[#ecf8f6] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Communauté non trouvée</p>
+          <p className="text-gray-600 mb-4">Community not found</p>
           <Button onClick={() => navigate('/community/list')} className="bg-[#d6955b] hover:bg-[#c5844a] text-white">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour aux communautés
+            Back to communities
           </Button>
         </div>
       </div>

@@ -21,7 +21,7 @@ export function EditRuleForm({
   return (
     <div className="space-y-3">
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">Titre</label>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">Title</label>
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -43,7 +43,7 @@ export function EditRuleForm({
           disabled={!title.trim() || !description.trim()}
         >
           <Check className="h-4 w-4 mr-1" />
-          Sauvegarder
+          Save
         </Button>
         <Button
           onClick={onCancel}
@@ -51,7 +51,7 @@ export function EditRuleForm({
           className="flex-1 border-2"
         >
           <X className="h-4 w-4 mr-1" />
-          Annuler
+          Cancel
         </Button>
       </div>
     </div>

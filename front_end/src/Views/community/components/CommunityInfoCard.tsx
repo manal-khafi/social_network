@@ -46,12 +46,12 @@ export function CommunityInfoCard({
                       <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       <span>
                         <span className="font-semibold text-gray-900">{(community._count?.members || members.length).toLocaleString()}</span>{" "}
-                        membres
+                        members
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#d6955b]" />
-                      <span className="font-semibold text-gray-900">Tendance</span>
+                      <span className="font-semibold text-gray-900">Trending</span>
                     </div>
                   </div>
                 </div>
@@ -71,12 +71,12 @@ export function CommunityInfoCard({
                 {isJoined ? (
                   <>
                     <UserMinus className="mr-1 h-3 w-3" />
-                    Quitter
+                    Leave
                   </>
                 ) : (
                   <>
                     <UserPlus className="mr-1 h-3 w-3" />
-                    Rejoindre
+                    Join
                   </>
                 )}
               </Button>

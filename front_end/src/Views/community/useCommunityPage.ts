@@ -187,7 +187,7 @@ export function useCommunityPage(communityId: string | number) {
       toast.success("Request accepted");
     } catch (error) {
       console.error("Failed to approve request:", error);
-      toast.error("Erreur lors de l'approbation de la demande");
+      toast.error("Failed to accept the request");
     }
   };
 
@@ -198,7 +198,7 @@ export function useCommunityPage(communityId: string | number) {
       toast.success("Request rejected");
     } catch (error) {
       console.error("Failed to reject request:", error);
-      toast.error("Erreur lors du rejet de la demande");
+      toast.error("Failed to reject the request");
     }
   };
 
@@ -223,7 +223,7 @@ export function useCommunityPage(communityId: string | number) {
       }
     } catch (error: any) {
       console.error("Failed to join/leave community:", error);
-      const msg = error?.response?.data?.message || "Erreur lors de l'opération";
+      const msg = error?.response?.data?.message || "Something went wrong";
       toast.error(msg);
     }
   };
@@ -243,7 +243,7 @@ export function useCommunityPage(communityId: string | number) {
     } catch (error: any) {
       console.error("Failed to send join request:", error);
       const msg =
-        error?.response?.data?.message || "Erreur lors de l'envoi de la demande";
+        error?.response?.data?.message || "Failed to send the join request";
       toast.error(msg);
     }
   };

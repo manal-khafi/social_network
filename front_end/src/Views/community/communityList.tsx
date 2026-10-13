@@ -64,13 +64,13 @@ export function CommunityList(_props: CommunityListProps) {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-[#18534f]">
-                Communautés
+                Communities
               </h1>
-              <p className="text-sm text-gray-600 mt-1">Découvrez et rejoignez des communautés</p>
+              <p className="text-sm text-gray-600 mt-1">Discover and join communities</p>
             </div>
             <Button onClick={handleCreateClick} className="bg-[#d6955b] hover:bg-[#c5844a] text-white hidden sm:flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Créer une communauté</span>
+              <span className="hidden sm:inline">Create a community</span>
             </Button>
             <Button onClick={handleCreateClick} className="bg-[#d6955b] hover:bg-[#c5844a] text-white sm:hidden p-2">
               <Plus className="h-4 w-4" />
@@ -91,14 +91,14 @@ export function CommunityList(_props: CommunityListProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <p className="text-gray-600">Chargement des communautés...</p>
+            <p className="text-gray-600">Loading communities...</p>
           </div>
         ) : communities.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <p className="text-gray-600 mb-4">Aucune communauté trouvée</p>
+            <p className="text-gray-600 mb-4">No communities found</p>
             <Button onClick={handleCreateClick} className="bg-[#d6955b] hover:bg-[#c5844a] text-white hidden sm:flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Créer la première communauté</span>
+              <span className="hidden sm:inline">Create the first community</span>
             </Button>
             <Button onClick={handleCreateClick} className="bg-[#d6955b] hover:bg-[#c5844a] text-white sm:hidden p-2">
               <Plus className="h-4 w-4" />
@@ -106,7 +106,7 @@ export function CommunityList(_props: CommunityListProps) {
           </div>
         ) : (
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Toutes les communautés</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">All communities</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {communities.map((community) => (
                 <Card
@@ -145,7 +145,7 @@ export function CommunityList(_props: CommunityListProps) {
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-2 text-gray-600">
                         <Users className="h-4 w-4" />
-                        <span className="text-sm font-medium">{community._count?.members || community.members || 0} membres</span>
+                        <span className="text-sm font-medium">{community._count?.members || community.members || 0} members</span>
                       </div>
                       {community.type && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#d6955b] text-white capitalize">

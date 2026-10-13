@@ -4,6 +4,7 @@ import { useAppSelector } from '../../hooks';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { PATHS } from '../../routes/paths';
+import { LogoIcon } from '../ui/LogoIcon';
 
 export default function Header() {
   const location = useLocation();
@@ -36,7 +37,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border lg:hidden">
       <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
-        <Link to={PATHS.HOME} className="font-semibold text-lg tracking-tight">
+        <Link to={PATHS.HOME} className="flex items-center gap-2 shrink-0 font-semibold text-lg tracking-tight">
+          <LogoIcon size={28} />
           Anmouggar
         </Link>
 

@@ -77,7 +77,7 @@ export function CreateCommunity() {
     e.preventDefault();
 
     if (!name.trim() || !bio.trim()) {
-      toast.error("Veuillez remplir tous les champs requis");
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -139,10 +139,10 @@ export function CreateCommunity() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[#18534f]">
-              Créer une communauté
+              Create a community
             </h1>
             <p className="text-sm text-gray-600">
-              Partagez votre passion avec le monde
+              Share your passion with the world
             </p>
           </div>
         </div>
@@ -151,16 +151,16 @@ export function CreateCommunity() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Card className="border-2 shadow-xl bg-[#ecf8f6]">
           <CardHeader>
-            <CardTitle>Informations de la communauté</CardTitle>
+            <CardTitle>Community details</CardTitle>
             <CardDescription>
-              Remplissez les informations ci-dessous
+              Fill in the details below
             </CardDescription>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label>Nom *</Label>
+                <Label>Name *</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} />
               </div>
 
@@ -170,7 +170,7 @@ export function CreateCommunity() {
               </div>
 
               <div ref={dropdownRef} className="relative">
-                <Label>Catégorie *</Label>
+                <Label>Category *</Label>
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -205,7 +205,7 @@ export function CreateCommunity() {
                   variant="outline"
                   onClick={() => navigate("/home/community/list")}
                 >
-                  Annuler
+                  Cancel
                 </Button>
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? (

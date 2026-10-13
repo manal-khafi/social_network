@@ -68,12 +68,12 @@ export function SettingsTab({
               <div className="p-2 rounded-lg bg-[#ecf8f6]">
                 <Hash className="h-5 w-5 text-[#18534f]" />
               </div>
-              <h3 className="font-semibold text-lg">Informations de base</h3>
+              <h3 className="font-semibold text-lg">Basic information</h3>
             </div>
 
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="edit-name" className="text-sm text-gray-700">Nom de la communauté</Label>
+                <Label htmlFor="edit-name" className="text-sm text-gray-700">Community name</Label>
                 <Input
                   id="edit-name"
                   value={editName}
@@ -93,27 +93,27 @@ export function SettingsTab({
                   rows={3}
                   className="border-2 focus:border-[#226d68] resize-none"
                 />
-                <p className="text-xs text-gray-500">{editDescription.length} caractères</p>
+                <p className="text-xs text-gray-500">{editDescription.length} characters</p>
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="edit-category" className="text-sm text-gray-700">Catégorie</Label>
+                <Label htmlFor="edit-category" className="text-sm text-gray-700">Category</Label>
                 <Select value={editCategory} onValueChange={setEditCategory}>
                   <SelectTrigger className="h-10 border-2 focus:border-[#226d68]">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
                     <SelectItem value="tech">Tech</SelectItem>
-                    <SelectItem value="health">Santé</SelectItem>
-                    <SelectItem value="education">Éducation</SelectItem>
+                    <SelectItem value="health">Health</SelectItem>
+                    <SelectItem value="education">Education</SelectItem>
                     <SelectItem value="sports">Sports</SelectItem>
-                    <SelectItem value="entertainment">Divertissement</SelectItem>
+                    <SelectItem value="entertainment">Entertainment</SelectItem>
                     <SelectItem value="business">Business</SelectItem>
                     <SelectItem value="arts">Arts</SelectItem>
-                    <SelectItem value="travel">Voyage</SelectItem>
-                    <SelectItem value="food">Cuisine</SelectItem>
-                    <SelectItem value="lifestyle">Style de vie</SelectItem>
-                    <SelectItem value="other">Autre</SelectItem>
+                    <SelectItem value="travel">Travel</SelectItem>
+                    <SelectItem value="food">Food</SelectItem>
+                    <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -128,18 +128,18 @@ export function SettingsTab({
               <div className="p-2 rounded-lg bg-[#feeaa1]">
                 <Palette className="h-5 w-5 text-[#18534f]" />
               </div>
-              <h3 className="font-semibold text-lg">Apparence</h3>
+              <h3 className="font-semibold text-lg">Appearance</h3>
             </div>
 
             <div className="space-y-4">
               {/* Image de couverture */}
               <div className="space-y-2">
-                <Label className="text-sm text-gray-700">Image de couverture</Label>
+                <Label className="text-sm text-gray-700">Cover image</Label>
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <div className="w-full h-24 rounded-lg border-2 border-dashed border-[#226d68] bg-gray-50 overflow-hidden">
                       {coverImagePreview ? (
-                        <img src={coverImagePreview} alt="Aperçu couverture" className="w-full h-full object-cover" />
+                        <img src={coverImagePreview} alt="Cover preview" className="w-full h-full object-cover" />
                       ) : (
                         <div className="flex items-center justify-center h-full">
                           <ImageIcon className="h-8 w-8 text-[#226d68]" />
@@ -153,7 +153,7 @@ export function SettingsTab({
                       className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-white border-2 border-[#226d68] rounded-lg hover:bg-[#ecf8f6] transition-colors text-[#18534f] text-sm"
                     >
                       <Upload className="h-4 w-4" />
-                      <span>Modifier</span>
+                      <span>Edit</span>
                     </Label>
                     <input
                       id="cover-upload"
@@ -169,12 +169,12 @@ export function SettingsTab({
 
               {/* Logo */}
               <div className="space-y-2">
-                <Label className="text-sm text-gray-700">Logo de la communauté</Label>
+                <Label className="text-sm text-gray-700">Community logo</Label>
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-xl border-2 border-dashed border-[#226d68] bg-gray-50 overflow-hidden flex items-center justify-center">
                       {logoImagePreview ? (
-                        <img src={logoImagePreview} alt="Aperçu logo" className="w-full h-full object-cover" />
+                        <img src={logoImagePreview} alt="Logo preview" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-[#18534f] to-[#226d68] flex items-center justify-center text-white text-2xl font-bold">
                           {editName.charAt(0)}
@@ -188,7 +188,7 @@ export function SettingsTab({
                       className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-white border-2 border-[#226d68] rounded-lg hover:bg-[#ecf8f6] transition-colors text-[#18534f] text-sm"
                     >
                       <Upload className="h-4 w-4" />
-                      <span>Modifier</span>
+                      <span>Edit</span>
                     </Label>
                     <input
                       id="logo-upload"
@@ -212,16 +212,16 @@ export function SettingsTab({
               <div className="p-2 rounded-lg bg-[#ecf8f6]">
                 <Shield className="h-5 w-5 text-[#18534f]" />
               </div>
-              <h3 className="font-semibold text-lg">Confidentialité & Paramètres</h3>
+              <h3 className="font-semibold text-lg">Privacy & Settings</h3>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
                 <div className="flex-1">
                   <Label htmlFor="public-toggle" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    Communauté publique
+                    Public community
                   </Label>
-                  <p className="text-xs text-gray-500 mt-0.5">Visible par tous les utilisateurs</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Visible to all users</p>
                 </div>
                 <Switch
                   id="public-toggle"
@@ -234,9 +234,9 @@ export function SettingsTab({
               <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
                 <div className="flex-1">
                   <Label htmlFor="posts-toggle" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    Autoriser les publications
+                    Allow posts
                   </Label>
-                  <p className="text-xs text-gray-500 mt-0.5">Les membres peuvent publier du contenu</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Members can post content</p>
                 </div>
                 <Switch
                   id="posts-toggle"
@@ -249,9 +249,9 @@ export function SettingsTab({
               <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
                 <div className="flex-1">
                   <Label htmlFor="approval-toggle" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    Approbation requise
+                    Approval required
                   </Label>
-                  <p className="text-xs text-gray-500 mt-0.5">Valider les publications avant affichage</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Review posts before they are shown</p>
                 </div>
                 <Switch
                   id="approval-toggle"
@@ -272,7 +272,7 @@ export function SettingsTab({
                 <div className="p-2 rounded-lg bg-[#feeaa1]">
                   <TrendingUp className="h-5 w-5 text-[#18534f]" />
                 </div>
-                <h3 className="font-semibold text-lg">Aperçu des modifications</h3>
+                <h3 className="font-semibold text-lg">Preview of changes</h3>
               </div>
 
               <Card className="border-2 border-[#226d68]">
@@ -314,14 +314,14 @@ export function SettingsTab({
                 setLogoImagePreview("");
               }}
             >
-              Annuler
+              Cancel
             </Button>
             <Button
               onClick={handleSaveSettings}
               disabled={isSaving}
               className="flex-1 h-11 bg-[#d6955b] hover:bg-[#c5844a] text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSaving ? "En cours..." : "Sauvegarder"}
+              {isSaving ? "Saving..." : "Save"}
             </Button>
           </div>
         </div>

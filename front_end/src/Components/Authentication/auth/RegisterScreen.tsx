@@ -212,18 +212,18 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
         />
 
         <AuthInput
-          label="Adresse"
+          label="Address"
           type="text"
-          placeholder="Enter your adresse"
+          placeholder="Enter your address"
           value={formData.adresse}
           onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
           required
         />
 
         <AuthInput
-          label="date_of_birth"
+          label="Date of birth"
           type="date"
-          placeholder="Enter your birthday date"
+          placeholder="Enter your date of birth"
           value={formData.date_of_birth}
           onChange={(e) =>
             setFormData({ ...formData, date_of_birth: e.target.value })

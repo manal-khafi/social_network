@@ -148,7 +148,7 @@ const storiesSlice = createSlice({
       })
       .addCase(fetchStories.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.error.message ?? "Impossible de charger les stories";
+        state.error = action.error.message ?? "Failed to load stories";
       })
 
       .addCase(createStory.pending, (state) => {

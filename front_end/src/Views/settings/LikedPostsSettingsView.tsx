@@ -23,7 +23,7 @@ export default function LikedPostsSettingsView() {
         const response = await api.get("/posts/mylikes");
         setLikedPosts(response.data);
       } catch (err: any) {
-        console.error("Erreur API:", err);
+        console.error("API error:", err);
         setError(err.response?.data?.message || "Could not load liked posts");
       } finally {
         setLoading(false);
@@ -45,7 +45,7 @@ export default function LikedPostsSettingsView() {
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-bold">Posts aimés</h1>
+        <h1 className="text-xl font-bold">Liked Posts</h1>
       </div>
 
       <div className="p-4 space-y-4 max-w-2xl mx-auto pb-24">
@@ -53,7 +53,7 @@ export default function LikedPostsSettingsView() {
         {loading && (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-            <p className="text-muted-foreground">Chargement de vos favoris...</p>
+            <p className="text-muted-foreground">Loading your liked posts...</p>
           </div>
         )}
 
@@ -66,7 +66,7 @@ export default function LikedPostsSettingsView() {
               onClick={() => window.location.reload()}
               className="mt-4 text-sm underline"
             >
-              Réessayer
+              Try again
             </button>
           </Card>
         )}
@@ -75,9 +75,9 @@ export default function LikedPostsSettingsView() {
         {!loading && !error && likedPosts.length === 0 && (
           <Card className="p-8 text-center">
             <Heart className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-muted-foreground">Aucun post aimé pour le moment</p>
+            <p className="text-muted-foreground">No liked posts yet</p>
             <p className="text-sm text-muted-foreground mt-2">
-              Les publications que vous aimez apparaîtront ici.
+              Posts you like will appear here.
             </p>
           </Card>
         )}

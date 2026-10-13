@@ -128,8 +128,8 @@ export async function uploadMedia(
   const isVideo = file.type.startsWith("video/");
   const isImage = file.type.startsWith("image/");
   if (!isVideo && !isImage) throw new Error("Choose an image or a video");
-  if (isImage && file.size > MAX_IMAGE_BYTES) throw new Error("Image trop lourde (max 25 Mo)");
-  if (isVideo && file.size > MAX_VIDEO_BYTES) throw new Error("Vidéo trop lourde (max 100 Mo)");
+  if (isImage && file.size > MAX_IMAGE_BYTES) throw new Error("Image is too large (max 25 MB)");
+  if (isVideo && file.size > MAX_VIDEO_BYTES) throw new Error("Video is too large (max 100 MB)");
 
   if (isImage) {
     const { width, height } = await readImageSize(file);

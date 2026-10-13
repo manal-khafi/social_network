@@ -22,23 +22,23 @@ export function JoinRequestsSection({
       <CardContent className="p-6">
         <div className="mb-6">
           <h3 className="text-xl font-semibold mb-2">
-            Demandes d'adhésion ({joinRequests.length})
+            Join requests ({joinRequests.length})
           </h3>
           <p className="text-sm text-gray-600">
-            Gérez les demandes de rejoindre la communauté
+            Manage requests to join the community
           </p>
         </div>
 
         {joinRequests.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>Aucune demande en attente</p>
+            <p>No pending requests</p>
           </div>
         ) : (
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-4">
               {joinRequests.map((request) => {
-                const userName = request.user?.display_name || request.user?.username || "Utilisateur";
+                const userName = request.user?.display_name || request.user?.username || "User";
                 const userEmail = request.user?.email || "";
                 const userAvatar = request.user?.avatar_url;
                 const initials = userName.split(" ").map(n => n[0]).join("").toUpperCase();
@@ -65,7 +65,7 @@ export function JoinRequestsSection({
                               {userEmail}
                             </p>
                             <p className="text-xs text-gray-500 mb-2">
-                              Demande envoyée le {new Date(request.created_at).toLocaleDateString('fr-FR')}
+                              Requested on {new Date(request.created_at).toLocaleDateString('en-US')}
                             </p>
                             {request.message && (
                               <p className="text-sm text-gray-600 bg-[#ecf8f6] p-3 rounded-lg">
@@ -81,7 +81,7 @@ export function JoinRequestsSection({
                             className="bg-[#18534f] hover:bg-[#226d68] text-white"
                           >
                             <Check className="h-4 w-4 mr-1" />
-                            Accepter
+                            Accept
                           </Button>
                           <Button
                             size="sm"
@@ -90,7 +90,7 @@ export function JoinRequestsSection({
                             className="border-2 border-red-500 text-red-500 hover:bg-red-50"
                           >
                             <X className="h-4 w-4 mr-1" />
-                            Refuser
+                            Reject
                           </Button>
                         </div>
                       </div>

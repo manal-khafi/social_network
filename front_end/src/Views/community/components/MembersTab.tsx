@@ -20,22 +20,22 @@ export function MembersTab({
         <CardContent className="p-6">
           <div className="mb-6">
             <h3 className="text-xl font-semibold mb-2">
-              Membres ({members.length})
+              Members ({members.length})
             </h3>
             <p className="text-sm text-gray-600">
-              Découvrez les membres de cette communauté
+              Meet the members of this community
             </p>
           </div>
 
           <ScrollArea className="h-[500px] pr-4">
             {members.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-600">Aucun membre pour le moment</p>
+                <p className="text-gray-600">No members yet</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {members.map((member) => {
-                  const userName = member.user?.display_name || member.user?.username || member.name || "Utilisateur";
+                  const userName = member.user?.display_name || member.user?.username || member.name || "User";
                   const initials = userName.substring(0, 2).toUpperCase();
 
                   return (
@@ -63,13 +63,13 @@ export function MembersTab({
                               <p className="text-sm text-gray-600">{member.user?.username ? `@${member.user.username}` : member.username}</p>
                               {member.joinedAt && (
                                 <p className="text-xs text-gray-500 mt-1">
-                                  Membre depuis {new Date(member.joinedAt).toLocaleDateString('fr-FR')}
+                                  Member since {new Date(member.joinedAt).toLocaleDateString('en-US')}
                                 </p>
                               )}
                             </div>
                           </div>
                           <Button variant="outline" className="border-2 border-[#226d68] text-[#18534f] hover:bg-[#ecf8f6] hover:border-[#18534f]">
-                            Suivre
+                            Follow
                           </Button>
                         </div>
                       </CardContent>

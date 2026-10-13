@@ -31,9 +31,9 @@ const fetchBlockedList = async () => {
       setError("The server is not responding");
     } else {
       // Le serveur a répondu mais avec une erreur (401, 404, 500)
-      setError(`Erreur ${err.response.status}: ${err.response.data.message}`);
+      setError(`Error ${err.response.status}: ${err.response.data.message}`);
     }
-    console.error("Détail erreur :", err);
+    console.error("Error details:", err);
   } finally {
     setLoading(false);
   }
