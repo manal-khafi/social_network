@@ -53,7 +53,7 @@ Compose stack that runs the whole thing behind nginx.
 ```bash
 git clone https://github.com/IMANEMHARACH/social_network.git
 cd social_network
-git checkout producation
+git checkout dev
 
 cp .env.example .env
 ```
@@ -305,7 +305,7 @@ login, password reset, the public feed and account search do not.
 ## CI/CD
 
 `.github/workflows/ci.yml` runs on every pull request and on pushes to `main`
-and `producation`. It has three jobs:
+and `dev`. It has three jobs:
 
 | Job | Steps |
 |---|---|
@@ -361,7 +361,7 @@ Migrations are applied when the backend container starts. Set up TLS (section
 
 ## Contributing
 
-- **Target branch: `producation`** (spelled that way). It is the active trunk;
+- **Target branch: `dev`**. It is the active trunk;
   `main` is far behind and should not be used as a base or PR target.
 - **Branch names**: existing branches use `feature/<short-name>`, e.g.
   `feature/instagram-stories`. Keep that for features and use

@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, producation]
+    branches: [main, dev]
   pull_request:
 
 # Dummy value: prisma.config.ts requires DATABASE_URL to load, but nothing in CI
