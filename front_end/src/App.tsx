@@ -5,6 +5,7 @@ import { store } from "./store";
 import { useAppSelector } from "./hooks";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useRealtime } from "./realtime/useRealtime";
+import { useSocialRedirectResult } from "./hooks/useSocialRedirectResult";
 import i18n from "./i18n/i18n";
 import { DirectionProvider } from "@radix-ui/react-direction";
 import MainLayout from "./layouts/MainLayout";
@@ -70,6 +71,7 @@ function AppContent() {
   const navigate = useNavigate();
   const { isSessionLoading } = useAuthSession();
   useRealtime();
+  useSocialRedirectResult();
 
   if (isSessionLoading) {
     return (

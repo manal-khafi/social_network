@@ -1,4 +1,5 @@
-import { loginWithGoogle, loginWithFacebook } from "../../../config/firebaseConfig";
+import type { User as FirebaseUser } from "firebase/auth";
+import { loginWithGoogle, loginWithFacebook, getSocialRedirectResult } from "../../../config/firebaseConfig";
 import { socialLoginBackend } from "../../../utils/api";
 import type { User } from "../../../features/auth/authSlice";
 
@@ -35,28 +36,48 @@ export interface SocialAuthResult {
   redirectTo?: string;
 }
 
-export const handleSocialAuth = async (
+/** Exchanges a Firebase user for the app's own session (backend JWT). */
+const exchangeWithBackend = async (
+  user: FirebaseUser,
   provider: "google" | "facebook"
 ): Promise<SocialAuthResult> => {
+  const idToken = await user.getIdToken();
+  const backendResponse = await socialLoginBackend(idToken, provider);
+  if (!backendResponse.token) throw new Error("Backend did not return JWT token");
+  return { success: true, token: backendResponse.token, user: backendResponse.user };
+};
+
+/**
+ * Starts Google / Facebook sign-in. Resolves with the session on desktop
+ * (popup), or with null on mobile, where the browser is redirected to the
+ * provider and the sign-in completes on return (see completeSocialRedirect).
+ */
+export const handleSocialAuth = async (
+  provider: "google" | "facebook"
+): Promise<SocialAuthResult | null> => {
   try {
-    let user;
-    if (provider === "google") user = await loginWithGoogle();
-    if (provider === "facebook") user = await loginWithFacebook();
-
-    if (!user) throw new Error("No user returned from Firebase");
-
-    const idToken = await user.getIdToken();
-
-    const backendResponse = await socialLoginBackend(idToken, provider);
-
-    console.log("Backend response:", backendResponse);
-    if (!backendResponse.token) throw new Error("Backend did not return JWT token");
-    return { success: true, token: backendResponse.token, user: backendResponse.user };
-
-
+    const user = provider === "google" ? await loginWithGoogle() : await loginWithFacebook();
+    if (!user) return null; // redirecting
+    return await exchangeWithBackend(user, provider);
   } catch (error: any) {
     console.error("Social auth failed:", error);
     throw error;
   }
 };
 
+let redirectResult: Promise<SocialAuthResult | null> | null = null;
+
+/**
+ * Finishes a redirect sign-in (mobile) once the provider sends the user back.
+ * Null when no redirect sign-in is pending. Memoised: the result can only be
+ * read once, and React may run the caller's effect twice in development.
+ */
+export const completeSocialRedirect = (): Promise<SocialAuthResult | null> => {
+  redirectResult ??= (async () => {
+    const result = await getSocialRedirectResult();
+    if (!result?.user) return null;
+    const provider = result.providerId === "facebook.com" ? "facebook" : "google";
+    return exchangeWithBackend(result.user, provider);
+  })();
+  return redirectResult;
+};
