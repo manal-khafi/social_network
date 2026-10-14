@@ -23,6 +23,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "../../Components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../Components/ui/alert-dialog";
 import { Input } from "../../Components/ui/input";
 import { Textarea } from "../../Components/ui/textarea";
 import { toast } from "sonner";
@@ -39,6 +49,7 @@ import {
 } from "../../features/twoFactorAuth/twoFactorAuthSlice";
 
 
+import { firebaseSignOut } from "../../config/firebaseConfig";
 import { useTranslation } from "react-i18next";
 
 export default function AccountSettingsView() {
@@ -65,6 +76,9 @@ export default function AccountSettingsView() {
   const [deactivateReason, setDeactivateReason] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteReason, setDeleteReason] = useState("");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  // Last "are you sure?" step before the request is sent.
+  const [confirmAction, setConfirmAction] = useState<"deactivate" | "delete" | null>(null);
   const [passwordError, setPasswordError] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -78,11 +92,15 @@ export default function AccountSettingsView() {
 
   // Load the profile if we landed here directly (currentUser only gets populated
   // when you visit your own profile otherwise -> blank page).
+  // Also reload when has_password is unknown (profile loaded by another screen).
   useEffect(() => {
-    if (!currentUser && userStatus !== "loading") {
+    if ((!currentUser || currentUser.has_password === undefined) && userStatus !== "loading") {
       dispatch(fetchCurrentUserProfile());
     }
   }, [currentUser, userStatus, dispatch]);
+
+  // Google / Facebook accounts have no password to confirm with.
+  const requiresPassword = currentUser?.has_password !== false;
 
   const resetPasswordForm = () => {
     setPasswordError("");
@@ -164,10 +182,17 @@ export default function AccountSettingsView() {
     }
   };
 
-  const handleDeactivate = async () => {
-    setPasswordError("");
+  /** The session is gone on the server: drop it here and go to the sign-in screen. */
+  const leaveAccount = () => {
+    firebaseSignOut().catch(() => undefined);
+    dispatch(logout());
+    navigate(PATHS.AUTH, { replace: true });
+  };
 
-    if (!deactivatePassword) {
+  // Form step: validate, then ask for a final confirmation.
+  const reviewDeactivate = () => {
+    setPasswordError("");
+    if (requiresPassword && !deactivatePassword) {
       setPasswordError(t("account.passwordIsRequired"));
       return;
     }
@@ -175,32 +200,12 @@ export default function AccountSettingsView() {
       toast.error(t("account.pleaseProvideAReasonForDeactivation"));
       return;
     }
-
-    try {
-      setIsSubmitting(true);
-
-      await api.post("/account/me/deactivate", {
-        password: deactivatePassword,
-        reason: deactivateReason,
-      });
-
-      toast.success(t("account.accountDeactivated"));
-      dispatch(logout());
-      navigate(PATHS.AUTH, { replace: true });
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.message || err?.message || t("account.failedToDeactivateAccount");
-      setPasswordError(String(msg));
-      toast.error(String(msg));
-    } finally {
-      setIsSubmitting(false);
-    }
+    setConfirmAction("deactivate");
   };
 
-  const handleDelete = async () => {
+  const reviewDelete = () => {
     setPasswordError("");
-
-    if (!deletePassword) {
+    if (requiresPassword && !deletePassword) {
       setPasswordError(t("account.passwordIsRequired"));
       return;
     }
@@ -208,17 +213,47 @@ export default function AccountSettingsView() {
       toast.error(t("account.pleaseProvideAReasonForDeletion"));
       return;
     }
+    if (deleteConfirmText.trim() !== currentUser?.username) {
+      toast.error(t("account.typeUsernameToConfirm", { username: currentUser?.username ?? "" }));
+      return;
+    }
+    setConfirmAction("delete");
+  };
 
+  const handleDeactivate = async () => {
+    try {
+      setIsSubmitting(true);
+
+      await api.post("/account/me/deactivate", {
+        ...(requiresPassword && { password: deactivatePassword }),
+        reason: deactivateReason,
+      });
+
+      toast.success(t("account.accountDeactivatedSignedOut"));
+      setShowDeactivateDialog(false);
+      leaveAccount();
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message || err?.message || t("account.failedToDeactivateAccount");
+      setPasswordError(String(msg));
+      toast.error(String(msg));
+    } finally {
+      setIsSubmitting(false);
+      setConfirmAction(null);
+    }
+  };
+
+  const handleDelete = async () => {
     try {
       setIsSubmitting(true);
 
       await api.delete("/account/me/delete", {
-        data: { password: deletePassword, reason: deleteReason },
+        data: { ...(requiresPassword && { password: deletePassword }), reason: deleteReason },
       });
 
       toast.success(t("account.accountDeleted"));
-      dispatch(logout());
-      navigate(PATHS.AUTH, { replace: true });
+      setShowDeleteDialog(false);
+      leaveAccount();
     } catch (err: any) {
       const msg =
         err?.response?.data?.message || err?.message || t("account.failedToDeleteAccount");
@@ -226,6 +261,7 @@ export default function AccountSettingsView() {
       toast.error(String(msg));
     } finally {
       setIsSubmitting(false);
+      setConfirmAction(null);
     }
   };
 
@@ -523,9 +559,10 @@ export default function AccountSettingsView() {
               <li>{t("account.youCanReactivateAnytimeByLogging")}</li>
             </ul>
 
+            {requiresPassword && (
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                Confirm Password <span className="text-destructive">*</span>
+                {t("account.confirmPasswordLabel")} <span className="text-destructive">*</span>
               </label>
               <Input
                 type="password"
@@ -539,10 +576,11 @@ export default function AccountSettingsView() {
               />
               {passwordError && <p className="text-xs text-destructive">{passwordError}</p>}
             </div>
+            )}
 
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                Why are you deactivating? <span className="text-destructive">*</span>
+                {t("account.whyDeactivating")} <span className="text-destructive">*</span>
               </label>
               <Textarea
                 placeholder={t("account.pleaseTellUsWhyYoureDeactivating")}
@@ -558,7 +596,7 @@ export default function AccountSettingsView() {
             <Button variant="outline" onClick={() => setShowDeactivateDialog(false)} disabled={isSubmitting}>
               {t("actions.cancel")}
             </Button>
-            <Button variant="destructive" onClick={handleDeactivate} disabled={isSubmitting}>
+            <Button variant="destructive" onClick={reviewDeactivate} disabled={isSubmitting}>
               {t("account.deactivateAccount")}
             </Button>
           </DialogFooter>
@@ -573,6 +611,7 @@ export default function AccountSettingsView() {
           if (!open) {
             setDeletePassword("");
             setDeleteReason("");
+            setDeleteConfirmText("");
             setPasswordError("");
           }
         }}
@@ -598,9 +637,10 @@ export default function AccountSettingsView() {
               <li>{t("account.thisCannotBeUndoneOrReversed")}</li>
             </ul>
 
+            {requiresPassword && (
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                Confirm Password <span className="text-destructive">*</span>
+                {t("account.confirmPasswordLabel")} <span className="text-destructive">*</span>
               </label>
               <Input
                 type="password"
@@ -614,10 +654,11 @@ export default function AccountSettingsView() {
               />
               {passwordError && <p className="text-xs text-destructive">{passwordError}</p>}
             </div>
+            )}
 
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                Why are you deleting? <span className="text-destructive">*</span>
+                {t("account.whyDeleting")} <span className="text-destructive">*</span>
               </label>
               <Textarea
                 placeholder={t("account.pleaseTellUsWhyYoureDeleting")}
@@ -627,18 +668,70 @@ export default function AccountSettingsView() {
               />
               <p className="text-xs text-muted-foreground">{t("account.yourFeedbackIsImportantToUs")}</p>
             </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {t("account.typeUsernameToConfirm", { username: currentUser?.username ?? "" })}{" "}
+                <span className="text-destructive">*</span>
+              </label>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={currentUser?.username ?? ""}
+                autoComplete="off"
+                autoCapitalize="none"
+                spellCheck={false}
+              />
+            </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={isSubmitting}>
               {t("actions.cancel")}
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
+            <Button
+              variant="destructive"
+              onClick={reviewDelete}
+              disabled={isSubmitting || deleteConfirmText.trim() !== currentUser?.username}
+            >
               {t("account.deletePermanently")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Final confirmation for deactivate / delete */}
+      <AlertDialog
+        open={confirmAction !== null}
+        onOpenChange={(open) => !open && !isSubmitting && setConfirmAction(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction === "delete" ? t("account.confirmDeleteTitle") : t("account.confirmDeactivateTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction === "delete"
+                ? t("account.confirmDeleteDescription")
+                : t("account.confirmDeactivateDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>{t("actions.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              disabled={isSubmitting}
+              onClick={(e) => {
+                e.preventDefault(); // stay open until the request finishes
+                if (confirmAction === "delete") handleDelete();
+                else handleDeactivate();
+              }}
+            >
+              {confirmAction === "delete" ? t("account.deletePermanently") : t("account.deactivateAccount")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

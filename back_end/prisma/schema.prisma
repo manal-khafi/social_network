@@ -80,6 +80,7 @@ enum ReportStatus {
   ACCEPTED
   REJECTED
 }
+
 enum CommunityType {
   tech
   health
@@ -126,10 +127,10 @@ model User {
   allow_mention_notifications Boolean @default(true)
   allow_repost_notifications  Boolean @default(true)
 
-  two_factor_enabled       Boolean  @default(false)
-  two_factor_secret        String?
-  two_factor_temp_secret   String?
-  two_factor_confirmed_at  DateTime?
+  two_factor_enabled      Boolean   @default(false)
+  two_factor_secret       String?
+  two_factor_temp_secret  String?
+  two_factor_confirmed_at DateTime?
 
   gender        String?
   date_of_birth DateTime?
@@ -156,7 +157,7 @@ model User {
   storyComments            StoryComment[]
   storyReactions           StoryReaction[]
   storyPollVotes           StoryPollVote[]
-  storyQuestionResponses    StoryQuestionResponse[]
+  storyQuestionResponses   StoryQuestionResponse[]
   highlights               Highlight[]
   closeFriends             CloseFriend[]             @relation("User")
   closeFriendsOf           CloseFriend[]             @relation("CloseFriend")
@@ -180,8 +181,8 @@ model Follow {
   follower_id String
   followed_id String
 
-  follower User @relation("Follower", fields: [follower_id], references: [id])
-  followed User @relation("Followed", fields: [followed_id], references: [id])
+  follower User @relation("Follower", fields: [follower_id], references: [id], onDelete: Cascade)
+  followed User @relation("Followed", fields: [followed_id], references: [id], onDelete: Cascade)
 
   // follower_id lookups are already served by the unique index below.
   @@unique([follower_id, followed_id])
@@ -195,8 +196,8 @@ model Block {
   blocker_id String
   blocked_id String
 
-  blocker User @relation("Blocker", fields: [blocker_id], references: [id])
-  blocked User @relation("Blocked", fields: [blocked_id], references: [id])
+  blocker User @relation("Blocker", fields: [blocker_id], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blocked_id], references: [id], onDelete: Cascade)
 
   @@unique([blocker_id, blocked_id])
 }
@@ -212,7 +213,7 @@ model Post {
   updated_at  DateTime       @updatedAt
 
   user_id String
-  user    User   @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   // Relations
   reports     Report[]
@@ -238,9 +239,9 @@ model Comment {
   post_id           String
   parent_comment_id String?
 
-  user          User     @relation(fields: [user_id], references: [id])
-  post          Post     @relation(fields: [post_id], references: [id])
-  parentComment Comment? @relation("CommentReplies", fields: [parent_comment_id], references: [id])
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post          Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  parentComment Comment? @relation("CommentReplies", fields: [parent_comment_id], references: [id], onDelete: Cascade)
 
   // Relations
   replies Comment[] @relation("CommentReplies")
@@ -259,9 +260,9 @@ model Like {
   post_id    String?
   comment_id String?
 
-  user    User     @relation(fields: [user_id], references: [id])
-  post    Post?    @relation(fields: [post_id], references: [id])
-  comment Comment? @relation(fields: [comment_id], references: [id])
+  user    User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post    Post?    @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  comment Comment? @relation(fields: [comment_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, post_id, comment_id])
 }
@@ -274,8 +275,8 @@ model Share {
   user_id String
   post_id String
 
-  user User @relation(fields: [user_id], references: [id])
-  post Post @relation(fields: [post_id], references: [id])
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
 }
 
 model Repost {
@@ -286,8 +287,8 @@ model Repost {
   user_id          String
   original_post_id String
 
-  user         User @relation(fields: [user_id], references: [id])
-  originalPost Post @relation(fields: [original_post_id], references: [id])
+  user         User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  originalPost Post @relation(fields: [original_post_id], references: [id], onDelete: Cascade)
 }
 
 model Save {
@@ -297,8 +298,8 @@ model Save {
   user_id String
   post_id String
 
-  user User @relation(fields: [user_id], references: [id])
-  post Post @relation(fields: [post_id], references: [id])
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [post_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, post_id])
 }
@@ -337,21 +338,21 @@ model Story {
   created_at DateTime @default(now())
 
   user_id String
-  user    User   @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  sharedPost  Post?  @relation("StorySharedPost", fields: [shared_post_id], references: [id])
-  sharedStory Story? @relation("StoryReshare", fields: [shared_story_id], references: [id])
+  sharedPost  Post?   @relation("StorySharedPost", fields: [shared_post_id], references: [id], onDelete: SetNull)
+  sharedStory Story?  @relation("StoryReshare", fields: [shared_story_id], references: [id], onDelete: SetNull)
   reshares    Story[] @relation("StoryReshare")
 
   // Relations
-  views          StoryView[]
-  likes          StoryLike[]
-  comments       StoryComment[]
-  reactions      StoryReaction[]
-  messages       Message[]
-  pollVotes      StoryPollVote[]
+  views             StoryView[]
+  likes             StoryLike[]
+  comments          StoryComment[]
+  reactions         StoryReaction[]
+  messages          Message[]
+  pollVotes         StoryPollVote[]
   questionResponses StoryQuestionResponse[]
-  highlightItems HighlightItem[]
+  highlightItems    HighlightItem[]
 }
 
 model Highlight {
@@ -362,7 +363,7 @@ model Highlight {
   updated_at DateTime @updatedAt
 
   user_id String
-  user    User   @relation(fields: [user_id], references: [id])
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   items HighlightItem[]
 }
@@ -377,7 +378,7 @@ model StoryQuestionResponse {
   user_id    String
 
   story Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [user_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([story_id, overlay_id])
 }
@@ -393,7 +394,7 @@ model StoryPollVote {
   user_id    String
 
   story Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [user_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([story_id, overlay_id, user_id])
 }
@@ -419,8 +420,8 @@ model StoryView {
   story_id  String
   viewer_id String
 
-  story  Story @relation(fields: [story_id], references: [id])
-  viewer User  @relation(fields: [viewer_id], references: [id])
+  story  Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
+  viewer User  @relation(fields: [viewer_id], references: [id], onDelete: Cascade)
 
   @@unique([story_id, viewer_id])
 }
@@ -432,8 +433,8 @@ model StoryLike {
   user_id  String
   story_id String
 
-  user  User  @relation(fields: [user_id], references: [id])
-  story Story @relation(fields: [story_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  story Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, story_id])
 }
@@ -448,8 +449,8 @@ model StoryComment {
   user_id  String
   story_id String
 
-  user  User  @relation(fields: [user_id], references: [id])
-  story Story @relation(fields: [story_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  story Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
 }
 
 model StoryReaction {
@@ -461,7 +462,7 @@ model StoryReaction {
   user_id  String
   story_id String
 
-  user  User  @relation(fields: [user_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   story Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, story_id])
@@ -474,17 +475,17 @@ model CloseFriend {
   user_id         String
   close_friend_id String
 
-  user        User @relation("User", fields: [user_id], references: [id])
-  closeFriend User @relation("CloseFriend", fields: [close_friend_id], references: [id])
+  user        User @relation("User", fields: [user_id], references: [id], onDelete: Cascade)
+  closeFriend User @relation("CloseFriend", fields: [close_friend_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, close_friend_id])
 }
 
 model Conversation {
-  id           String   @id @default(uuid())
-  title        String?
-  is_group     Boolean  @default(false)
-  created_at   DateTime @default(now())
+  id              String   @id @default(uuid())
+  title           String?
+  is_group        Boolean  @default(false)
+  created_at      DateTime @default(now())
   last_message_at DateTime @default(now())
 
   // Relations
@@ -499,8 +500,8 @@ model ConversationParticipant {
   is_archived     Boolean   @default(false)
   last_read_at    DateTime?
 
-  conversation Conversation @relation(fields: [conversation_id], references: [id])
-  user         User         @relation(fields: [user_id], references: [id])
+  conversation Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([conversation_id, user_id])
 }
@@ -519,9 +520,9 @@ model Message {
   sender_id       String
   story_id        String?
 
-  conversation Conversation @relation(fields: [conversation_id], references: [id])
-  sender       User         @relation("Sender", fields: [sender_id], references: [id])
-  story        Story?       @relation(fields: [story_id], references: [id])
+  conversation Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  sender       User         @relation("Sender", fields: [sender_id], references: [id], onDelete: Cascade)
+  story        Story?       @relation(fields: [story_id], references: [id], onDelete: SetNull)
 
   // Relations
   statuses MessageStatus[]
@@ -538,8 +539,8 @@ model MessageStatus {
   message_id String
   user_id    String
 
-  message Message @relation(fields: [message_id], references: [id])
-  user    User    @relation(fields: [user_id], references: [id])
+  message Message @relation(fields: [message_id], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([message_id, user_id])
 }
@@ -555,7 +556,7 @@ model Community {
   created_at  DateTime      @default(now())
 
   created_by String
-  creator    User   @relation("Creator", fields: [created_by], references: [id])
+  creator    User   @relation("Creator", fields: [created_by], references: [id], onDelete: Cascade)
 
   // Relations
   members      CommunityMember[]
@@ -573,8 +574,8 @@ model CommunityMember {
   user_id      String
   role_id      String?
 
-  community Community @relation(fields: [community_id], references: [id])
-  user      User      @relation(fields: [user_id], references: [id])
+  community Community @relation(fields: [community_id], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   role      Role?     @relation(fields: [role_id], references: [id])
 
   @@unique([community_id, user_id])
@@ -589,7 +590,7 @@ model Group {
   created_at  DateTime @default(now())
 
   community_id String
-  community    Community @relation(fields: [community_id], references: [id])
+  community    Community @relation(fields: [community_id], references: [id], onDelete: Cascade)
 
   // Relations
   members      GroupMember[]
@@ -605,8 +606,8 @@ model GroupMember {
   user_id  String
   role_id  String?
 
-  group Group @relation(fields: [group_id], references: [id])
-  user  User  @relation(fields: [user_id], references: [id])
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   role  Role? @relation(fields: [role_id], references: [id])
 
   @@unique([group_id, user_id])
@@ -623,9 +624,9 @@ model JoinRequest {
   community_id String?
   group_id     String?
 
-  user      User       @relation(fields: [user_id], references: [id])
-  community Community? @relation(fields: [community_id], references: [id])
-  group     Group?     @relation(fields: [group_id], references: [id])
+  user      User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  community Community? @relation(fields: [community_id], references: [id], onDelete: Cascade)
+  group     Group?     @relation(fields: [group_id], references: [id], onDelete: Cascade)
 }
 
 model Role {
@@ -690,7 +691,7 @@ model Notification {
   user_id              String
   type_notification_id String
 
-  user             User             @relation(fields: [user_id], references: [id])
+  user             User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
   typeNotification TypeNotification @relation(fields: [type_notification_id], references: [id])
 
   @@index([user_id, created_at])

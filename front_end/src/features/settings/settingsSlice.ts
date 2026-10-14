@@ -82,8 +82,18 @@ const applyPreferences = (
   notifications.all = PREFERENCE_KEYS.some((key) => notifications[key]);
 };
 
+/** The theme saved by next-themes (localStorage "theme"). */
+const loadTheme = (): SettingsState['theme'] => {
+  try {
+    const saved = localStorage.getItem('theme');
+    return saved === 'light' || saved === 'dark' ? saved : 'system';
+  } catch {
+    return 'system';
+  }
+};
+
 const initialState: SettingsState = {
-  theme: 'system',
+  theme: loadTheme(),
   language: (loadLanguage() as SettingsState['language']) || 'en',
   notifications: {
     likes: true,

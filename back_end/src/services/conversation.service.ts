@@ -301,15 +301,34 @@ export class ConversationService {
    * Instagram-style "mentioned you in their story" card in the DM between the
    * story author and the mentioned user.
    */
-  static async sendStoryMention(senderId: string, recipientId: string, storyId: string) {
+  static sendStoryMention(senderId: string, recipientId: string, storyId: string) {
+    return this.sendStoryCard(senderId, recipientId, storyId, 'story_mention', null);
+  }
+
+  /**
+   * A story sent from the viewer's "send to" sheet, with an optional note,
+   * shown as a story card in the DM (message_type "text" + story_id).
+   */
+  static sendStoryShare(senderId: string, recipientId: string, storyId: string, note: string | null) {
+    return this.sendStoryCard(senderId, recipientId, storyId, 'text', note);
+  }
+
+  /** Story card message in the direct chat; pushed live with its story preview. */
+  private static async sendStoryCard(
+    senderId: string,
+    recipientId: string,
+    storyId: string,
+    messageType: 'story_mention' | 'text',
+    content: string | null
+  ) {
     const conversation = await getOrCreateDirectConversation(senderId, recipientId);
     const message = await prisma.message.create({
       data: {
         conversation_id: conversation.id,
         sender_id: senderId,
         story_id: storyId,
-        content: null,
-        message_type: 'story_mention',
+        content,
+        message_type: messageType,
       },
       include: messageInclude,
     });

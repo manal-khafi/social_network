@@ -11,7 +11,23 @@ import api from "../../../api/axios";
 import { AuthInput } from "./AuthInput";
 import { AuthButton } from "./AuthButton";
 import { SocialButton } from "./SocialButton";
-import { oauthErrorMessage, startSocialAuth, takeOAuthError, type SocialProvider } from "./socialAuth";
+import {
+  oauthErrorMessage,
+  peekOAuthError,
+  startSocialAuth,
+  takeOAuthError,
+  type SocialProvider,
+} from "./socialAuth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../ui/alert-dialog";
 import { Logo } from "./Logo";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -46,9 +62,29 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     navigate("/home");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Signing into a deactivated account: ask before reactivating it. "password"
+  // re-sends the form with reactivate: true; a provider restarts its sign-in.
+  const [reactivation, setReactivation] = useState<"password" | SocialProvider | null>(() => {
+    const error = peekOAuthError();
+    return error?.code === "account_deactivated" ? error.provider : null;
+  });
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    signIn(false);
+  };
+
+  const confirmReactivation = () => {
+    const how = reactivation;
+    setReactivation(null);
+    if (how === "password") signIn(true);
+    else if (how) {
+      setIsLoading(true);
+      startSocialAuth(how, { reactivate: true });
+    }
+  };
+
+  const signIn = async (reactivate: boolean) => {
     setIsLoading(true);
     dispatch(setAuthLoading());
 
@@ -56,6 +92,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       const response = await api.post("/authentication/login", {
         email: formData.emailOrUsername,
         password: formData.password,
+        ...(reactivate && { reactivate: true }),
       });
 
       const data = response.data;
@@ -87,7 +124,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       dispatch(setAuth({ token: data.token, user: data.user ?? null }));
 
       goNextAfterAuth(data.user, data.redirectTo);
+      if (reactivate) toast.success(t("auth.accountReactivated"));
     } catch (error: any) {
+      if (error.response?.data?.code === "account_deactivated") {
+        dispatch(setAuthError(""));
+        setReactivation("password");
+        return;
+      }
       const errorMsg =
         error.response?.data?.message || t("auth.serverError");
       toast.error(errorMsg);
@@ -148,8 +191,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   // Back from a failed Google / Facebook sign-in.
   useEffect(() => {
-    const code = takeOAuthError();
-    const msg = code && oauthErrorMessage(code, t);
+    const error = takeOAuthError();
+    const msg = error && oauthErrorMessage(error.code, t);
     if (msg) toast.error(msg);
   }, [t]);
 
@@ -288,6 +331,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           </button>
         </p>
       </div>
+      <AlertDialog open={reactivation !== null} onOpenChange={(open) => !open && setReactivation(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("auth.accountDeactivatedTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("auth.accountDeactivatedReactivate")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmReactivation}>{t("auth.reactivateAccount")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 };

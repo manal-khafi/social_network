@@ -150,7 +150,7 @@ export const verifyTwoFactorLogin = async (req: Request, res: Response) => {
     return res.status(400).json({ success: false, message: 'Invalid code format. Must be 6 digits.' });
   }
 
-  let challenge: { id: string; token_version?: number };
+  let challenge: { id: string; token_version?: number; reactivate?: boolean };
   try {
     challenge = verifyTwoFactorLoginToken(twoFactorToken);
   } catch {
@@ -168,7 +168,7 @@ export const verifyTwoFactorLogin = async (req: Request, res: Response) => {
 
     if (
       !user ||
-      !user.is_active ||
+      (!user.is_active && !challenge.reactivate) ||
       user.token_version !== challenge.token_version ||
       !user.two_factor_enabled ||
       !user.two_factor_secret
@@ -188,6 +188,11 @@ export const verifyTwoFactorLogin = async (req: Request, res: Response) => {
 
     if (!verified) {
       return res.status(403).json({ success: false, message: 'Invalid TOTP code.' });
+    }
+
+    // Deactivated account the user chose to reactivate at sign-in.
+    if (!user.is_active) {
+      await prisma.user.update({ where: { id: user.id }, data: { is_active: true } });
     }
 
     const session = await issueLoginSession(res, user);

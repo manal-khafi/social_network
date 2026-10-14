@@ -18,7 +18,8 @@ const invalidCredentials = (res: Response) =>
 
 export const Login = async (req: Request, res: Response) => {
   try {
-    const { email: loginIdentifier, password } = req.body;
+    const { email: loginIdentifier, password, reactivate } = req.body;
+    const wantsReactivation = reactivate === true;
     if (!loginIdentifier || !password) {
       return res.status(400).json({
         success: false,
@@ -48,10 +49,13 @@ export const Login = async (req: Request, res: Response) => {
 
     // Account-state checks come only after the password is proven, so their
     // messages cannot be used to probe which emails are registered.
-    if (!user.is_active) {
+    // Deactivated: the password is proven, so the owner may reactivate by
+    // signing in again with reactivate: true (after 2FA, when enabled).
+    if (!user.is_active && !wantsReactivation) {
       return res.status(403).json({
         success: false,
-        message: "This account has been deactivated. Contact support to reactivate.",
+        code: "account_deactivated",
+        message: "This account is deactivated. Sign in again to reactivate it.",
       });
     }
 
@@ -72,9 +76,14 @@ export const Login = async (req: Request, res: Response) => {
         twoFactorToken: generateTwoFactorLoginToken({
           id: user.id,
           token_version: user.token_version,
+          ...(!user.is_active && { reactivate: true }),
         }),
         message: "Two-factor authentication code required",
       });
+    }
+
+    if (!user.is_active) {
+      await prisma.user.update({ where: { id: user.id }, data: { is_active: true } });
     }
 
     const session = await issueLoginSession(res, user);

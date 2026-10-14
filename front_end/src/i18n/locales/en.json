@@ -156,7 +156,10 @@
     "accountExistsWithDifferentCredential": "An account already exists with this email. Please sign in with the method you originally used (email/password or Google).",
     "oauthNoEmail": "Your Google / Facebook account didn't share an email address. Allow email access, or sign up with email and password.",
     "oauthNotConfigured": "Google / Facebook sign-in is not available right now.",
-    "oauthDeactivated": "This account has been deactivated. Contact support to reactivate it."
+    "accountDeactivatedTitle": "Your account is deactivated",
+    "accountDeactivatedReactivate": "Reactivate it to sign in. Your profile and posts will be visible again.",
+    "reactivateAccount": "Reactivate account",
+    "accountReactivated": "Welcome back! Your account has been reactivated."
   },
   "posts": {
     "like": "Like",
@@ -919,7 +922,16 @@
     "retry": "Retry",
     "enterTheCodeFromYourAuthenticator": "Enter the code from your authenticator app to disable 2FA.",
     "disable2faTitle": "Disable Two-Factor Authentication",
-    "enable2faTitle": "Enable Two-Factor Authentication"
+    "enable2faTitle": "Enable Two-Factor Authentication",
+    "confirmPasswordLabel": "Confirm password",
+    "whyDeactivating": "Why are you deactivating?",
+    "whyDeleting": "Why are you deleting?",
+    "typeUsernameToConfirm": "Type your username ({{username}}) to confirm",
+    "confirmDeactivateTitle": "Deactivate your account?",
+    "confirmDeactivateDescription": "You will be signed out on every device and your profile will be hidden. Sign in again any time to reactivate it.",
+    "confirmDeleteTitle": "Delete your account permanently?",
+    "confirmDeleteDescription": "Your profile, posts, stories, messages and media will be deleted for good. This cannot be undone.",
+    "accountDeactivatedSignedOut": "Account deactivated. Sign in again any time to reactivate it."
   },
   "notificationSettings": {
     "whenSomeoneFollowsYouAsksTo": "When someone follows you, asks to, or accepts your request",

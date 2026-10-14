@@ -3,7 +3,8 @@ import { X, Search, Send, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { shareStory } from "../../features/stories/storiesSlice";
-import { getFollowing, type StoryUser } from "../../api/storiesApi";
+import { getFollowing, searchAccounts, type StoryUser } from "../../api/storiesApi";
+import { listConversations } from "../../api/messagesApi";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useTranslation } from "react-i18next";
 
@@ -15,36 +16,79 @@ interface Props {
 export default function ShareStorySheet({ storyId, onClose }: Props) {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
-  const currentUser = useAppSelector((s) => s.user.currentUser);
+  // The signed-in user comes from the session; state.user.currentUser is only
+  // loaded once the profile screen has been opened.
+  const myId = useAppSelector((s) => s.auth.user?.id ?? s.user.currentUser?.id ?? null);
   const [people, setPeople] = useState<StoryUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [results, setResults] = useState<StoryUser[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [selected, setSelected] = useState<Map<string, StoryUser>>(new Map());
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
 
+  // Suggestions: recent chats first, then the people you follow.
   useEffect(() => {
-    if (!currentUser?.id) return;
-    getFollowing(currentUser.id)
-      .then(setPeople)
-      .catch(() => setPeople([]))
-      .finally(() => setLoading(false));
-  }, [currentUser?.id]);
+    let cancelled = false;
+    Promise.allSettled([listConversations(), myId ? getFollowing(myId) : Promise.resolve([])]).then(
+      ([chats, following]) => {
+        if (cancelled) return;
+        const seen = new Set<string>();
+        const list: StoryUser[] = [];
+        const add = (u: StoryUser | null | undefined) => {
+          if (!u?.id || u.id === myId || seen.has(u.id)) return;
+          seen.add(u.id);
+          list.push(u);
+        };
+        if (chats.status === "fulfilled") chats.value.filter((c) => !c.is_group).forEach((c) => add(c.other_user));
+        if (following.status === "fulfilled") following.value.forEach(add);
+        setPeople(list);
+        setLoading(false);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [myId]);
+
+  // Typing searches every account, like the new-message screen.
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setResults(null);
+      return;
+    }
+    let cancelled = false;
+    setSearching(true);
+    const timer = window.setTimeout(() => {
+      searchAccounts(q)
+        .then((users) => !cancelled && setResults(users.filter((u) => u.id !== myId)))
+        .catch(() => !cancelled && setResults([]))
+        .finally(() => !cancelled && setSearching(false));
+    }, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [query, myId]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return people;
-    return people.filter(
-      (p) =>
-        p.username.toLowerCase().includes(q) ||
-        p.display_name.toLowerCase().includes(q)
+    // Matching suggestions right away, then the server results.
+    const local = people.filter(
+      (p) => p.username.toLowerCase().includes(q) || p.display_name?.toLowerCase().includes(q)
     );
-  }, [people, query]);
+    const ids = new Set(local.map((p) => p.id));
+    return [...local, ...(results ?? []).filter((u) => !ids.has(u.id))];
+  }, [people, query, results]);
 
-  const toggle = (id: string) =>
+  const toggle = (user: StoryUser) =>
     setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      const next = new Map(prev);
+      if (next.has(user.id)) next.delete(user.id);
+      else next.set(user.id, user);
       return next;
     });
 
@@ -53,7 +97,7 @@ export default function ShareStorySheet({ storyId, onClose }: Props) {
     setSending(true);
     try {
       const res = await dispatch(
-        shareStory({ storyId, recipientIds: [...selected], note: note.trim() || undefined })
+        shareStory({ storyId, recipientIds: [...selected.keys()], note: note.trim() || undefined })
       ).unwrap();
       toast.success(t("stories.sentToCount", { count: res.shared_count }));
       onClose();
@@ -89,20 +133,22 @@ export default function ShareStorySheet({ storyId, onClose }: Props) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-2">
-          {loading && (
+          {(loading || (searching && filtered.length === 0)) && (
             <div className="py-10 grid place-items-center">
               <Loader2 className="w-5 h-5 animate-spin text-white/50" />
             </div>
           )}
-          {!loading && filtered.length === 0 && (
-            <p className="text-center text-sm text-white/50 py-10">{t("stories.noOneToSendToYet")}</p>
+          {!loading && !searching && filtered.length === 0 && (
+            <p className="text-center text-sm text-white/50 py-10">
+              {query.trim() ? t("stories.noResults") : t("stories.noOneToSendToYet")}
+            </p>
           )}
           {filtered.map((p) => {
             const isSel = selected.has(p.id);
             return (
               <button
                 key={p.id}
-                onClick={() => toggle(p.id)}
+                onClick={() => toggle(p)}
                 className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5"
               >
                 <Avatar className="w-11 h-11">
@@ -138,7 +184,7 @@ export default function ShareStorySheet({ storyId, onClose }: Props) {
             className="rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold flex items-center gap-1 disabled:opacity-50"
           >
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            Send{selected.size > 0 ? ` (${selected.size})` : ""}
+            {t("actions.send")}{selected.size > 0 ? ` (${selected.size})` : ""}
           </button>
         </div>
       </div>

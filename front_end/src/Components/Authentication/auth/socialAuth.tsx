@@ -7,12 +7,18 @@ export type SocialProvider = "google" | "facebook";
  * the OAuth flow and sends the browser back to the app with the session
  * (see consumeOAuthRedirect). No popups, so it works in every mobile browser.
  */
-export const startSocialAuth = (provider: SocialProvider) => {
+export const startSocialAuth = (provider: SocialProvider, { reactivate = false } = {}) => {
   const base = (api.defaults.baseURL || "/api").replace(/\/+$/, "");
-  window.location.assign(`${base}/authentication/${provider}`);
+  window.location.assign(`${base}/authentication/${provider}${reactivate ? "?reactivate=1" : ""}`);
 };
 
-let pendingOAuthError: string | null = null;
+export interface OAuthError {
+  code: string;
+  /** Set with account_deactivated: the provider to sign in again with to reactivate. */
+  provider: SocialProvider | null;
+}
+
+let pendingOAuthError: OAuthError | null = null;
 
 /**
  * Reads what the backend's OAuth callback put in the URL fragment
@@ -29,9 +35,18 @@ export const consumeOAuthRedirect = (): string | null => {
   if (!token && !error) return null;
 
   window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
-  if (error) pendingOAuthError = error;
+  if (error) {
+    const provider = params.get("provider");
+    pendingOAuthError = {
+      code: error,
+      provider: provider === "google" || provider === "facebook" ? provider : null,
+    };
+  }
   return token;
 };
+
+/** The OAuth failure from the last redirect, without consuming it. */
+export const peekOAuthError = () => pendingOAuthError;
 
 /** The OAuth failure from the last redirect, once (for the login screen). */
 export const takeOAuthError = () => {
@@ -45,10 +60,10 @@ export const oauthErrorMessage = (code: string, t: (key: string) => string): str
   switch (code) {
     case "cancelled":
       return null;
+    case "account_deactivated": // the login screen offers to reactivate instead
+      return null;
     case "account_exists_with_different_method":
       return t("auth.accountExistsWithDifferentCredential");
-    case "deactivated":
-      return t("auth.oauthDeactivated");
     case "no_email":
       return t("auth.oauthNoEmail");
     case "not_configured":

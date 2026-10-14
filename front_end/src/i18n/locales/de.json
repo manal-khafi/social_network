@@ -156,7 +156,10 @@
     "accountExistsWithDifferentCredential": "Mit dieser E-Mail gibt es bereits ein Konto. Melde dich mit der Methode an, die du ursprünglich verwendet hast (E-Mail/Passwort oder Google).",
     "oauthNoEmail": "Dein Google- / Facebook-Konto hat keine E-Mail-Adresse geteilt. Erlaube den E-Mail-Zugriff oder registriere dich mit E-Mail und Passwort.",
     "oauthNotConfigured": "Die Anmeldung mit Google / Facebook ist gerade nicht verfügbar.",
-    "oauthDeactivated": "Dieses Konto wurde deaktiviert. Wende dich an den Support, um es wieder zu aktivieren."
+    "accountDeactivatedTitle": "Dein Konto ist deaktiviert",
+    "accountDeactivatedReactivate": "Reaktiviere es, um dich anzumelden. Dein Profil und deine Beiträge sind dann wieder sichtbar.",
+    "reactivateAccount": "Konto reaktivieren",
+    "accountReactivated": "Willkommen zurück! Dein Konto wurde reaktiviert."
   },
   "posts": {
     "like": "Gefällt mir",
@@ -919,7 +922,16 @@
     "retry": "Erneut versuchen",
     "enterTheCodeFromYourAuthenticator": "Gib den Code aus deiner Authentifizierungs-App ein, um 2FA zu deaktivieren.",
     "disable2faTitle": "Zwei-Faktor-Authentifizierung deaktivieren",
-    "enable2faTitle": "Zwei-Faktor-Authentifizierung aktivieren"
+    "enable2faTitle": "Zwei-Faktor-Authentifizierung aktivieren",
+    "confirmPasswordLabel": "Passwort bestätigen",
+    "whyDeactivating": "Warum deaktivierst du dein Konto?",
+    "whyDeleting": "Warum löschst du dein Konto?",
+    "typeUsernameToConfirm": "Gib zur Bestätigung deinen Benutzernamen ({{username}}) ein",
+    "confirmDeactivateTitle": "Konto deaktivieren?",
+    "confirmDeactivateDescription": "Du wirst auf allen Geräten abgemeldet und dein Profil wird ausgeblendet. Melde dich jederzeit wieder an, um es zu reaktivieren.",
+    "confirmDeleteTitle": "Konto endgültig löschen?",
+    "confirmDeleteDescription": "Dein Profil, deine Beiträge, Storys, Nachrichten und Medien werden endgültig gelöscht. Das kann nicht rückgängig gemacht werden.",
+    "accountDeactivatedSignedOut": "Konto deaktiviert. Melde dich jederzeit wieder an, um es zu reaktivieren."
   },
   "notificationSettings": {
     "whenSomeoneFollowsYouAsksTo": "Wenn dir jemand folgt, dir folgen möchte oder deine Anfrage annimmt",

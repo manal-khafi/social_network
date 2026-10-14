@@ -156,7 +156,10 @@
     "accountExistsWithDifferentCredential": "Ya existe una cuenta con este correo electrónico. Inicia sesión con el método que usaste originalmente (correo electrónico/contraseña o Google).",
     "oauthNoEmail": "Tu cuenta de Google / Facebook no compartió una dirección de correo. Permite el acceso al correo o regístrate con correo y contraseña.",
     "oauthNotConfigured": "El inicio de sesión con Google / Facebook no está disponible en este momento.",
-    "oauthDeactivated": "Esta cuenta ha sido desactivada. Contacta con soporte para reactivarla."
+    "accountDeactivatedTitle": "Tu cuenta está desactivada",
+    "accountDeactivatedReactivate": "Reactívala para iniciar sesión. Tu perfil y tus publicaciones volverán a ser visibles.",
+    "reactivateAccount": "Reactivar cuenta",
+    "accountReactivated": "¡Bienvenido de nuevo! Tu cuenta ha sido reactivada."
   },
   "posts": {
     "like": "Me gusta",
@@ -919,7 +922,16 @@
     "retry": "Reintentar",
     "enterTheCodeFromYourAuthenticator": "Introduce el código de tu aplicación de autenticación para desactivar la 2FA.",
     "disable2faTitle": "Desactivar la autenticación en dos pasos",
-    "enable2faTitle": "Activar la autenticación en dos pasos"
+    "enable2faTitle": "Activar la autenticación en dos pasos",
+    "confirmPasswordLabel": "Confirma la contraseña",
+    "whyDeactivating": "¿Por qué desactivas tu cuenta?",
+    "whyDeleting": "¿Por qué eliminas tu cuenta?",
+    "typeUsernameToConfirm": "Escribe tu nombre de usuario ({{username}}) para confirmar",
+    "confirmDeactivateTitle": "¿Desactivar tu cuenta?",
+    "confirmDeactivateDescription": "Se cerrará tu sesión en todos los dispositivos y tu perfil quedará oculto. Inicia sesión cuando quieras para reactivarla.",
+    "confirmDeleteTitle": "¿Eliminar tu cuenta de forma permanente?",
+    "confirmDeleteDescription": "Tu perfil, publicaciones, historias, mensajes y archivos se eliminarán para siempre. Esto no se puede deshacer.",
+    "accountDeactivatedSignedOut": "Cuenta desactivada. Inicia sesión cuando quieras para reactivarla."
   },
   "notificationSettings": {
     "whenSomeoneFollowsYouAsksTo": "Cuando alguien te sigue, solicita seguirte o acepta tu solicitud",

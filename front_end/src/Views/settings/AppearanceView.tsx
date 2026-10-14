@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useTranslation } from 'react-i18next';
@@ -36,7 +35,7 @@ export default function AppearanceView() {
   const dispatch = useAppDispatch();
   const { theme, setTheme } = useTheme();
   
-  const { theme: reduxTheme, language } = useAppSelector((state) => state.settings);
+  const { language } = useAppSelector((state) => state.settings);
   const fontSize = useAppSelector((state) => state.textSize.fontSize);
   const { 
     highContrast, 
@@ -45,12 +44,6 @@ export default function AppearanceView() {
     largerTouchTargets 
   } = useAppSelector((state) => state.accessibility);
   const { density } = useAppSelector((state) => state.layoutDensity);
-
-  useEffect(() => {
-    if (reduxTheme && theme !== reduxTheme) {
-      setTheme(reduxTheme);
-    }
-  }, [reduxTheme, theme, setTheme]);
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);

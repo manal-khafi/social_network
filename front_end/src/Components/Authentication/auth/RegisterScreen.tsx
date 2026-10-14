@@ -101,8 +101,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
 
   // Back from a failed Google / Facebook sign-in.
   useEffect(() => {
-    const code = takeOAuthError();
-    const msg = code && oauthErrorMessage(code, t);
+    const error = takeOAuthError();
+    const msg = error && oauthErrorMessage(error.code, t);
     if (msg) toast.error(msg);
   }, [t]);
 

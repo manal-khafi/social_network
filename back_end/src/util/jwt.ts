@@ -85,17 +85,18 @@ const twoFactorLoginSecret: Secret = createHmac("sha256", AUTH_SECRET)
   .digest("hex");
 const TWO_FACTOR_LOGIN_PURPOSE = "2fa_login";
 
-export const generateTwoFactorLoginToken = (payload: { id: string; token_version: number }) =>
+export const generateTwoFactorLoginToken = (payload: { id: string; token_version: number; reactivate?: boolean }) =>
   jwt.sign({ ...payload, purpose: TWO_FACTOR_LOGIN_PURPOSE }, twoFactorLoginSecret, { expiresIn: "5m" });
 
 export const verifyTwoFactorLoginToken = (token: string) => {
   const decoded = jwt.verify(token, twoFactorLoginSecret) as {
     id?: string;
     token_version?: number;
+    reactivate?: boolean;
     purpose?: string;
   };
   if (decoded.purpose !== TWO_FACTOR_LOGIN_PURPOSE || !decoded.id) {
     throw new Error("Invalid two-factor login token");
   }
-  return { id: decoded.id, token_version: decoded.token_version };
+  return { id: decoded.id, token_version: decoded.token_version, reactivate: decoded.reactivate === true };
 };

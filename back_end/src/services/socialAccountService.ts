@@ -13,6 +13,11 @@ export interface SocialProfile {
   provider: string;
 }
 
+export interface SocialSignInOptions {
+  /** The owner chose to reactivate a deactivated account by signing in. */
+  reactivate?: boolean;
+}
+
 export type SocialAccountResult =
   | { status: "ok"; user: Awaited<ReturnType<typeof prisma.user.findUnique>> & {} }
   | { status: "account_exists_with_different_method" }
@@ -35,7 +40,10 @@ const freeUsername = async (email: string) => {
  * the provider verified the email; otherwise anyone able to put someone else's
  * address on a social account could take that account over.
  */
-export const findOrCreateSocialUser = async (profile: SocialProfile): Promise<SocialAccountResult> => {
+export const findOrCreateSocialUser = async (
+  profile: SocialProfile,
+  { reactivate = false }: SocialSignInOptions = {}
+): Promise<SocialAccountResult> => {
   let user = await prisma.user.findUnique({ where: { email: profile.email } });
 
   if (!user) {
@@ -56,14 +64,18 @@ export const findOrCreateSocialUser = async (profile: SocialProfile): Promise<So
 
   const sameMethod = user.provider === profile.provider;
   if (!sameMethod && !profile.emailVerified) return { status: "account_exists_with_different_method" };
-  if (!user.is_active) return { status: "deactivated" };
+  if (!user.is_active && !reactivate) return { status: "deactivated" };
 
   // Remember the latest method; a verified provider email also confirms the
   // address of an email/password account that was never verified.
-  if (!sameMethod || (!user.is_verified && profile.emailVerified)) {
+  if (!sameMethod || (!user.is_verified && profile.emailVerified) || !user.is_active) {
     user = await prisma.user.update({
       where: { id: user.id },
-      data: { provider: profile.provider, ...(profile.emailVerified && { is_verified: true }) },
+      data: {
+        provider: profile.provider,
+        ...(profile.emailVerified && { is_verified: true }),
+        ...(!user.is_active && { is_active: true }),
+      },
     });
   }
   return { status: "ok", user };

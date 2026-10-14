@@ -9,6 +9,7 @@ import { findOrCreateSocialUser, startSession, type SocialProfile } from "../../
  * every mobile browser.
  *
  *   GET /api/authentication/:provider           -> redirect to the provider
+ *       (?reactivate=1: the owner of a deactivated account chose to reactivate it)
  *   GET /api/authentication/:provider/callback  -> session, then back to the app
  *
  * Both URLs are opened through the frontend's own domain (its /api/* rewrite),
@@ -45,8 +46,8 @@ const stateCookieOptions = () => ({
 });
 
 /** Back to the app with an error the login screen can show. */
-const failRedirect = (res: Response, code: string) =>
-  res.redirect(`${frontendUrl()}/#oauth_error=${encodeURIComponent(code)}`);
+const failRedirect = (res: Response, code: string, extra: Record<string, string> = {}) =>
+  res.redirect(`${frontendUrl()}/#${new URLSearchParams({ oauth_error: code, ...extra })}`);
 
 const isProvider = (p: string): p is Provider => p === "google" || p === "facebook";
 
@@ -58,7 +59,8 @@ export const oauthStart = (req: Request, res: Response) => {
 
   // CSRF protection: the callback must bring back the same random state.
   const state = randomBytes(24).toString("hex");
-  res.cookie(STATE_COOKIE, `${provider}:${state}`, stateCookieOptions());
+  const reactivate = req.query.reactivate === "1" ? ":reactivate" : "";
+  res.cookie(STATE_COOKIE, `${provider}:${state}${reactivate}`, stateCookieOptions());
 
   const url =
     provider === "google"
@@ -146,7 +148,9 @@ export const oauthCallback = async (req: Request, res: Response) => {
 
   const code = typeof req.query.code === "string" ? req.query.code : null;
   const state = typeof req.query.state === "string" ? req.query.state : null;
-  if (!code || !state || saved !== `${provider}:${state}`) return failRedirect(res, "invalid_state");
+  if (!code || !state || !saved) return failRedirect(res, "invalid_state");
+  const reactivate = saved === `${provider}:${state}:reactivate`;
+  if (!reactivate && saved !== `${provider}:${state}`) return failRedirect(res, "invalid_state");
 
   const { id, secret } = credentials(provider);
   if (!id || !secret) return failRedirect(res, "not_configured");
@@ -155,8 +159,13 @@ export const oauthCallback = async (req: Request, res: Response) => {
     const profile = provider === "google" ? await googleProfile(code) : await facebookProfile(code);
     if (!profile) return failRedirect(res, "no_email");
 
-    const result = await findOrCreateSocialUser(profile);
-    if (result.status !== "ok") return failRedirect(res, result.status);
+    const result = await findOrCreateSocialUser(profile, { reactivate });
+    if (result.status !== "ok") {
+      // Deactivated: the login screen offers to sign in again with ?reactivate=1.
+      return result.status === "deactivated"
+        ? failRedirect(res, "account_deactivated", { provider })
+        : failRedirect(res, result.status);
+    }
 
     const accessToken = await startSession(res, result.user);
     const page = result.user.onboarding_done === false ? "/personalize" : "/home";

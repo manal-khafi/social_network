@@ -2,8 +2,7 @@ import prisma from '../util/prisma';
 import { AppError } from '../util/error';
 import { StoryService } from './story.service';
 import { NotificationService } from './notificationService';
-import { getOrCreateDirectConversation } from '../util/conversation';
-import { emitToUser } from '../realtime/io';
+import { ConversationService } from './conversation.service';
 
 export class StoryShareService {
   /**
@@ -28,7 +27,7 @@ export class StoryShareService {
     const story = await StoryService.getStoryById(storyId, senderId);
 
     const recipients = await prisma.user.findMany({
-      where: { id: { in: uniqueRecipients } },
+      where: { id: { in: uniqueRecipients }, is_active: true },
       select: { id: true },
     });
     const validIds = new Set(recipients.map((r) => r.id));
@@ -39,27 +38,9 @@ export class StoryShareService {
     for (const recipientId of uniqueRecipients) {
       if (!validIds.has(recipientId)) continue;
 
-      const conversation = await getOrCreateDirectConversation(senderId, recipientId);
-
-      const message = await prisma.message.create({
-        data: {
-          conversation_id: conversation.id,
-          sender_id: senderId,
-          story_id: storyId,
-          content: trimmedNote || null,
-          message_type: 'text',
-        },
-      });
-
-      await prisma.messageStatus.create({
-        data: { message_id: message.id, user_id: recipientId, status: 'sent' },
-      });
-
-      emitToUser(recipientId, 'message:new', {
-        ...message,
-        conversation_id: conversation.id,
-        shared_story_id: storyId,
-      });
+      // Same DM card as a story mention: bumps the chat in the inbox and is
+      // pushed live with the story preview.
+      const message = await ConversationService.sendStoryShare(senderId, recipientId, storyId, trimmedNote || null);
 
       results.push({ recipient_id: recipientId, message_id: message.id });
     }

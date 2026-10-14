@@ -46,7 +46,7 @@ export const socialLogin = async (req: Request, res: Response) => {
       name: displayName,
       picture: avatarUrl,
       provider: firebaseSignInProvider,
-    });
+    }, { reactivate: req.body?.reactivate === true });
     if (result.status === "account_exists_with_different_method") {
       return res.status(409).json({
         success: false,
@@ -58,7 +58,8 @@ export const socialLogin = async (req: Request, res: Response) => {
     if (result.status === "deactivated") {
       return res.status(403).json({
         success: false,
-        message: "This account has been deactivated. Contact support to reactivate.",
+        code: "account_deactivated",
+        message: "This account is deactivated. Sign in again to reactivate it.",
       });
     }
     const user = result.user;

@@ -34,7 +34,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         },
       });
 
-      if (!user || user.token_version !== decodedRefresh.token_version) {
+      if (!user || !user.is_active || user.token_version !== decodedRefresh.token_version) {
         return res.status(401).json({ message: "Invalid refresh token" });
       }
 
@@ -108,7 +108,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         },
       });
 
-      if (!user || user.token_version !== decodedRefresh.token_version) {
+      if (!user || !user.is_active || user.token_version !== decodedRefresh.token_version) {
         return res.status(401).json({ message: "Invalid refresh token" });
       }
 

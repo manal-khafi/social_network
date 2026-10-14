@@ -156,7 +156,10 @@
     "accountExistsWithDifferentCredential": "يوجد حساب بهذا البريد الإلكتروني بالفعل. يرجى تسجيل الدخول بالطريقة التي استخدمتها أول مرة (البريد الإلكتروني وكلمة المرور أو Google).",
     "oauthNoEmail": "لم يشارك حسابك على Google / Facebook عنوان بريد إلكتروني. اسمح بالوصول إلى البريد الإلكتروني أو أنشئ حسابًا بالبريد الإلكتروني وكلمة المرور.",
     "oauthNotConfigured": "تسجيل الدخول عبر Google / Facebook غير متاح حاليًا.",
-    "oauthDeactivated": "تم إلغاء تنشيط هذا الحساب. تواصل مع الدعم لإعادة تنشيطه."
+    "accountDeactivatedTitle": "حسابك غير نشط",
+    "accountDeactivatedReactivate": "أعد تنشيطه لتسجيل الدخول. سيظهر ملفك الشخصي ومنشوراتك مجددًا.",
+    "reactivateAccount": "إعادة تنشيط الحساب",
+    "accountReactivated": "مرحبًا بعودتك! تمت إعادة تنشيط حسابك."
   },
   "posts": {
     "like": "إعجاب",
@@ -951,7 +954,16 @@
     "retry": "إعادة المحاولة",
     "enterTheCodeFromYourAuthenticator": "أدخل الرمز من تطبيق المصادقة لتعطيل المصادقة الثنائية.",
     "disable2faTitle": "تعطيل المصادقة الثنائية",
-    "enable2faTitle": "تفعيل المصادقة الثنائية"
+    "enable2faTitle": "تفعيل المصادقة الثنائية",
+    "confirmPasswordLabel": "تأكيد كلمة المرور",
+    "whyDeactivating": "لماذا تريد إلغاء تنشيط حسابك؟",
+    "whyDeleting": "لماذا تريد حذف حسابك؟",
+    "typeUsernameToConfirm": "اكتب اسم المستخدم ({{username}}) للتأكيد",
+    "confirmDeactivateTitle": "إلغاء تنشيط حسابك؟",
+    "confirmDeactivateDescription": "سيتم تسجيل خروجك من جميع الأجهزة وسيتم إخفاء ملفك الشخصي. سجّل الدخول مجددًا في أي وقت لإعادة تنشيطه.",
+    "confirmDeleteTitle": "حذف حسابك نهائيًا؟",
+    "confirmDeleteDescription": "سيتم حذف ملفك الشخصي ومنشوراتك وقصصك ورسائلك ووسائطك نهائيًا. لا يمكن التراجع عن ذلك.",
+    "accountDeactivatedSignedOut": "تم إلغاء تنشيط الحساب. سجّل الدخول مجددًا في أي وقت لإعادة تنشيطه."
   },
   "notificationSettings": {
     "whenSomeoneFollowsYouAsksTo": "عندما يتابعك أحدهم أو يطلب متابعتك أو يقبل طلبك",
