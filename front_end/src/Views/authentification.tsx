@@ -7,7 +7,7 @@ import { ForgotPasswordScreen } from "../Components/Authentication/auth/ForgotPa
 import { ResetPasswordScreen } from "../Components/Authentication/auth/resetPassword.tsx";
 import { LeftSide } from "../Components/Authentication/auth/LeftSide.tsx";
 
-type Screen = "login" | "register" | "forgotPassword";
+type Screen = "login" | "register" | "forgotPassword" | "resetPassword";
 
 export default function AuthView() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("login");
@@ -48,10 +48,7 @@ export default function AuthView() {
             />
           )}
           {currentScreen === "resetPassword" && (
-            <ResetPasswordScreen
-              key="resetPassword"
-              onSwitchToLogin={() => setCurrentScreen("login")}
-            />
+            <ResetPasswordScreen key="resetPassword" />
           )}
         </AnimatePresence>
       </div>

@@ -29,7 +29,15 @@ export interface MusicTrack {
   duration_sec: number | null;
 }
 
-export type StoryOverlayType = "text" | "emoji" | "mention" | "post" | "link" | "poll";
+export type StoryOverlayType =
+  | "text"
+  | "emoji"
+  | "mention"
+  | "post"
+  | "link"
+  | "poll"
+  | "question"
+  | "gif";
 
 export interface StoryOverlay {
   id: string;

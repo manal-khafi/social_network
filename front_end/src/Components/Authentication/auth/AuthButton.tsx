@@ -1,9 +1,11 @@
-import React, { ButtonHTMLAttributes } from "react";
+import React from "react";
 import { motion } from "framer-motion";
+import type { HTMLMotionProps } from "framer-motion";
 import { Loader } from "./Loader";
 
 
-interface AuthButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+// Spread onto <motion.button>, so the props are motion's button props.
+interface AuthButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
   variant?: "primary" | "secondary";
   isLoading?: boolean;
   children: React.ReactNode;

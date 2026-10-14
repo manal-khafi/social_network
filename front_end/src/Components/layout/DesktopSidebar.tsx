@@ -69,7 +69,7 @@ export default function DesktopSidebar() {
         >
           <div className="flex items-center gap-3">
             <Avatar className="w-12 h-12">
-              <AvatarImage src={user.avatar_url ?? user.avatar ?? undefined} />
+              <AvatarImage src={user.avatar_url ?? ('avatar' in user ? user.avatar : undefined) ?? undefined} />
               <AvatarFallback>{(user.username?.[0] ?? '?').toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

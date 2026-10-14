@@ -16,7 +16,7 @@ export const ResetPasswordScreen: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState({ password: "", confirmPassword: "" });
   const [errors, setErrors] = useState({ password: "", confirmPassword: "" });
-  const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>("weak");
+  const [passwordStrength, setPasswordStrength] = useState<"weak" | "medium" | "strong">("weak");
 
   const handleNavigate = () => {
     navigate('/');

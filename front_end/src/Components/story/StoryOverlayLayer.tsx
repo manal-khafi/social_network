@@ -231,7 +231,7 @@ export default function StoryOverlayLayer({
           maxWidth: "80vw",
         }}
       >
-        {ov.type === "mention" ? `@${ov.text}` : ov.text}
+        {ov.text}
       </div>
     );
   };

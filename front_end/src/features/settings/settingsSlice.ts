@@ -110,7 +110,7 @@ const settingsSlice = createSlice({
     setLanguage: (state, action: PayloadAction<'en' | 'fr' | 'es' | 'ar' | 'de'>) => {
       state.language = action.payload;
     },
-    toggleNotification: (state, action: PayloadAction<keyof typeof initialState.notifications>) => {
+    toggleNotification: (state, action: PayloadAction<(typeof PREFERENCE_KEYS)[number] | 'all'>) => {
       state.notifications[action.payload] = !state.notifications[action.payload];
     },
     toggleAllNotifications: (state) => {

@@ -9,6 +9,13 @@ export interface User {
   email: string;
   role?: string;
   avatar?: string;
+  // Present when the session comes from /authentication/me or social login;
+  // components fall back to this object until the full profile is loaded.
+  avatar_url?: string | null;
+  display_name?: string | null;
+  bio?: string | null;
+  followersCount?: number;
+  followingCount?: number;
   isProfileComplete?: boolean;
   onboarding_done?: boolean;
 }

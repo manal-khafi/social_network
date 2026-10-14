@@ -328,9 +328,8 @@ Migrations are applied when the backend container starts. Set up TLS (section
 
 ## Known limitations / in progress
 
-- **Frontend typecheck fails.** `tsc` reports about 90 TypeScript errors in
-  `front_end`. The Vite build passes because it does not typecheck, and the
-  frontend typecheck is not part of CI.
+- **Frontend typecheck is not in CI.** `npx tsc -b` passes in `front_end`,
+  but the CI job only lints and builds, and the Vite build does not typecheck.
 - **Social login needs a Firebase service account.** Without
   `FIREBASE_SERVICE_ACCOUNT_PATH` or `FIREBASE_SERVICE_ACCOUNT`, Google and
   Facebook sign-in return 503.

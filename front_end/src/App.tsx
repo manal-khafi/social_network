@@ -72,7 +72,7 @@ function AppContent() {
       <Route path="/" element={<AuthView />} />
       <Route
         path="/forgot-password"
-        element={<ForgotPasswordScreen onBack={() => {}} />}
+        element={<ForgotPasswordScreen onSwitchToLogin={() => {}} />}
       />
       <Route path="/reset-password" element={<ResetPasswordScreen />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
@@ -112,10 +112,7 @@ function AppContent() {
           <Route
             path="community/create"
             element={
-              <CreateCommunity
-                onBack={() => navigate(-1)}
-                onSubmit={(data) => console.log(data)}
-              />
+              <CreateCommunity />
             }
           />
 

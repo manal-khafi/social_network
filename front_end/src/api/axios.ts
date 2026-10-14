@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosHeaders } from "axios";
 import { store } from "../store";
 import { logout, setAuth } from "../features/auth/authSlice";
 
@@ -46,8 +46,8 @@ api.interceptors.request.use(
     }
 
     if (token) {
-      config.headers = config.headers ?? {};
-      (config.headers as any).Authorization = `Bearer ${token}`;
+      config.headers = config.headers ?? new AxiosHeaders();
+      config.headers.Authorization = `Bearer ${token}`;
       // console.log("DEBUG: Axios sending BACKEND JWT length:", token.length);
     }
 

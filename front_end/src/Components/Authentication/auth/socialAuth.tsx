@@ -1,7 +1,18 @@
 import { loginWithGoogle, loginWithFacebook } from "../../../config/firebaseConfig";
 import { socialLoginBackend } from "../../../utils/api";
+import type { User } from "../../../features/auth/authSlice";
 
-export const handleSocialAuth = async (provider: "google" | "facebook") => {
+export interface SocialAuthResult {
+  success: boolean;
+  token: string;
+  user: User | null;
+  message?: string;
+  redirectTo?: string;
+}
+
+export const handleSocialAuth = async (
+  provider: "google" | "facebook"
+): Promise<SocialAuthResult> => {
   try {
     let user;
     if (provider === "google") user = await loginWithGoogle();

@@ -4,9 +4,50 @@ import * as messagesApi from "../../api/messagesApi";
 import type { ApiConversation, ApiMessage } from "../../api/messagesApi";
 import type { RootState } from "../../store";
 
-export type MessageType = "text" | "image" | "video" | "file" | "call";
+export type MessageType =
+  | "text"
+  | "image"
+  | "video"
+  | "file"
+  | "call"
+  // Kinds the chat UI can compose and render; the API does not persist their
+  // extra payload yet (see sendMessage below).
+  | "sticker"
+  | "poll"
+  | "event"
+  | "location"
+  | "voice";
 
-export interface Message {
+export interface MessagePoll {
+  question: string;
+  options: { id: string; text: string; votes: number }[];
+  totalVotes: number;
+}
+
+export interface MessageEvent {
+  title: string;
+  date: string;
+  time: string;
+  location?: string;
+}
+
+export interface MessageLocation {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+/** Optional payloads of the non-text message kinds. */
+export interface MessageExtras {
+  sticker?: string;
+  image?: string;
+  poll?: MessagePoll;
+  event?: MessageEvent;
+  location?: MessageLocation;
+  voiceDuration?: number;
+}
+
+export interface Message extends MessageExtras {
   id: string;
   senderId: string;
   content: string;
@@ -15,6 +56,8 @@ export interface Message {
   createdAt: string;
   isRead: boolean;
   callMeta?: { callType: "audio" | "video"; status: string; durationSec: number } | null;
+  /** Delivery state ("sent" | "delivered" | "seen"); not provided by the API yet. */
+  status?: string;
 }
 
 export interface Conversation {
@@ -133,7 +176,9 @@ export const fetchConversation = createAsyncThunk(
 export const sendMessage = createAsyncThunk(
   "messages/sendMessage",
   async (
-    payload: { conversationId: string; content: string; type?: string },
+    // Only conversationId and content are sent; the extras are accepted so the
+    // composer can describe richer messages, but the API ignores them for now.
+    payload: { conversationId: string; content: string; type?: MessageType } & MessageExtras,
     { rejectWithValue }
   ) => {
     const content = (payload.content ?? "").trim();

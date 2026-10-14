@@ -8,6 +8,7 @@ interface SetupProfileProps {
   initialData?: {
     username: string;
     profileImage: string | null;
+    imageFile?: File | null;
   };
 }
 

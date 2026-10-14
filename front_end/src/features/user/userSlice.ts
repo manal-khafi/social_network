@@ -410,8 +410,8 @@ export const fetchBlockedUsers = createAsyncThunk<
   { rejectValue: string }
 >("user/fetchBlockedUsers", async (params, { rejectWithValue }) => {
   try {
-    const page = params?.page ?? 1;
-    const limit = params?.limit ?? 20;
+    const page = (params ? params.page : undefined) ?? 1;
+    const limit = (params ? params.limit : undefined) ?? 20;
 
     const res = await api.get(`/blocks`, { params: { page, limit } });
     return (res.data?.data ?? []) as UserProfile[];

@@ -1,8 +1,10 @@
-import React, { InputHTMLAttributes, forwardRef, useState } from "react";
+import React, { forwardRef, useState } from "react";
 import { motion } from "framer-motion";
+import type { HTMLMotionProps } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 
-interface AuthInputProps extends InputHTMLAttributes<HTMLInputElement> {
+// Spread onto <motion.input>, so the props are motion's input props.
+interface AuthInputProps extends HTMLMotionProps<"input"> {
   label: string;
   error?: string;
 }
