@@ -152,7 +152,8 @@
     "connectShareDiscover": "Connect, Share, Discover",
     "loadingSession": "Loading session...",
     "popupBlocked": "Allow pop-ups for this site to sign in with Google or Facebook",
-    "socialUnsupportedBrowser": "This browser blocks Google / Facebook sign-in. Open the site in Safari or Chrome."
+    "socialUnsupportedBrowser": "This browser blocks Google / Facebook sign-in. Open the site in Safari or Chrome.",
+    "accountExistsWithDifferentCredential": "An account already exists with this email. Please sign in with the method you originally used (email/password or Google)."
   },
   "posts": {
     "like": "Like",

@@ -99,9 +99,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
       dispatch(setAuthLoading());
 
       const data = await handleSocialAuth(provider);
-      // Mobile: the browser is being sent to Google / Facebook; the sign-in
-      // finishes when it comes back (useSocialRedirectResult in App.tsx).
-      if (data === null) return;
 
       if (!data?.success) {
         const msg = t("auth.socialRegistrationFailed");

@@ -152,7 +152,8 @@
     "connectShareDiscover": "Vernetzen, teilen, entdecken",
     "loadingSession": "Sitzung wird geladen...",
     "popupBlocked": "Erlaube Pop-ups für diese Seite, um dich mit Google oder Facebook anzumelden",
-    "socialUnsupportedBrowser": "Dieser Browser blockiert die Anmeldung mit Google / Facebook. Öffne die Seite in Safari oder Chrome."
+    "socialUnsupportedBrowser": "Dieser Browser blockiert die Anmeldung mit Google / Facebook. Öffne die Seite in Safari oder Chrome.",
+    "accountExistsWithDifferentCredential": "Mit dieser E-Mail gibt es bereits ein Konto. Melde dich mit der Methode an, die du ursprünglich verwendet hast (E-Mail/Passwort oder Google)."
   },
   "posts": {
     "like": "Gefällt mir",

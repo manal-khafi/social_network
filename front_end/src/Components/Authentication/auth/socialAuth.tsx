@@ -1,5 +1,5 @@
 import type { User as FirebaseUser } from "firebase/auth";
-import { loginWithGoogle, loginWithFacebook, getSocialRedirectResult } from "../../../config/firebaseConfig";
+import { loginWithGoogle, loginWithFacebook } from "../../../config/firebaseConfig";
 import { socialLoginBackend } from "../../../utils/api";
 import type { User } from "../../../features/auth/authSlice";
 
@@ -12,7 +12,7 @@ export const socialAuthErrorMessage = (
   t: (key: string) => string,
   fallback: string
 ): string | null => {
-  const e = error as { code?: string; message?: string; response?: { data?: { message?: string } } };
+  const e = error as { code?: string; message?: string; response?: { data?: { message?: string; code?: string } } };
   switch (e?.code) {
     case "auth/popup-closed-by-user":
     case "auth/cancelled-popup-request":
@@ -20,10 +20,17 @@ export const socialAuthErrorMessage = (
       return null;
     case "auth/popup-blocked":
       return t("auth.popupBlocked");
+    // Firebase: the email is already used by another sign-in method.
+    case "auth/account-exists-with-different-credential":
+      return t("auth.accountExistsWithDifferentCredential");
     case "auth/operation-not-supported-in-this-environment":
     case "auth/web-storage-unsupported":
       return t("auth.socialUnsupportedBrowser");
     default:
+      // Same situation, refused by our backend (unverified provider email).
+      if ((e?.response?.data as { code?: string } | undefined)?.code === "account_exists_with_different_method") {
+        return t("auth.accountExistsWithDifferentCredential");
+      }
       return e?.response?.data?.message || e?.message || fallback;
   }
 };
@@ -47,37 +54,14 @@ const exchangeWithBackend = async (
   return { success: true, token: backendResponse.token, user: backendResponse.user };
 };
 
-/**
- * Starts Google / Facebook sign-in. Resolves with the session on desktop
- * (popup), or with null on mobile, where the browser is redirected to the
- * provider and the sign-in completes on return (see completeSocialRedirect).
- */
-export const handleSocialAuth = async (
-  provider: "google" | "facebook"
-): Promise<SocialAuthResult | null> => {
+/** Google / Facebook sign-in (popup), then the app's own session. */
+export const handleSocialAuth = async (provider: "google" | "facebook"): Promise<SocialAuthResult> => {
   try {
     const user = provider === "google" ? await loginWithGoogle() : await loginWithFacebook();
-    if (!user) return null; // redirecting
+    if (!user) throw new Error("No user returned from Firebase");
     return await exchangeWithBackend(user, provider);
   } catch (error: any) {
     console.error("Social auth failed:", error);
     throw error;
   }
-};
-
-let redirectResult: Promise<SocialAuthResult | null> | null = null;
-
-/**
- * Finishes a redirect sign-in (mobile) once the provider sends the user back.
- * Null when no redirect sign-in is pending. Memoised: the result can only be
- * read once, and React may run the caller's effect twice in development.
- */
-export const completeSocialRedirect = (): Promise<SocialAuthResult | null> => {
-  redirectResult ??= (async () => {
-    const result = await getSocialRedirectResult();
-    if (!result?.user) return null;
-    const provider = result.providerId === "facebook.com" ? "facebook" : "google";
-    return exchangeWithBackend(result.user, provider);
-  })();
-  return redirectResult;
 };

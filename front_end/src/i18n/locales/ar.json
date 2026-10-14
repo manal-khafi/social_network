@@ -152,7 +152,8 @@
     "connectShareDiscover": "تواصل، شارك، اكتشف",
     "loadingSession": "جارٍ تحميل الجلسة...",
     "popupBlocked": "اسمح بالنوافذ المنبثقة لهذا الموقع لتسجيل الدخول عبر Google أو Facebook",
-    "socialUnsupportedBrowser": "هذا المتصفح يمنع تسجيل الدخول عبر Google / Facebook. افتح الموقع في Safari أو Chrome."
+    "socialUnsupportedBrowser": "هذا المتصفح يمنع تسجيل الدخول عبر Google / Facebook. افتح الموقع في Safari أو Chrome.",
+    "accountExistsWithDifferentCredential": "يوجد حساب بهذا البريد الإلكتروني بالفعل. يرجى تسجيل الدخول بالطريقة التي استخدمتها أول مرة (البريد الإلكتروني وكلمة المرور أو Google)."
   },
   "posts": {
     "like": "إعجاب",

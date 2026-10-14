@@ -60,17 +60,35 @@ export const socialLogin = async (req: Request, res: Response) => {
       });
     } else {
       console.log("Existing user found for email:", email);
+      // Same email, different sign-in method (email/password, Google, Facebook):
+      // the same account is used, but only when the provider has verified the
+      // address. Otherwise anyone able to put someone else's email on a social
+      // account (Facebook emails are often unverified in Firebase) could take
+      // over that person's account.
+      const sameMethod = user.provider === firebaseSignInProvider;
+      if (!sameMethod && decodedToken.email_verified !== true) {
+        return res.status(409).json({
+          success: false,
+          code: "account_exists_with_different_method",
+          message:
+            "An account already exists with this email. Please sign in with the method you originally used (email/password or Google).",
+        });
+      }
       if (!user.is_active) {
         return res.status(403).json({
           success: false,
           message: "This account has been deactivated. Contact support to reactivate.",
         });
       }
-      // Optionally update user's provider if they previously signed up with email/password
-      if (user.provider !== firebaseSignInProvider) {
+      // Remember the latest method; a verified provider email also confirms the
+      // address of an email/password account that was never verified.
+      if (!sameMethod || (!user.is_verified && decodedToken.email_verified === true)) {
         user = await prisma.user.update({
           where: { id: user.id },
-          data: { provider: firebaseSignInProvider },
+          data: {
+            provider: firebaseSignInProvider,
+            ...(decodedToken.email_verified === true && { is_verified: true }),
+          },
         });
       }
     }

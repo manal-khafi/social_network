@@ -91,6 +91,7 @@ through **its own origin**. Add these rewrite rules to the static site
 
 | Source | Destination | Action |
 |---|---|---|
+| `/__/auth/*` | `https://<firebase-project>.firebaseapp.com/__/auth/*` | Rewrite (first) |
 | `/api/*` | `https://<backend>.onrender.com/api/*` | Rewrite |
 | `/uploads/*` | `https://<backend>.onrender.com/uploads/*` | Rewrite |
 | `/*` | `/index.html` | Rewrite |
@@ -101,9 +102,16 @@ from a `_redirects` file, and uses `*` in the destination rather than `:splat`.
 Static site environment:
 
 - `VITE_API_URL` unset or `/api` (a production build defaults to `/api`)
-- `VITE_FIREBASE_AUTH_DOMAIN=<firebase-project>.firebaseapp.com`. Google /
-  Facebook sign-in uses a popup on desktop and a full-page redirect on phones
-  (`signInWithRedirect`, completed on return by `useSocialRedirectResult`).
+- `VITE_FIREBASE_AUTH_DOMAIN=<the site's domain>` (e.g. `www.anmougar.online`),
+  served through the `/__/auth/*` rewrite above, which must be the first rule.
+  Google / Facebook sign-in uses a popup on every device. Then, once:
+  - Google Cloud Console > APIs & Services > Credentials > the OAuth web client:
+    add `https://<the site's domain>/__/auth/handler` to the authorized
+    redirect URIs
+  - Facebook for Developers > Facebook Login > Settings: add the same URL to the
+    valid OAuth redirect URIs
+  - Firebase console > Authentication > Settings > Authorized domains: add the
+    site's domain
 - `VITE_SOCKET_URL=https://<backend>.onrender.com` - Socket.IO connects to the
   web service directly: it authenticates with the access token, not the cookie,
   and WebSocket upgrades through a static-site rewrite are not documented

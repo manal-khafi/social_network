@@ -146,9 +146,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       dispatch(setAuthLoading());
 
       const data = await handleSocialAuth(provider);
-      // Mobile: the browser is being sent to Google / Facebook; the sign-in
-      // finishes when it comes back (useSocialRedirectResult in App.tsx).
-      if (data === null) return;
 
       if (!data?.success) {
         const msg = data?.message || t("auth.socialLoginFailed");
