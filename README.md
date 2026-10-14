@@ -13,7 +13,7 @@ Compose stack that runs the whole thing behind nginx.
 | Backend | Node.js 24, Express 4, TypeScript, Prisma 6, PostgreSQL 17, Socket.IO 4, JWT auth, Firebase Admin (social login), Nodemailer, pino |
 | Frontend | React 19, Vite 6, Redux Toolkit, React Router 7, Tailwind CSS 4, Radix UI, Socket.IO client, Firebase (auth + Storage), i18next (en, fr, es, ar, de) |
 | Infra | Docker Compose, nginx reverse proxy, GitHub Actions |
-| Tests / quality | Vitest + supertest (backend), ESLint 9 (both), `tsc` typecheck (backend) |
+| Tests / quality | Vitest + supertest (backend), ESLint 9 (both), `tsc` typecheck (both) |
 
 ## Features
 
@@ -310,7 +310,7 @@ and `dev`. It has three jobs:
 | Job | Steps |
 |---|---|
 | `backend` | `npm ci`, `prisma generate`, typecheck, lint, tests |
-| `frontend` | `npm ci`, lint, production build |
+| `frontend` | `npm ci`, typecheck (`npx tsc -b`), lint, production build |
 | `docker` | `docker compose build` with a throwaway `.env` |
 
 No job needs a database: the backend tests mock Prisma.
@@ -328,8 +328,6 @@ Migrations are applied when the backend container starts. Set up TLS (section
 
 ## Known limitations / in progress
 
-- **Frontend typecheck is not in CI.** `npx tsc -b` passes in `front_end`,
-  but the CI job only lints and builds, and the Vite build does not typecheck.
 - **Social login needs a Firebase service account.** Without
   `FIREBASE_SERVICE_ACCOUNT_PATH` or `FIREBASE_SERVICE_ACCOUNT`, Google and
   Facebook sign-in return 503.
@@ -371,7 +369,7 @@ Migrations are applied when the backend container starts. Set up TLS (section
 
   ```bash
   cd back_end  && npm run typecheck && npm run lint && npm test
-  cd front_end && npm run lint && npm run build
+  cd front_end && npx tsc -b && npm run lint && npm run build
   ```
 
 - Schema changes go through a Prisma migration
