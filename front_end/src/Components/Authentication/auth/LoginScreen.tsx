@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../../hooks";
@@ -11,7 +11,7 @@ import api from "../../../api/axios";
 import { AuthInput } from "./AuthInput";
 import { AuthButton } from "./AuthButton";
 import { SocialButton } from "./SocialButton";
-import { handleSocialAuth, socialAuthErrorMessage } from "./socialAuth";
+import { oauthErrorMessage, startSocialAuth, takeOAuthError, type SocialProvider } from "./socialAuth";
 import { Logo } from "./Logo";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -140,45 +140,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   };
 
-  const onSocialAuth = async (provider: "google" | "facebook") => {
-    try {
-      setIsLoading(true);
-      dispatch(setAuthLoading());
-
-      const data = await handleSocialAuth(provider);
-
-      if (!data?.success) {
-        const msg = data?.message || t("auth.socialLoginFailed");
-        toast.error(msg);
-        dispatch(setAuthError(msg));
-        return;
-      }
-
-      if (!data.token) {
-        const msg = t("auth.socialMissingToken");
-        toast.error(msg);
-        dispatch(setAuthError(msg));
-        return;
-      }
-
-      // ✅ Store BACKEND JWT only. Firebase user stays out of Redux.
-      dispatch(setAuth({ token: data.token, user: data.user ?? null }));
-
-      goNextAfterAuth(data.user, data.redirectTo);
-      toast.success(t("auth.socialLoginSuccess", { provider }));
-    } catch (error: any) {
-      const msg = socialAuthErrorMessage(error, t, t("auth.socialLoginFailed"));
-      if (!msg) {
-        // popup closed by the user: not an error
-        dispatch(setAuthError(""));
-        return;
-      }
-      toast.error(msg);
-      dispatch(setAuthError(msg));
-    } finally {
-      setIsLoading(false);
-    }
+  // Full-page redirect; the backend brings the browser back signed in.
+  const onSocialAuth = (provider: SocialProvider) => {
+    setIsLoading(true);
+    startSocialAuth(provider);
   };
+
+  // Back from a failed Google / Facebook sign-in.
+  useEffect(() => {
+    const code = takeOAuthError();
+    const msg = code && oauthErrorMessage(code, t);
+    if (msg) toast.error(msg);
+  }, [t]);
 
   if (twoFactorToken) {
     return (

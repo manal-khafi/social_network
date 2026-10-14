@@ -153,7 +153,10 @@
     "loadingSession": "جارٍ تحميل الجلسة...",
     "popupBlocked": "اسمح بالنوافذ المنبثقة لهذا الموقع لتسجيل الدخول عبر Google أو Facebook",
     "socialUnsupportedBrowser": "هذا المتصفح يمنع تسجيل الدخول عبر Google / Facebook. افتح الموقع في Safari أو Chrome.",
-    "accountExistsWithDifferentCredential": "يوجد حساب بهذا البريد الإلكتروني بالفعل. يرجى تسجيل الدخول بالطريقة التي استخدمتها أول مرة (البريد الإلكتروني وكلمة المرور أو Google)."
+    "accountExistsWithDifferentCredential": "يوجد حساب بهذا البريد الإلكتروني بالفعل. يرجى تسجيل الدخول بالطريقة التي استخدمتها أول مرة (البريد الإلكتروني وكلمة المرور أو Google).",
+    "oauthNoEmail": "لم يشارك حسابك على Google / Facebook عنوان بريد إلكتروني. اسمح بالوصول إلى البريد الإلكتروني أو أنشئ حسابًا بالبريد الإلكتروني وكلمة المرور.",
+    "oauthNotConfigured": "تسجيل الدخول عبر Google / Facebook غير متاح حاليًا.",
+    "oauthDeactivated": "تم إلغاء تنشيط هذا الحساب. تواصل مع الدعم لإعادة تنشيطه."
   },
   "posts": {
     "like": "إعجاب",

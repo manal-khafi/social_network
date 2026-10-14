@@ -1,67 +1,59 @@
-import type { User as FirebaseUser } from "firebase/auth";
-import { loginWithGoogle, loginWithFacebook } from "../../../config/firebaseConfig";
-import { socialLoginBackend } from "../../../utils/api";
-import type { User } from "../../../features/auth/authSlice";
+import api from "../../../api/axios";
+
+export type SocialProvider = "google" | "facebook";
 
 /**
- * What to tell the user when the Google / Facebook popup fails. null means the
- * user simply closed the popup: nothing to report.
+ * Google / Facebook sign-in: a full-page redirect to the backend, which runs
+ * the OAuth flow and sends the browser back to the app with the session
+ * (see consumeOAuthRedirect). No popups, so it works in every mobile browser.
  */
-export const socialAuthErrorMessage = (
-  error: unknown,
-  t: (key: string) => string,
-  fallback: string
-): string | null => {
-  const e = error as { code?: string; message?: string; response?: { data?: { message?: string; code?: string } } };
-  switch (e?.code) {
-    case "auth/popup-closed-by-user":
-    case "auth/cancelled-popup-request":
-    case "auth/user-cancelled":
+export const startSocialAuth = (provider: SocialProvider) => {
+  const base = (api.defaults.baseURL || "/api").replace(/\/+$/, "");
+  window.location.assign(`${base}/authentication/${provider}`);
+};
+
+let pendingOAuthError: string | null = null;
+
+/**
+ * Reads what the backend's OAuth callback put in the URL fragment
+ * (#token=... on success, #oauth_error=... on failure) and removes it from
+ * the address bar so the token is not left in history. Call once, before the
+ * app renders.
+ */
+export const consumeOAuthRedirect = (): string | null => {
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash) return null;
+  const params = new URLSearchParams(hash);
+  const token = params.get("token");
+  const error = params.get("oauth_error");
+  if (!token && !error) return null;
+
+  window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+  if (error) pendingOAuthError = error;
+  return token;
+};
+
+/** The OAuth failure from the last redirect, once (for the login screen). */
+export const takeOAuthError = () => {
+  const error = pendingOAuthError;
+  pendingOAuthError = null;
+  return error;
+};
+
+/** What to tell the user about an OAuth failure code. null = nothing to report. */
+export const oauthErrorMessage = (code: string, t: (key: string) => string): string | null => {
+  switch (code) {
+    case "cancelled":
       return null;
-    case "auth/popup-blocked":
-      return t("auth.popupBlocked");
-    // Firebase: the email is already used by another sign-in method.
-    case "auth/account-exists-with-different-credential":
+    case "account_exists_with_different_method":
       return t("auth.accountExistsWithDifferentCredential");
-    case "auth/operation-not-supported-in-this-environment":
-    case "auth/web-storage-unsupported":
-      return t("auth.socialUnsupportedBrowser");
+    case "deactivated":
+      return t("auth.oauthDeactivated");
+    case "no_email":
+      return t("auth.oauthNoEmail");
+    case "not_configured":
+      return t("auth.oauthNotConfigured");
     default:
-      // Same situation, refused by our backend (unverified provider email).
-      if ((e?.response?.data as { code?: string } | undefined)?.code === "account_exists_with_different_method") {
-        return t("auth.accountExistsWithDifferentCredential");
-      }
-      return e?.response?.data?.message || e?.message || fallback;
-  }
-};
-
-export interface SocialAuthResult {
-  success: boolean;
-  token: string;
-  user: User | null;
-  message?: string;
-  redirectTo?: string;
-}
-
-/** Exchanges a Firebase user for the app's own session (backend JWT). */
-const exchangeWithBackend = async (
-  user: FirebaseUser,
-  provider: "google" | "facebook"
-): Promise<SocialAuthResult> => {
-  const idToken = await user.getIdToken();
-  const backendResponse = await socialLoginBackend(idToken, provider);
-  if (!backendResponse.token) throw new Error("Backend did not return JWT token");
-  return { success: true, token: backendResponse.token, user: backendResponse.user };
-};
-
-/** Google / Facebook sign-in (popup), then the app's own session. */
-export const handleSocialAuth = async (provider: "google" | "facebook"): Promise<SocialAuthResult> => {
-  try {
-    const user = provider === "google" ? await loginWithGoogle() : await loginWithFacebook();
-    if (!user) throw new Error("No user returned from Firebase");
-    return await exchangeWithBackend(user, provider);
-  } catch (error: any) {
-    console.error("Social auth failed:", error);
-    throw error;
+      return t("auth.socialLoginFailed");
   }
 };

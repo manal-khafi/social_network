@@ -11,8 +11,14 @@ import { Toaster } from "./Components/ui/sonner";
 import "./style/index.css";
 import { auth } from "./config/firebaseConfig"; // Import Firebase auth instance
 import { onAuthStateChanged } from "firebase/auth";
-import { setAuthLoading, setFirebaseUser } from "./features/auth/authSlice"; // Import actions from authSlice
+import { setAuth, setAuthLoading, setFirebaseUser } from "./features/auth/authSlice"; // Import actions from authSlice
+import { consumeOAuthRedirect } from "./Components/Authentication/auth/socialAuth";
 import { toSafeUser } from "./utils/authUtils"; // Import toSafeUser helper
+
+// Back from Google / Facebook sign-in: persist the token now, so the session
+// bootstrap (useAuthSession) loads the user with it.
+const oauthToken = consumeOAuthRedirect();
+if (oauthToken) store.dispatch(setAuth({ token: oauthToken, user: null }));
 
 store.dispatch(setAuthLoading()); 
 

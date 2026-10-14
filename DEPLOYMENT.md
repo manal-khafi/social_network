@@ -91,7 +91,6 @@ through **its own origin**. Add these rewrite rules to the static site
 
 | Source | Destination | Action |
 |---|---|---|
-| `/__/auth/*` | `https://<firebase-project>.firebaseapp.com/__/auth/*` | Rewrite (first) |
 | `/api/*` | `https://<backend>.onrender.com/api/*` | Rewrite |
 | `/uploads/*` | `https://<backend>.onrender.com/uploads/*` | Rewrite |
 | `/*` | `/index.html` | Rewrite |
@@ -102,23 +101,35 @@ from a `_redirects` file, and uses `*` in the destination rather than `:splat`.
 Static site environment:
 
 - `VITE_API_URL` unset or `/api` (a production build defaults to `/api`)
-- `VITE_FIREBASE_AUTH_DOMAIN=<the site's domain>` (e.g. `www.anmougar.online`),
-  served through the `/__/auth/*` rewrite above, which must be the first rule.
-  Google / Facebook sign-in uses a popup on every device. Then, once:
-  - Google Cloud Console > APIs & Services > Credentials > the OAuth web client:
-    add `https://<the site's domain>/__/auth/handler` to the authorized
-    redirect URIs
-  - Facebook for Developers > Facebook Login > Settings: add the same URL to the
-    valid OAuth redirect URIs
-  - Firebase console > Authentication > Settings > Authorized domains: add the
-    site's domain
 - `VITE_SOCKET_URL=https://<backend>.onrender.com` - Socket.IO connects to the
   web service directly: it authenticates with the access token, not the cookie,
   and WebSocket upgrades through a static-site rewrite are not documented
 
-Web service environment: `NODE_ENV=production`, and `ALLOWED_ORIGINS` set to the
-static site's URL (needed by the Socket.IO connection and by the origin check
+Web service environment: `NODE_ENV=production`, `FRONTEND_URL` set to the
+site's public URL (e.g. `https://www.anmougar.online`), and `ALLOWED_ORIGINS`
+set to the same URL (needed by the Socket.IO connection and by the origin check
 on write requests).
+
+### Google / Facebook sign-in
+
+Sign-in runs on the backend as full-page redirects (no Firebase popup), so it
+works in every mobile browser. The browser opens
+`https://<the site's domain>/api/authentication/google` (or `/facebook`)
+through the `/api/*` rewrite, the provider sends it back to the matching
+`/callback`, and the backend sets the refresh cookie and redirects to
+`/home#token=...`. Going through the site's domain rather than the
+`onrender.com` hostname is what makes that cookie first-party.
+
+Web service environment: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+`FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`. Then, once:
+
+- Google Cloud Console > APIs & Services > Credentials > the OAuth 2.0 web
+  client: add `https://<the site's domain>/api/authentication/google/callback`
+  to the authorized redirect URIs
+- Facebook for Developers > Facebook Login > Settings: add
+  `https://<the site's domain>/api/authentication/facebook/callback` to the
+  valid OAuth redirect URIs (and make sure the app asks for the `email`
+  permission)
 
 ## Local development (unchanged)
 

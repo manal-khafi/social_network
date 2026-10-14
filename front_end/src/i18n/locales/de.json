@@ -153,7 +153,10 @@
     "loadingSession": "Sitzung wird geladen...",
     "popupBlocked": "Erlaube Pop-ups für diese Seite, um dich mit Google oder Facebook anzumelden",
     "socialUnsupportedBrowser": "Dieser Browser blockiert die Anmeldung mit Google / Facebook. Öffne die Seite in Safari oder Chrome.",
-    "accountExistsWithDifferentCredential": "Mit dieser E-Mail gibt es bereits ein Konto. Melde dich mit der Methode an, die du ursprünglich verwendet hast (E-Mail/Passwort oder Google)."
+    "accountExistsWithDifferentCredential": "Mit dieser E-Mail gibt es bereits ein Konto. Melde dich mit der Methode an, die du ursprünglich verwendet hast (E-Mail/Passwort oder Google).",
+    "oauthNoEmail": "Dein Google- / Facebook-Konto hat keine E-Mail-Adresse geteilt. Erlaube den E-Mail-Zugriff oder registriere dich mit E-Mail und Passwort.",
+    "oauthNotConfigured": "Die Anmeldung mit Google / Facebook ist gerade nicht verfügbar.",
+    "oauthDeactivated": "Dieses Konto wurde deaktiviert. Wende dich an den Support, um es wieder zu aktivieren."
   },
   "posts": {
     "like": "Gefällt mir",

@@ -65,3 +65,17 @@ export const socialLoginLimiter = rateLimit({
 	standardHeaders: true,
 	legacyHeaders: false,
 });
+
+// Server-side Google / Facebook sign-in: each attempt is two full-page
+// requests (start + callback), and the browser is mid-redirect, so over the
+// limit it goes back to the app with an error instead of a bare JSON page.
+export const oauthLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	limit: 30,
+	standardHeaders: true,
+	legacyHeaders: false,
+	handler: (_req, res) => {
+		const frontend = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
+		res.redirect(`${frontend}/#oauth_error=too_many_attempts`);
+	},
+});

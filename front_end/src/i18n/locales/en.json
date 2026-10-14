@@ -153,7 +153,10 @@
     "loadingSession": "Loading session...",
     "popupBlocked": "Allow pop-ups for this site to sign in with Google or Facebook",
     "socialUnsupportedBrowser": "This browser blocks Google / Facebook sign-in. Open the site in Safari or Chrome.",
-    "accountExistsWithDifferentCredential": "An account already exists with this email. Please sign in with the method you originally used (email/password or Google)."
+    "accountExistsWithDifferentCredential": "An account already exists with this email. Please sign in with the method you originally used (email/password or Google).",
+    "oauthNoEmail": "Your Google / Facebook account didn't share an email address. Allow email access, or sign up with email and password.",
+    "oauthNotConfigured": "Google / Facebook sign-in is not available right now.",
+    "oauthDeactivated": "This account has been deactivated. Contact support to reactivate it."
   },
   "posts": {
     "like": "Like",

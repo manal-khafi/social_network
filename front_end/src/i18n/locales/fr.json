@@ -153,7 +153,10 @@
     "loadingSession": "Chargement de la session...",
     "popupBlocked": "Autorisez les fenêtres pop-up pour ce site afin de vous connecter avec Google ou Facebook",
     "socialUnsupportedBrowser": "Ce navigateur bloque la connexion Google / Facebook. Ouvrez le site dans Safari ou Chrome.",
-    "accountExistsWithDifferentCredential": "Un compte existe déjà avec cet e-mail. Connectez-vous avec la méthode utilisée à l'origine (e-mail/mot de passe ou Google)."
+    "accountExistsWithDifferentCredential": "Un compte existe déjà avec cet e-mail. Connectez-vous avec la méthode utilisée à l'origine (e-mail/mot de passe ou Google).",
+    "oauthNoEmail": "Votre compte Google / Facebook n'a pas partagé d'adresse e-mail. Autorisez l'accès à l'e-mail ou inscrivez-vous avec un e-mail et un mot de passe.",
+    "oauthNotConfigured": "La connexion Google / Facebook n'est pas disponible pour le moment.",
+    "oauthDeactivated": "Ce compte a été désactivé. Contactez le support pour le réactiver."
   },
   "posts": {
     "like": "J'aime",
