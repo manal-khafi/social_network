@@ -1050,6 +1050,17 @@
     "turnCameraOn": "Activer la caméra",
     "connecting": "Connexion…",
     "calling": "Appel en cours…",
-    "hangUp": "Raccrocher"
+    "hangUp": "Raccrocher",
+    "incomingVoiceCall": "Appel vocal entrant…",
+    "incomingVideoCall": "Appel vidéo entrant…",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "noAnswer": "Pas de réponse",
+    "connectionLost": "Connexion de l'appel perdue",
+    "permissionDenied": "L'accès au micro/à la caméra a été bloqué. Autorisez-le dans les paramètres du site de votre navigateur.",
+    "noDevice": "Aucun micro ni caméra trouvé",
+    "insecureContext": "Les appels nécessitent une connexion sécurisée (https)",
+    "cameraUnavailableAudioOnly": "Caméra indisponible — appel en audio uniquement",
+    "joinedListenOnly": "vous avez rejoint sans micro"
   }
 }

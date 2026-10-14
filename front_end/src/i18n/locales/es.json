@@ -1050,6 +1050,17 @@
     "turnCameraOn": "Encender cámara",
     "connecting": "Conectando…",
     "calling": "Llamando…",
-    "hangUp": "Colgar"
+    "hangUp": "Colgar",
+    "incomingVoiceCall": "Llamada de voz entrante…",
+    "incomingVideoCall": "Videollamada entrante…",
+    "accept": "Aceptar",
+    "decline": "Rechazar",
+    "noAnswer": "Sin respuesta",
+    "connectionLost": "Se perdió la conexión de la llamada",
+    "permissionDenied": "Se bloqueó el acceso al micrófono/cámara. Permítelo en la configuración del sitio de tu navegador.",
+    "noDevice": "No se encontró micrófono ni cámara",
+    "insecureContext": "Las llamadas requieren una conexión segura (https)",
+    "cameraUnavailableAudioOnly": "Cámara no disponible — continuando solo con audio",
+    "joinedListenOnly": "te uniste sin micrófono"
   }
 }

@@ -1050,6 +1050,17 @@
     "turnCameraOn": "Turn camera on",
     "connecting": "Connecting…",
     "calling": "Calling…",
-    "hangUp": "Hang up"
+    "hangUp": "Hang up",
+    "incomingVoiceCall": "Incoming voice call…",
+    "incomingVideoCall": "Incoming video call…",
+    "accept": "Accept",
+    "decline": "Decline",
+    "noAnswer": "No answer",
+    "connectionLost": "Call connection lost",
+    "permissionDenied": "Microphone/camera access was blocked. Allow it in your browser's site settings.",
+    "noDevice": "No microphone or camera found",
+    "insecureContext": "Calls need a secure (https) connection",
+    "cameraUnavailableAudioOnly": "Camera unavailable — continuing with audio only",
+    "joinedListenOnly": "you joined without a microphone"
   }
 }

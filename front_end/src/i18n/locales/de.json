@@ -1050,6 +1050,17 @@
     "turnCameraOn": "Kamera einschalten",
     "connecting": "Verbindung wird hergestellt…",
     "calling": "Anruf läuft…",
-    "hangUp": "Auflegen"
+    "hangUp": "Auflegen",
+    "incomingVoiceCall": "Eingehender Sprachanruf…",
+    "incomingVideoCall": "Eingehender Videoanruf…",
+    "accept": "Annehmen",
+    "decline": "Ablehnen",
+    "noAnswer": "Keine Antwort",
+    "connectionLost": "Anrufverbindung unterbrochen",
+    "permissionDenied": "Der Zugriff auf Mikrofon/Kamera wurde blockiert. Erlaube ihn in den Website-Einstellungen deines Browsers.",
+    "noDevice": "Kein Mikrofon oder keine Kamera gefunden",
+    "insecureContext": "Anrufe erfordern eine sichere (https) Verbindung",
+    "cameraUnavailableAudioOnly": "Kamera nicht verfügbar — weiter nur mit Audio",
+    "joinedListenOnly": "du bist ohne Mikrofon beigetreten"
   }
 }

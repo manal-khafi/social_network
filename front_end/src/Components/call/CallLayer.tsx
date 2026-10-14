@@ -14,6 +14,9 @@ function useRingtone(active: boolean) {
     if (!AC) return;
     const ctx = new AC();
     ctxRef.current = ctx;
+    // Browsers start an AudioContext suspended until the page has seen a user
+    // gesture; try anyway, the visual card still shows if this is refused.
+    ctx.resume().catch(() => {});
     const beep = () => {
       const o = ctx.createOscillator();
       const g = ctx.createGain();
@@ -90,7 +93,7 @@ export default function CallLayer() {
             <div className="min-w-0 flex-1">
               <p className="font-semibold truncate">{call.peer?.username}</p>
               <p className="text-xs text-white/60">
-                Incoming {isVideo ? "video" : "voice"} call…
+                {isVideo ? t("calls.incomingVideoCall") : t("calls.incomingVoiceCall")}
               </p>
             </div>
           </div>
@@ -99,13 +102,13 @@ export default function CallLayer() {
               onClick={call.reject}
               className="flex-1 flex items-center justify-center gap-2 rounded-full bg-red-600 py-2.5 font-semibold"
             >
-              <PhoneOff className="w-4 h-4" /> Decline
+              <PhoneOff className="w-4 h-4" /> {t("calls.decline")}
             </button>
             <button
               onClick={call.accept}
               className="flex-1 flex items-center justify-center gap-2 rounded-full bg-green-600 py-2.5 font-semibold"
             >
-              <Phone className="w-4 h-4" /> Accept
+              <Phone className="w-4 h-4" /> {t("calls.accept")}
             </button>
           </div>
         </div>
@@ -128,10 +131,12 @@ export default function CallLayer() {
 
       <div className="relative flex-1 overflow-hidden">
         {isVideo && call.status === "active" ? (
+          // Muted: the remote audio already plays through the <audio> element.
           <video
             ref={remoteVideoRef}
             autoPlay
             playsInline
+            muted
             className="absolute inset-0 w-full h-full object-cover bg-black"
           />
         ) : (

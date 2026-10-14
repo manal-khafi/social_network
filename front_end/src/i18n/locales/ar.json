@@ -1086,6 +1086,17 @@
     "turnCameraOn": "تشغيل الكاميرا",
     "connecting": "جارٍ التوصيل…",
     "calling": "جارٍ الاتصال…",
-    "hangUp": "إنهاء المكالمة"
+    "hangUp": "إنهاء المكالمة",
+    "incomingVoiceCall": "مكالمة صوتية واردة…",
+    "incomingVideoCall": "مكالمة فيديو واردة…",
+    "accept": "قبول",
+    "decline": "رفض",
+    "noAnswer": "لا يوجد رد",
+    "connectionLost": "انقطع اتصال المكالمة",
+    "permissionDenied": "تم حظر الوصول إلى الميكروفون/الكاميرا. اسمح به من إعدادات الموقع في متصفحك.",
+    "noDevice": "لم يتم العثور على ميكروفون أو كاميرا",
+    "insecureContext": "تتطلب المكالمات اتصالاً آمناً (https)",
+    "cameraUnavailableAudioOnly": "الكاميرا غير متاحة — المتابعة بالصوت فقط",
+    "joinedListenOnly": "انضممت بدون ميكروفون"
   }
 }
