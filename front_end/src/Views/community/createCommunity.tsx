@@ -12,7 +12,7 @@ import {
 import { Input } from "../../Components/Community/communityInput";
 import { Label } from "../../Components/Community/communityLabel";
 import { Textarea } from "../../Components/Community/communityTextArea";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { createCommunity } from "../../api/axios";
 import { storage } from "../../config/firebaseConfig";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
