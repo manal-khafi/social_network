@@ -150,7 +150,9 @@
     "socialWorld": "monde social",
     "tokenIsMissing": "Le jeton est manquant !",
     "connectShareDiscover": "Se connecter, partager, découvrir",
-    "loadingSession": "Chargement de la session..."
+    "loadingSession": "Chargement de la session...",
+    "popupBlocked": "Autorisez les fenêtres pop-up pour ce site afin de vous connecter avec Google ou Facebook",
+    "socialUnsupportedBrowser": "Ce navigateur bloque la connexion Google / Facebook. Ouvrez le site dans Safari ou Chrome."
   },
   "posts": {
     "like": "J'aime",

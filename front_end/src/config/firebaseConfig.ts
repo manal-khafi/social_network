@@ -11,6 +11,13 @@ import {
 
 // Firebase configuration. Values come from VITE_FIREBASE_* at build time and
 // fall back to the existing project so local builds keep working unconfigured.
+//
+// authDomain: browsers that partition third-party storage (Safari, Firefox,
+// Chrome 115+, most mobile browsers) lose the sign-in state when the helper
+// page lives on <project>.firebaseapp.com while the app is on another domain:
+// "Unable to process request due to missing initial state". In production set
+// VITE_FIREBASE_AUTH_DOMAIN to the app's own domain and proxy /__/auth/* to
+// <project>.firebaseapp.com (see DEPLOYMENT.md).
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCKB3zKrAUvWBJ3E83tLlLw5vGvfrOqX1E",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "exam9-1.firebaseapp.com",

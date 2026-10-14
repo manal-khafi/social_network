@@ -93,6 +93,7 @@ through **its own origin**. Add these rewrite rules to the static site
 |---|---|---|
 | `/api/*` | `https://<backend>.onrender.com/api/*` | Rewrite |
 | `/uploads/*` | `https://<backend>.onrender.com/uploads/*` | Rewrite |
+| `/__/auth/*` | `https://<firebase-project>.firebaseapp.com/__/auth/*` | Rewrite |
 | `/*` | `/index.html` | Rewrite |
 
 Render reads these rules from the dashboard (or `routes:` in a Blueprint), not
@@ -101,6 +102,18 @@ from a `_redirects` file, and uses `*` in the destination rather than `:splat`.
 Static site environment:
 
 - `VITE_API_URL` unset or `/api` (a production build defaults to `/api`)
+- `VITE_FIREBASE_AUTH_DOMAIN=<static-site>.onrender.com` (the app's own domain,
+  served through the `/__/auth/*` rewrite above). With the default
+  `<project>.firebaseapp.com`, Google / Facebook sign-in fails on mobile and in
+  Safari / Firefox with "Unable to process request due to missing initial
+  state": those browsers partition third-party storage. Then, once:
+  - Google Cloud Console > APIs & Services > Credentials > the OAuth web client:
+    add `https://<static-site>.onrender.com/__/auth/handler` to the authorized
+    redirect URIs
+  - Facebook for Developers > Facebook Login > Settings: add the same URL to the
+    valid OAuth redirect URIs
+  - Firebase console > Authentication > Settings > Authorized domains: add
+    `<static-site>.onrender.com`
 - `VITE_SOCKET_URL=https://<backend>.onrender.com` - Socket.IO connects to the
   web service directly: it authenticates with the access token, not the cookie,
   and WebSocket upgrades through a static-site rewrite are not documented

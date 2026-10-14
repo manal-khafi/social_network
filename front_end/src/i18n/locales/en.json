@@ -150,7 +150,9 @@
     "socialWorld": "Social World",
     "tokenIsMissing": "Token is missing!",
     "connectShareDiscover": "Connect, Share, Discover",
-    "loadingSession": "Loading session..."
+    "loadingSession": "Loading session...",
+    "popupBlocked": "Allow pop-ups for this site to sign in with Google or Facebook",
+    "socialUnsupportedBrowser": "This browser blocks Google / Facebook sign-in. Open the site in Safari or Chrome."
   },
   "posts": {
     "like": "Like",

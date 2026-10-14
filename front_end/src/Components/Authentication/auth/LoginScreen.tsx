@@ -11,7 +11,7 @@ import api from "../../../api/axios";
 import { AuthInput } from "./AuthInput";
 import { AuthButton } from "./AuthButton";
 import { SocialButton } from "./SocialButton";
-import { handleSocialAuth } from "./socialAuth";
+import { handleSocialAuth, socialAuthErrorMessage } from "./socialAuth";
 import { Logo } from "./Logo";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -167,8 +167,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       goNextAfterAuth(data.user, data.redirectTo);
       toast.success(t("auth.socialLoginSuccess", { provider }));
     } catch (error: any) {
-      const msg =
-        error.response?.data?.message || error.message || t("auth.socialLoginFailed");
+      const msg = socialAuthErrorMessage(error, t, t("auth.socialLoginFailed"));
+      if (!msg) {
+        // popup closed by the user: not an error
+        dispatch(setAuthError(""));
+        return;
+      }
       toast.error(msg);
       dispatch(setAuthError(msg));
     } finally {

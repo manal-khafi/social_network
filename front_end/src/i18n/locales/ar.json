@@ -150,7 +150,9 @@
     "socialWorld": "العالم الاجتماعي",
     "tokenIsMissing": "الرمز مفقود!",
     "connectShareDiscover": "تواصل، شارك، اكتشف",
-    "loadingSession": "جارٍ تحميل الجلسة..."
+    "loadingSession": "جارٍ تحميل الجلسة...",
+    "popupBlocked": "اسمح بالنوافذ المنبثقة لهذا الموقع لتسجيل الدخول عبر Google أو Facebook",
+    "socialUnsupportedBrowser": "هذا المتصفح يمنع تسجيل الدخول عبر Google / Facebook. افتح الموقع في Safari أو Chrome."
   },
   "posts": {
     "like": "إعجاب",

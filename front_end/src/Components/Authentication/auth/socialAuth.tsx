@@ -2,6 +2,31 @@ import { loginWithGoogle, loginWithFacebook } from "../../../config/firebaseConf
 import { socialLoginBackend } from "../../../utils/api";
 import type { User } from "../../../features/auth/authSlice";
 
+/**
+ * What to tell the user when the Google / Facebook popup fails. null means the
+ * user simply closed the popup: nothing to report.
+ */
+export const socialAuthErrorMessage = (
+  error: unknown,
+  t: (key: string) => string,
+  fallback: string
+): string | null => {
+  const e = error as { code?: string; message?: string; response?: { data?: { message?: string } } };
+  switch (e?.code) {
+    case "auth/popup-closed-by-user":
+    case "auth/cancelled-popup-request":
+    case "auth/user-cancelled":
+      return null;
+    case "auth/popup-blocked":
+      return t("auth.popupBlocked");
+    case "auth/operation-not-supported-in-this-environment":
+    case "auth/web-storage-unsupported":
+      return t("auth.socialUnsupportedBrowser");
+    default:
+      return e?.response?.data?.message || e?.message || fallback;
+  }
+};
+
 export interface SocialAuthResult {
   success: boolean;
   token: string;
