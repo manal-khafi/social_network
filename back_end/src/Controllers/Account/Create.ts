@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
-import { promises as fs } from "fs";
-import path from "path";
 
 const Create = async (req: Request, res: Response) => {
   try {
@@ -36,29 +34,21 @@ const Create = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid gender" });
     }
 
-    let avatarUrl: string | null = null;
-
-    if (req.file) {
-      if (!req.file.mimetype.startsWith("image/")) {
-        return res
-          .status(400)
-          .json({ message: "File must be an image" });
+    // The picture is uploaded beforehand through POST /api/upload; only its
+    // URL arrives here. undefined = not sent: keep the current avatar (for
+    // example the one from Google sign-in); null = remove it.
+    let avatarUrl: string | null | undefined;
+    if (profile.avatarUrl === null) {
+      avatarUrl = null;
+    } else if (profile.avatarUrl !== undefined) {
+      if (
+        typeof profile.avatarUrl !== "string" ||
+        profile.avatarUrl.length > 2048 ||
+        !/^https?:\/\/\S+$/.test(profile.avatarUrl)
+      ) {
+        return res.status(400).json({ message: "Invalid avatar URL" });
       }
-
-      if (req.file.size > 5 * 1024 * 1024) {
-        return res
-          .status(400)
-          .json({ message: "Image too large (max 5MB)" });
-      }
-
-      const avatarFileName = `${userId}.png`;
-      const avatarDir = path.join(__dirname, "../../../uploads/avatars");
-      await fs.mkdir(avatarDir, { recursive: true });
-
-      const avatarPath = path.join(avatarDir, avatarFileName);
-      await fs.writeFile(avatarPath, req.file.buffer);
-
-      avatarUrl = `/uploads/avatars/${avatarFileName}`;
+      avatarUrl = profile.avatarUrl;
     }
 
     const updatedUser = await prisma.user.update({
@@ -69,7 +59,7 @@ const Create = async (req: Request, res: Response) => {
         bio: profile.bio || null,
         gender: profile.gender || null,
         is_private: privacy?.type === "private",
-        avatar_url: avatarUrl,
+        ...(avatarUrl !== undefined && { avatar_url: avatarUrl }),
       },
     });
 

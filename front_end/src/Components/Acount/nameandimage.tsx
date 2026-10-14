@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, User, Camera, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAppDispatch } from '../../hooks';
+import { updateMyAvatar } from '../../features/user/userSlice';
+import { uploadImageAndGetURL } from '../../utils/uploadImageAndGetURL';
 
 interface SetupProfileProps {
   onUpdate: (data: { username: string; profileImage: string | null; imageFile: File | null }) => void;
@@ -17,48 +20,66 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState(initialData?.username || '');
-  const [profileImage, setProfileImage] = useState<string | null>(initialData?.profileImage || null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const dispatch = useAppDispatch();
+  // "default" in the wizard data means "picture removed during the wizard".
+  const [profileImage, setProfileImage] = useState<string | null>(
+    initialData?.profileImage && initialData.profileImage !== 'default' ? initialData.profileImage : null
+  );
+  const [photoRemoved, setPhotoRemoved] = useState(initialData?.profileImage === 'default');
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
-  // Update the parent whenever data changes
+  // Update the parent whenever data changes. The picture is uploaded as soon as
+  // it is picked, so the parent only ever receives its final URL (never a File).
   useEffect(() => {
-    if (username.trim() || profileImage) {
-      const data = {
+    if (uploading) return;
+    if (username.trim() || profileImage || photoRemoved) {
+      onUpdate({
         username: username.trim(),
-        profileImage,
-        imageFile,
-      };
-      onUpdate(data);
+        profileImage: profileImage ?? (photoRemoved ? 'default' : null),
+        imageFile: null,
+      });
     }
-  }, [username, profileImage, imageFile, onUpdate]);
+  }, [username, profileImage, photoRemoved, uploading, onUpdate]);
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError(t("onboarding.theImageIsTooLargeMax"));
-        return;
-      }
-      if (!file.type.startsWith('image/')) {
-        setError(t("onboarding.pleaseSelectAnImageFile"));
-        return;
-      }
+    event.target.value = '';
+    if (!file) return;
 
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setProfileImage(result);
-      };
-      reader.readAsDataURL(file);
-      setError('');
+    if (file.size > 5 * 1024 * 1024) {
+      setError(t("onboarding.theImageIsTooLargeMax"));
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      setError(t("onboarding.pleaseSelectAnImageFile"));
+      return;
+    }
+
+    // Show the picture straight away, then upload it and save it on the
+    // profile so it is not lost if the wizard is left or reloaded.
+    const previous = profileImage;
+    const preview = URL.createObjectURL(file);
+    setProfileImage(preview);
+    setUploading(true);
+    setError('');
+    try {
+      const url = await uploadImageAndGetURL(file, 'avatars');
+      await dispatch(updateMyAvatar({ avatar_url: url })).unwrap();
+      setProfileImage(url);
+      setPhotoRemoved(false);
+    } catch (err) {
+      setProfileImage(previous);
+      setError(err instanceof Error ? err.message : typeof err === 'string' ? err : t("errors.uploadFailed"));
+    } finally {
+      URL.revokeObjectURL(preview);
+      setUploading(false);
     }
   };
 
   const handleRemoveImage = () => {
     setProfileImage(null);
-    setImageFile(null);
+    setPhotoRemoved(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,10 +126,16 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
                       <img
                         src={profileImage}
                         alt={t("onboarding.profilePreview")}
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full object-cover ${uploading ? 'opacity-50' : ''}`}
                       />
+                      {uploading && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-8 h-8 border-2 border-[#18534F]/30 border-t-[#18534F] rounded-full animate-spin"></div>
+                        </div>
+                      )}
                       <button
                         type="button"
+                        disabled={uploading}
                         onClick={handleRemoveImage}
                         className="absolute top-1 end-1 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition"
                       >
@@ -138,6 +165,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
                 <input
                   type="file"
                   accept="image/*"
+                  disabled={uploading}
                   onChange={handleImageUpload}
                   className="hidden"
                 />
@@ -212,7 +240,7 @@ const SetupProfile: React.FC<SetupProfileProps> = ({ onUpdate, onSkip, onBack, i
 
             <button
               type="submit"
-              disabled={loading || !username.trim()}
+              disabled={loading || uploading || !username.trim()}
               className="flex-1 py-3 bg-gradient-to-r from-[#18534F] to-[#718197] text-white 
                 rounded-lg hover:shadow-lg transition disabled:opacity-50 
                 flex items-center justify-center gap-2"

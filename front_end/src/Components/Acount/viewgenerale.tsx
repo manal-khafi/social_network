@@ -10,6 +10,7 @@ import { fetchMe } from "../../features/auth/authSlice";
 import api from "../../api/axios";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { uploadFile } from "../../api/upload";
 
 type Step = "choice" | "profile" | "gender" | "privacy" | "summary";
 
@@ -156,6 +157,20 @@ const PersonalizationWizard: React.FC = () => {
         throw new Error(t("onboarding.usernameIsRequired"));
       }
 
+      // The picture was uploaded and saved when it was picked (see
+      // nameandimage.tsx), so only its URL is sent. A draft restored from an
+      // older session may still hold an inline image: upload it now.
+      const picked = allData.profile.profileImage;
+      let avatarUrl: string | null | undefined;
+      if (picked?.startsWith("http")) {
+        avatarUrl = picked;
+      } else if (picked?.startsWith("data:image")) {
+        const blob = await (await fetch(picked)).blob();
+        avatarUrl = await uploadFile(blob, "avatars", "avatar.png");
+      } else if (picked === "default") {
+        avatarUrl = null; // removed during the wizard
+      }
+
       const jsonData = {
         accountSetup: {
           choice: allData.accountChoice,
@@ -166,26 +181,17 @@ const PersonalizationWizard: React.FC = () => {
           displayName: finalUsername,
           bio: "",
           gender: allData.gender,
+          // omitted when the picture was not touched, so an existing avatar
+          // (e.g. from Google sign-in) is kept
+          ...(avatarUrl !== undefined && { avatarUrl }),
         },
         privacy: allData.privacy,
         completedSteps: completedSteps,
       };
 
-      const formData = new FormData();
-      formData.append("userData", JSON.stringify(jsonData));
-
-      if (allData.profile.imageFile) {
-        formData.append("profileImage", allData.profile.imageFile);
-      } else if (
-        allData.profile.profileImage &&
-        allData.profile.profileImage !== "default" &&
-        allData.profile.profileImage.startsWith("data:image")
-      ) {
-        const base64Data = allData.profile.profileImage.split(",")[1];
-        formData.append("profileImageBase64", base64Data);
-      }
-
-      const response = await api.post("/Compte/update/profile", formData);
+      const response = await api.post("/Compte/update/profile", {
+        userData: JSON.stringify(jsonData),
+      });
       const result = response.data;
 
       console.log("JSON response:", result);
