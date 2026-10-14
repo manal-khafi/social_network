@@ -249,9 +249,13 @@
       "copyLink": "Copier le lien",
       "copyLinkDesc": "Copier le lien dans le presse-papiers",
       "sharedToFeed": "Partagé dans le fil",
-      "sharedToStory": "Partagé dans votre story",
-      "openingMessages": "Ouverture des messages...",
-      "linkCopied": "Lien copié dans le presse-papiers"
+      "linkCopied": "Lien copié",
+      "storyNotAllowed": "Seules les publications publiques peuvent être partagées en story",
+      "alreadyReposted": "Vous avez déjà republié cette publication",
+      "repostFailed": "Impossible de republier cette publication",
+      "copyFailed": "Impossible de copier le lien",
+      "someCannotSee_one": "{{count}} personne ne peut pas voir cette publication, elle ne lui a pas été envoyée",
+      "someCannotSee_other": "{{count}} personnes ne peuvent pas voir cette publication, elle ne leur a pas été envoyée"
     },
     "reportDialog": {
       "title": "Signaler la publication",
@@ -692,7 +696,9 @@
     "storyMentionPreview": "Vous a mentionné dans sa story",
     "storySharePreview": "A envoyé une story",
     "storyUnavailable": "Cette story n'est plus disponible",
-    "addToYourStory": "Ajouter à votre story"
+    "addToYourStory": "Ajouter à votre story",
+    "postSharePreview": "A envoyé une publication",
+    "postUnavailable": "Cette publication n'est plus disponible"
   },
   "settings": {
     "title": "Paramètres",

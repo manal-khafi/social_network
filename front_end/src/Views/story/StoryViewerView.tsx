@@ -26,6 +26,7 @@ import {
   type PollResult,
 } from "../../api/storiesApi";
 import { Avatar, AvatarFallback, AvatarImage } from "../../Components/ui/avatar";
+import PostPreviewCard from '../../Components/post/PostPreviewCard';
 import StoryOverlayLayer from "../../Components/story/StoryOverlayLayer";
 import ShareStorySheet from "../../Components/story/ShareStorySheet";
 import SeenBySheet from "../../Components/story/SeenBySheet";
@@ -452,18 +453,12 @@ export default function StoryViewerView() {
 
           {/* reshared post card */}
           {story.sharedPost && (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[82%] rounded-xl bg-white/95 text-black p-3 shadow-xl">
-              <div className="flex items-center gap-2">
-                <Avatar className="w-6 h-6">
-                  <AvatarImage src={story.sharedPost.user.avatar_url ?? undefined} />
-                  <AvatarFallback>{story.sharedPost.user.username[0]?.toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <span className="text-xs font-semibold">@{story.sharedPost.user.username}</span>
-              </div>
-              {story.sharedPost.content && (
-                <p className="text-sm mt-2 line-clamp-5">{story.sharedPost.content}</p>
-              )}
-            </div>
+            <PostPreviewCard
+              user={story.sharedPost.user}
+              content={story.sharedPost.content}
+              media={story.sharedPost.media_urls}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[82%]"
+            />
           )}
 
           <StoryOverlayLayer

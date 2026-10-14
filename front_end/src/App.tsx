@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect } from "react";
 import { Provider } from "react-redux";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { store } from "./store";
 import { useAppSelector } from "./hooks";
 import { useAuthSession } from "./hooks/useAuthSession";
@@ -179,6 +179,9 @@ function AppContent() {
         </Route>
       </Route>
 
+      {/* Shared post link (Share > Copy link): https://<site>/post/<id> */}
+      <Route path="/post/:postId" element={<PostLinkRedirect />} />
+
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
@@ -225,6 +228,12 @@ function App() {
       <AppContent />
     </DirectionProvider>
   );
+}
+
+/** /post/:postId -> the post page inside the app (sign-in first if needed). */
+function PostLinkRedirect() {
+  const { postId } = useParams();
+  return <Navigate to={postId ? `/home/post/${postId}` : "/home"} replace />;
 }
 
 export default function AppWrapper() {

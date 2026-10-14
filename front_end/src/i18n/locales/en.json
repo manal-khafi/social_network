@@ -249,9 +249,13 @@
       "copyLink": "Copy Link",
       "copyLinkDesc": "Copy link to clipboard",
       "sharedToFeed": "Shared to feed",
-      "sharedToStory": "Shared to your story",
-      "openingMessages": "Opening messages...",
-      "linkCopied": "Link copied to clipboard"
+      "linkCopied": "Link copied",
+      "storyNotAllowed": "Only public posts can be shared to a story",
+      "alreadyReposted": "You already reposted this post",
+      "repostFailed": "Could not repost this post",
+      "copyFailed": "Could not copy the link",
+      "someCannotSee_one": "{{count}} person can't see this post, so it wasn't sent to them",
+      "someCannotSee_other": "{{count}} people can't see this post, so it wasn't sent to them"
     },
     "reportDialog": {
       "title": "Report post",
@@ -692,7 +696,9 @@
     "storyMentionPreview": "Mentioned you in their story",
     "storySharePreview": "Sent a story",
     "storyUnavailable": "This story is no longer available",
-    "addToYourStory": "Add to your story"
+    "addToYourStory": "Add to your story",
+    "postSharePreview": "Sent a post",
+    "postUnavailable": "This post is no longer available"
   },
   "settings": {
     "title": "Settings",

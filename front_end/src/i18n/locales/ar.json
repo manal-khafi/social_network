@@ -249,9 +249,17 @@
       "copyLink": "نسخ الرابط",
       "copyLinkDesc": "نسخ الرابط إلى الحافظة",
       "sharedToFeed": "تمت المشاركة في الصفحة الرئيسية",
-      "sharedToStory": "تمت المشاركة في قصتك",
-      "openingMessages": "جارٍ فتح الرسائل...",
-      "linkCopied": "تم نسخ الرابط إلى الحافظة"
+      "linkCopied": "تم نسخ الرابط",
+      "storyNotAllowed": "يمكن مشاركة المنشورات العامة فقط في القصة",
+      "alreadyReposted": "لقد أعدت نشر هذا المنشور بالفعل",
+      "repostFailed": "تعذّرت إعادة نشر هذا المنشور",
+      "copyFailed": "تعذّر نسخ الرابط",
+      "someCannotSee_zero": "لا يوجد أحد لا يستطيع رؤية هذا المنشور",
+      "someCannotSee_one": "شخص واحد لا يستطيع رؤية هذا المنشور، لذلك لم يُرسل إليه",
+      "someCannotSee_two": "شخصان لا يستطيعان رؤية هذا المنشور، لذلك لم يُرسل إليهما",
+      "someCannotSee_few": "{{count}} أشخاص لا يستطيعون رؤية هذا المنشور، لذلك لم يُرسل إليهم",
+      "someCannotSee_many": "{{count}} شخصًا لا يستطيعون رؤية هذا المنشور، لذلك لم يُرسل إليهم",
+      "someCannotSee_other": "{{count}} شخص لا يستطيعون رؤية هذا المنشور، لذلك لم يُرسل إليهم"
     },
     "reportDialog": {
       "title": "الإبلاغ عن المنشور",
@@ -720,7 +728,9 @@
     "storyMentionPreview": "أشار إليك في قصته",
     "storySharePreview": "أرسل قصة",
     "storyUnavailable": "هذه القصة لم تعد متاحة",
-    "addToYourStory": "أضف إلى قصتك"
+    "addToYourStory": "أضف إلى قصتك",
+    "postSharePreview": "أرسل منشورًا",
+    "postUnavailable": "هذا المنشور لم يعد متاحًا"
   },
   "settings": {
     "title": "الإعدادات",

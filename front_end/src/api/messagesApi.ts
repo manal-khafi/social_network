@@ -7,12 +7,22 @@ export interface ApiMessage {
   sender: StoryUser | null;
   sender_id: string;
   content: string | null;
-  message_type: "text" | "image" | "video" | "file" | "call" | "story_mention";
+  message_type: "text" | "image" | "video" | "file" | "call" | "story_mention" | "post";
   call_meta: { callType: "audio" | "video"; status: string; durationSec: number } | null;
   story_id: string | null;
   /** Preview of the shared / mentioning story, when the message is about one. */
   story?: MessageStoryPreview | null;
+  post_id?: string | null;
+  /** Preview of the shared post (message_type "post"); null once it is deleted or archived. */
+  post?: MessagePostPreview | null;
   created_at: string;
+}
+
+export interface MessagePostPreview {
+  id: string;
+  user: StoryUser;
+  content: string;
+  media_urls: string[];
 }
 
 export interface MessageStoryPreview {

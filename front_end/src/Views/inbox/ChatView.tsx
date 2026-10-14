@@ -23,6 +23,7 @@ import {
   Calendar, BarChart3, Play, Pause, Archive, Ban, Trash2, UserCircle, X, Loader2
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
+import PostPreviewCard from '../../Components/post/PostPreviewCard';
 import { Input } from '../../Components/ui/input';
 import { Button } from '../../Components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../Components/ui/dialog';
@@ -408,6 +409,8 @@ export default function ChatView() {
             />
           )}
           
+          {msg.type === 'post_share' && <PostMessageCard msg={msg} />}
+
           {msg.type === 'sticker' && (
             <div className="text-5xl">{msg.sticker}</div>
           )}
@@ -810,6 +813,28 @@ export default function ChatView() {
  * story" for the person mentioned) or a story sent to you. Tapping the preview
  * opens the story while it is live.
  */
+/** A post sent from its share sheet: opens the post; "unavailable" once deleted or archived. */
+function PostMessageCard({ msg }: { msg: Message }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const post = msg.post;
+
+  return (
+    <div className="w-56 max-w-full">
+      {post ? (
+        <button type="button" onClick={() => navigate(`/home/post/${post.id}`)} className="block w-full">
+          <PostPreviewCard user={post.user} content={post.content} media={post.media_urls} variant="chat" />
+        </button>
+      ) : (
+        <p className="rounded-xl border border-border px-3 py-4 text-xs text-center opacity-80">
+          {t('messages.postUnavailable')}
+        </p>
+      )}
+      {msg.content && <p className="mt-2 text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
+    </div>
+  );
+}
+
 function StoryMessageCard({
   msg,
   isSender,

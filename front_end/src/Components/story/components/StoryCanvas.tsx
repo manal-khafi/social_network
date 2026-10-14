@@ -2,6 +2,7 @@ import { useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Music2, Trash2 } from "lucide-react";
 import type { StoryOverlay, SharedPostRef } from "../../../api/storiesApi";
+import PostPreviewCard from "../../post/PostPreviewCard";
 import type { SelectedMusic } from "../MusicPicker";
 import StoryOverlayLayer from "../StoryOverlayLayer";
 import type { Mode, StoryMedia } from "./types";
@@ -74,10 +75,12 @@ export default function StoryCanvas({
 
         {/* reshared post card */}
         {sharedPost && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] rounded-xl bg-white/95 text-black p-3 shadow-lg">
-            <p className="text-xs font-semibold">@{sharedPost.user.username}</p>
-            <p className="text-sm mt-1 line-clamp-4">{sharedPost.content}</p>
-          </div>
+          <PostPreviewCard
+            user={sharedPost.user}
+            content={sharedPost.content}
+            media={sharedPost.media_urls}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%]"
+          />
         )}
 
         {/* re-shared story card */}

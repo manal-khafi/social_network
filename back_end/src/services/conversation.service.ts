@@ -44,9 +44,20 @@ const storyPreviewSelect = {
   user: { select: userSelect },
 } as const;
 
+// Post sent from its share sheet, shown as a card in the chat.
+const postPreviewSelect = {
+  id: true,
+  content: true,
+  media_urls: true,
+  is_deleted: true,
+  is_archived: true,
+  user: { select: userSelect },
+} as const;
+
 const messageInclude = {
   sender: { select: userSelect },
   story: { select: storyPreviewSelect },
+  post: { select: postPreviewSelect },
 } as const;
 
 export class ConversationService {
@@ -293,6 +304,18 @@ export class ConversationService {
             expired: new Date(m.story.expires_at) < new Date(),
           }
         : null,
+      post_id: m.post_id ?? null,
+      // Recipients were checked when it was sent (see PostShareService). A
+      // post deleted or archived since then shows as "unavailable".
+      post:
+        m.post && !m.post.is_deleted && !m.post.is_archived
+          ? {
+              id: m.post.id,
+              user: m.post.user,
+              content: m.post.content ?? '',
+              media_urls: Array.isArray(m.post.media_urls) ? m.post.media_urls : [],
+            }
+          : null,
       created_at: m.created_at,
     };
   }
@@ -302,7 +325,7 @@ export class ConversationService {
    * story author and the mentioned user.
    */
   static sendStoryMention(senderId: string, recipientId: string, storyId: string) {
-    return this.sendStoryCard(senderId, recipientId, storyId, 'story_mention', null);
+    return this.sendCard(senderId, recipientId, { story_id: storyId, message_type: 'story_mention', content: null });
   }
 
   /**
@@ -310,25 +333,31 @@ export class ConversationService {
    * shown as a story card in the DM (message_type "text" + story_id).
    */
   static sendStoryShare(senderId: string, recipientId: string, storyId: string, note: string | null) {
-    return this.sendStoryCard(senderId, recipientId, storyId, 'text', note);
+    return this.sendCard(senderId, recipientId, { story_id: storyId, message_type: 'text', content: note });
   }
 
-  /** Story card message in the direct chat; pushed live with its story preview. */
-  private static async sendStoryCard(
+  /** A post sent from its share sheet, with an optional note, shown as a post card. */
+  static sendPostShare(senderId: string, recipientId: string, postId: string, note: string | null) {
+    return this.sendCard(senderId, recipientId, { post_id: postId, message_type: 'post', content: note });
+  }
+
+  /** Story / post card message in the direct chat; pushed live with its preview. */
+  private static async sendCard(
     senderId: string,
     recipientId: string,
-    storyId: string,
-    messageType: 'story_mention' | 'text',
-    content: string | null
+    card: {
+      story_id?: string;
+      post_id?: string;
+      message_type: 'story_mention' | 'text' | 'post';
+      content: string | null;
+    }
   ) {
     const conversation = await getOrCreateDirectConversation(senderId, recipientId);
     const message = await prisma.message.create({
       data: {
         conversation_id: conversation.id,
         sender_id: senderId,
-        story_id: storyId,
-        content,
-        message_type: messageType,
+        ...card,
       },
       include: messageInclude,
     });

@@ -49,6 +49,7 @@ enum MessageType {
   file
   call
   story_mention
+  post // a post shared from its share sheet (post_id), with an optional note
 }
 
 enum MessageStatusEnum {
@@ -223,6 +224,7 @@ model Post {
   reposts     Repost[]
   saves       Save[]
   storyShares Story[]   @relation("StorySharedPost")
+  messages    Message[]
 
   @@index([user_id, created_at])
   @@index([created_at])
@@ -519,10 +521,12 @@ model Message {
   conversation_id String
   sender_id       String
   story_id        String?
+  post_id         String?
 
   conversation Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
   sender       User         @relation("Sender", fields: [sender_id], references: [id], onDelete: Cascade)
   story        Story?       @relation(fields: [story_id], references: [id], onDelete: SetNull)
+  post         Post?        @relation(fields: [post_id], references: [id], onDelete: SetNull)
 
   // Relations
   statuses MessageStatus[]

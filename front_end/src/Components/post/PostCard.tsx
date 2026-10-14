@@ -220,7 +220,7 @@ export default function PostCard({ post, initiallyShowComments = false }: PostCa
         )}
       </div>
 
-      <ShareDialog postId={post.id} open={showShareDialog} onOpenChange={setShowShareDialog} />
+      <ShareDialog post={post} open={showShareDialog} onOpenChange={setShowShareDialog} />
       <EditPostDialog post={post} open={showEditDialog} onOpenChange={setShowEditDialog} />
       <ReportPostDialog
         postId={post.id}

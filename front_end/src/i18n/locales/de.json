@@ -249,9 +249,13 @@
       "copyLink": "Link kopieren",
       "copyLinkDesc": "Link in die Zwischenablage kopieren",
       "sharedToFeed": "Im Feed geteilt",
-      "sharedToStory": "In deiner Story geteilt",
-      "openingMessages": "Nachrichten werden geöffnet...",
-      "linkCopied": "Link in die Zwischenablage kopiert"
+      "linkCopied": "Link kopiert",
+      "storyNotAllowed": "Nur öffentliche Beiträge können in einer Story geteilt werden",
+      "alreadyReposted": "Du hast diesen Beitrag bereits geteilt",
+      "repostFailed": "Der Beitrag konnte nicht geteilt werden",
+      "copyFailed": "Der Link konnte nicht kopiert werden",
+      "someCannotSee_one": "{{count}} Person kann diesen Beitrag nicht sehen und hat ihn deshalb nicht erhalten",
+      "someCannotSee_other": "{{count}} Personen können diesen Beitrag nicht sehen und haben ihn deshalb nicht erhalten"
     },
     "reportDialog": {
       "title": "Beitrag melden",
@@ -692,7 +696,9 @@
     "storyMentionPreview": "Hat dich in der Story erwähnt",
     "storySharePreview": "Hat eine Story gesendet",
     "storyUnavailable": "Diese Story ist nicht mehr verfügbar",
-    "addToYourStory": "Zu deiner Story hinzufügen"
+    "addToYourStory": "Zu deiner Story hinzufügen",
+    "postSharePreview": "Hat einen Beitrag gesendet",
+    "postUnavailable": "Dieser Beitrag ist nicht mehr verfügbar"
   },
   "settings": {
     "title": "Einstellungen",

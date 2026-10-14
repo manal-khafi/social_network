@@ -15,6 +15,7 @@ import { archivePost, unarchivePost } from "../Controllers/Posts/ArchiveControll
 
 import { blockGuard } from "../Middleware/Block/blockGuardMiddleware";
 import { getPost } from "../Controllers/Posts/GetPost";
+import { sharePostToUsers } from "../Controllers/Posts/SharePost";
 
 const postsRouter = Router();
 
@@ -34,6 +35,7 @@ postsRouter.delete("/:postId", authMiddleware, blockGuard(), deletePost);
 postsRouter.post("/:postId/like", authMiddleware, blockGuard(), toggleLike);
 postsRouter.post("/:postId/save", authMiddleware, blockGuard(), toggleSave);
 postsRouter.post("/:postId/repost", authMiddleware, blockGuard(), toggleRepost);
+postsRouter.post("/:postId/share", authMiddleware, sharePostToUsers);
 postsRouter.patch("/:postId/archive", authMiddleware, blockGuard(), archivePost);
 postsRouter.patch("/:postId/unarchive", authMiddleware, blockGuard(), unarchivePost);
 
