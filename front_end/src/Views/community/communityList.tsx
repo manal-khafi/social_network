@@ -22,9 +22,10 @@ interface Community {
   };
 }
 
-interface CommunityListProps {}
+// The list navigates by itself; props passed by the router wrapper are ignored.
+type CommunityListProps = Record<string, unknown>;
 
-export function CommunityList({}: CommunityListProps) {
+export function CommunityList(_props: CommunityListProps) {
   const navigate = useNavigate();
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);

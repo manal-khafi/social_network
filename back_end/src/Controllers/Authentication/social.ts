@@ -1,10 +1,18 @@
 import { Request, Response } from "express";
-import { admin } from "../../config/fireBase";
+import { admin, isFirebaseConfigured } from "../../config/fireBase";
 import prisma from "../../config/prismaClient";
-import { generateAccessToken, generateRefreshToken } from "../../util/jwt";
+import { generateAccessToken } from "../../util/jwt";
+import { setRefreshTokenCookie } from "../../services/sessionService";
 
 export const socialLogin = async (req: Request, res: Response) => {
   console.log("Social login request received."); // Log request hit
+  if (!isFirebaseConfigured) {
+    return res.status(503).json({
+      success: false,
+      message: "Social login is not configured on this server",
+    });
+  }
+
   const { idToken, token } = req.body;
   const firebaseIdToken = idToken || token;
 
@@ -47,10 +55,17 @@ export const socialLogin = async (req: Request, res: Response) => {
           is_verified: true,
           provider: firebaseSignInProvider, // Use Firebase sign-in provider
           onboarding_done: true, // Assuming social login implies onboarding is done
+          token_version: 1, // brand-new account: start one above the default 0
         },
       });
     } else {
       console.log("Existing user found for email:", email);
+      if (!user.is_active) {
+        return res.status(403).json({
+          success: false,
+          message: "This account has been deactivated. Contact support to reactivate.",
+        });
+      }
       // Optionally update user's provider if they previously signed up with email/password
       if (user.provider !== firebaseSignInProvider) {
         user = await prisma.user.update({
@@ -84,17 +99,7 @@ export const socialLogin = async (req: Request, res: Response) => {
       permissions,
       onboarding_done: user.onboarding_done,
     });
-    const refreshToken = generateRefreshToken({
-      id: user.id,
-      token_version: user.token_version,
-    });
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+    setRefreshTokenCookie(res, user);
 
     console.log("Backend JWT issued. First 10 chars:", accessToken.substring(0, 10)); // Log issued token (partial)
 

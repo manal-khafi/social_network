@@ -1,16 +1,23 @@
 import { useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { markAsRead, markAllAsRead } from '../../features/notifications/notificationsSlice';
+import {
+  deleteNotification,
+  fetchNotifications,
+  markAllAsRead,
+  markAsRead,
+} from '../../features/notifications/notificationsSlice';
+import { formatTime } from '../../utils/timeUtils';
 import { acceptFollowRequest, denyFollowRequest, fetchFollowRequests } from '../../features/user/userSlice';
 import { Card } from '../../Components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { Button } from '../../Components/ui/button';
 import { Separator } from '../../Components/ui/separator';
-import { Heart, MessageCircle, UserPlus, Repeat, Check, X } from 'lucide-react';
+import { Heart, MessageCircle, UserPlus, UserCheck, Repeat, AtSign, Bell, Check, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function NotificationsView() {
-  const { notifications } = useAppSelector((state) => state.notifications);
+  const { notifications, nextCursor, status, unreadCount } = useAppSelector((state) => state.notifications);
+  const isLoading = status === 'loading';
   const { followRequests } = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
 
@@ -26,15 +33,21 @@ export default function NotificationsView() {
 
   useEffect(() => {
     dispatch(fetchFollowRequests());
+    dispatch(fetchNotifications());
   }, [dispatch]);
 
   const getIcon = (type: string) => {
     switch (type) {
       case 'like': return <Heart className="w-5 h-5 text-red-500" />;
-      case 'comment': return <MessageCircle className="w-5 h-5 text-blue-500" />;
-      case 'follow': return <UserPlus className="w-5 h-5 text-green-500" />;
+      case 'comment':
+      case 'reply': return <MessageCircle className="w-5 h-5 text-blue-500" />;
+      case 'follow':
+      case 'follow_request': return <UserPlus className="w-5 h-5 text-green-500" />;
+      case 'follow_accepted': return <UserCheck className="w-5 h-5 text-green-500" />;
       case 'repost': return <Repeat className="w-5 h-5 text-purple-500" />;
-      default: return null;
+      case 'mention': return <AtSign className="w-5 h-5 text-amber-500" />;
+      // story_view, story_like, story_comment, ...
+      default: return <Bell className="w-5 h-5 text-muted-foreground" />;
     }
   };
 
@@ -45,6 +58,7 @@ export default function NotificationsView() {
         <Button
           variant="ghost"
           size="sm"
+          disabled={unreadCount === 0}
           onClick={() => dispatch(markAllAsRead())}
         >
           Mark all as read
@@ -110,34 +124,72 @@ export default function NotificationsView() {
       {/* Regular Notifications */}
       <div>
         <h3 className="font-semibold mb-3">Recent Activity</h3>
+        {notifications.length === 0 && !isLoading && (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            {status === 'failed' ? 'Could not load notifications.' : 'No notifications yet.'}
+          </p>
+        )}
+
         <div className="space-y-2">
-          {notifications.map((notif) => (
-            <Card
-              key={notif.id}
-              className={`p-4 cursor-pointer transition-colors ${!notif.isRead ? 'bg-muted/30 border-primary/20' : ''}`}
-              onClick={() => dispatch(markAsRead(notif.id))}
-            >
-              <div className="flex gap-3">
-                <Avatar>
-                  <AvatarImage src={notif.avatar} />
-                  <AvatarFallback>{notif.username[0].toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-start gap-2">
-                    <span className="mt-1">{getIcon(notif.type)}</span>
-                    <div className="flex-1">
-                      <p className="text-sm">
-                        <span className="font-semibold">{notif.username}</span>{' '}
-                        {notif.content}
-                      </p>
-                      <span className="text-xs text-muted-foreground">{notif.timestamp}</span>
+          {notifications.map((notif) => {
+            const actorName = notif.actor?.display_name || notif.actor?.username || '';
+            return (
+              <Card
+                key={notif.id}
+                className={`p-4 cursor-pointer transition-colors ${!notif.isRead ? 'bg-muted/30 border-primary/20' : ''}`}
+                onClick={() => {
+                  if (!notif.isRead) dispatch(markAsRead(notif.id));
+                }}
+              >
+                <div className="flex gap-3">
+                  <Avatar>
+                    <AvatarImage src={notif.actor?.avatar_url ?? undefined} />
+                    <AvatarFallback>{(actorName[0] ?? '?').toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start gap-2">
+                      <span className="mt-1">{getIcon(notif.type)}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm break-words">{notif.message}</p>
+                        <span className="text-xs text-muted-foreground">{formatTime(notif.createdAt)}</span>
+                      </div>
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-shrink-0 text-muted-foreground"
+                    aria-label="Delete notification"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dispatch(deleteNotification(notif.id));
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
+
+        {isLoading && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {nextCursor && !isLoading && (
+          <div className="flex justify-center pt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => dispatch(fetchNotifications({ cursor: nextCursor }))}
+            >
+              Load more
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

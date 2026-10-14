@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/axios';
 import { useAppSelector } from '../../hooks'; // Pour récupérer le token
 import { Card } from '../../Components/ui/card';
 import PostCard from '../../Components/post/PostCard';
@@ -20,11 +20,7 @@ export default function LikedPostsSettingsView() {
     const getLikedPosts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:3500/api/posts/mylikes", {
-          headers: {
-            Authorization: `Bearer ${token}` 
-          }
-        });
+        const response = await api.get("/posts/mylikes");
         setLikedPosts(response.data);
       } catch (err: any) {
         console.error("Erreur API:", err);

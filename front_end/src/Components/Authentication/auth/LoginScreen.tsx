@@ -32,6 +32,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     emailOrUsername: "",
     password: "",
   });
+  // Set when the backend answers the password step with a 2FA challenge.
+  const [twoFactorToken, setTwoFactorToken] = useState<string | null>(null);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
 
   const goNextAfterAuth = (_user?: any, redirectTo?: string) => {
     if (redirectTo && redirectTo !== "/personalize") {
@@ -62,6 +65,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         return;
       }
 
+      // Account protected by 2FA: no token yet, ask for the authenticator code.
+      if (data.requiresTwoFactor && data.twoFactorToken) {
+        setTwoFactorToken(data.twoFactorToken);
+        setTwoFactorCode("");
+        return;
+      }
+
       if (!data.token) {
         const msg = "Login succeeded but missing token in response.";
         toast.error(msg);
@@ -80,6 +90,49 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         error.response?.data?.message || "Server error. Please try again later.";
       toast.error(errorMsg);
       dispatch(setAuthError(errorMsg));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const cancelTwoFactor = () => {
+    setTwoFactorToken(null);
+    setTwoFactorCode("");
+    setFormData((prev) => ({ ...prev, password: "" }));
+  };
+
+  const handleTwoFactorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    setIsLoading(true);
+    dispatch(setAuthLoading());
+
+    try {
+      const response = await api.post("/auth/2fa/verify-login", {
+        twoFactorToken,
+        code: twoFactorCode,
+      });
+
+      const data = response.data;
+
+      if (!data?.success || !data.token) {
+        const msg = data?.message || "Login failed";
+        toast.error(msg);
+        dispatch(setAuthError(msg));
+        return;
+      }
+
+      toast.success(data.message || "Logged in successfully!");
+      dispatch(setAuth({ token: data.token, user: data.user ?? null }));
+      goNextAfterAuth(data.user, data.redirectTo);
+    } catch (error: any) {
+      const errorMsg =
+        error.response?.data?.message || "Server error. Please try again later.";
+      toast.error(errorMsg);
+      dispatch(setAuthError(errorMsg));
+      setTwoFactorCode("");
+      // Challenge expired or no longer valid: back to the password step.
+      if (error.response?.status === 401) cancelTwoFactor();
     } finally {
       setIsLoading(false);
     }
@@ -120,6 +173,57 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       setIsLoading(false);
     }
   };
+
+  if (twoFactorToken) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-8">
+          <Logo />
+          <p className="text-gray-600">
+            Enter the 6-digit code from your authenticator app.
+          </p>
+        </div>
+
+        <form onSubmit={handleTwoFactorSubmit} className="space-y-5">
+          <AuthInput
+            label="Authentication code"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]{6}"
+            maxLength={6}
+            placeholder="123456"
+            value={twoFactorCode}
+            onChange={(e) =>
+              setTwoFactorCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+            }
+            autoFocus
+            required
+          />
+
+          <AuthButton variant="primary" isLoading={isLoading} type="submit">
+            Verify
+          </AuthButton>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={cancelTwoFactor}
+            className="text-sm text-[#226d68] hover:text-[#18534f] transition-colors"
+            type="button"
+          >
+            Back to login
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

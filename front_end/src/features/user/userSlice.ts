@@ -196,7 +196,7 @@ export const updatePrivacySettings = createAsyncThunk<
   { rejectValue: string }
 >("user/updatePrivacySettings", async (payload, { rejectWithValue }) => {
   try {
-    const res = await api.patch("/users/me/privacy", payload);
+    const res = await api.patch("/privacy/me/privacy", payload);
     return res.data;
   } catch (error: unknown) {
     return rejectWithValue(getErrorMessage(error, "Failed to update privacy"));

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { verifyAccessToken } from "../../util/jwt";
 import { getBlockedUserIds } from "../../services/BlockService"; // Added import
+import { visiblePostWhere } from "../../services/postVisibility";
 
 export const getPosts = async (req: Request, res: Response) => {
   try {
@@ -44,35 +45,16 @@ export const getPosts = async (req: Request, res: Response) => {
       postInclude.reposts = { where: { user_id: userId }, select: { id: true } };
     }
 
-    const baseWhere = {
-      is_deleted: false,
-      is_archived: false,
-      user_id: {
-        notIn: blockedIds, // Filter out posts from blocked users
-      },
-    };
-
-    let allowedPrivateIds: string[] = [];
-    if (userId) {
-      const follows = await prisma.follow.findMany({
-        where: { follower_id: userId, status: "accepted" },
-        select: { followed_id: true },
-      });
-      allowedPrivateIds = follows.map((f: { followed_id: string }) => f.followed_id);
-    }
-
-    const privacyFilter = userId
-      ? {
-          OR: [
-            { user: { is_private: false } },
-            { user_id: userId },
-            { user_id: { in: allowedPrivateIds } },
-          ],
-        }
-      : { user: { is_private: false } };
-
     const posts = await prisma.post.findMany({
-      where: { ...baseWhere, ...privacyFilter } as any,
+      where: {
+        // The feed never shows archived posts, not even the viewer's own.
+        is_archived: false,
+        user_id: {
+          notIn: blockedIds, // Filter out posts from blocked users
+        },
+        // Post visibility (public / friends / private) + private accounts
+        AND: [visiblePostWhere(userId)],
+      },
       include: postInclude as any,
       orderBy: { created_at: "desc" },
       skip: offset,

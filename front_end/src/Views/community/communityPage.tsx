@@ -34,9 +34,11 @@ interface Member {
   avatar?: string;
   isVerified?: boolean;
   user?: {
-    firstName?: string;
-    lastName?: string;
-    email: string;
+    id: string;
+    username: string;
+    display_name?: string;
+    avatar_url?: string | null;
+    is_verified?: boolean;
   };
   joinedAt?: string;
   role?: string;
@@ -647,10 +649,8 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                   ) : (
                     <div className="space-y-4">
                       {members.map((member) => {
-                        const userName = member.user ? `${member.user.firstName || ''} ${member.user.lastName || ''}`.trim() || member.user.email : member.name || "Utilisateur";
-                        const initials = member.user && member.user.firstName && member.user.lastName
-                          ? `${member.user.firstName[0]}${member.user.lastName[0]}`
-                          : userName.substring(0, 2).toUpperCase();
+                        const userName = member.user?.display_name || member.user?.username || member.name || "Utilisateur";
+                        const initials = userName.substring(0, 2).toUpperCase();
 
                         return (
                           <Card key={member.id} className="group hover:shadow-md transition-all duration-300 hover:border-[#226d68]">
@@ -658,7 +658,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                   <Avatar className="h-14 w-14 border-2 border-gray-200 group-hover:border-[#226d68] transition-colors">
-                                    <AvatarImage src={member.avatar} />
+                                    <AvatarImage src={member.user?.avatar_url || member.avatar} />
                                     <AvatarFallback className="bg-gradient-to-br from-[#18534f] to-[#226d68] text-white font-semibold">
                                       {initials}
                                     </AvatarFallback>
@@ -674,7 +674,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
                                         </Badge>
                                       )}
                                     </div>
-                                    <p className="text-sm text-gray-600">{member.user?.email || member.username}</p>
+                                    <p className="text-sm text-gray-600">{member.user?.username ? `@${member.user.username}` : member.username}</p>
                                     {member.joinedAt && (
                                       <p className="text-xs text-gray-500 mt-1">
                                         Membre depuis {new Date(member.joinedAt).toLocaleDateString('fr-FR')}

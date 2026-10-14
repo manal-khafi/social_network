@@ -2,8 +2,6 @@ import { Request, Response } from "express";
 import { forgotPassword } from "../../services/authService";
 
 export const forgotPasswordController = async (req: Request, res: Response) => {
-  console.log("✅ FORGOT PASSWORD ENDPOINT HIT");
-  console.log("BODY:", req.body);
   const { email } = req.body;
 
   if (!email) {
@@ -14,7 +12,7 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
     await forgotPassword(email);
     return res.status(200).json({
       success: true,
-      message: "Password reset email sent! Check your inbox.",
+      message: "If an account with that email exists, a reset link has been sent.",
     });
   } catch (err: any) {
     console.error("🔥 FORGOT PASSWORD ERROR 🔥");

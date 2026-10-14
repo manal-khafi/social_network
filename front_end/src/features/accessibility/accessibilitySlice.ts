@@ -4,7 +4,7 @@ import { loadAccessibility} from "../../utils/persistAccessibility";
 import type { AccessibilityPersistedState } from "../../utils/persistAccessibility";
 
 
-interface AccessibilityState extends AccessibilityPersistedState {}
+type AccessibilityState = AccessibilityPersistedState;
 
 const initialState: AccessibilityState = {
   highContrast: false,

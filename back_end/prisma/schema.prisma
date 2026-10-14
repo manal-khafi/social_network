@@ -111,6 +111,14 @@ model User {
   allow_mentions       Boolean  @default(true)
   show_activity_status Boolean  @default(true)
 
+  // Notification preferences (Settings > Notifications). When false, that
+  // kind of notification is not created for this user.
+  allow_like_notifications    Boolean @default(true)
+  allow_comment_notifications Boolean @default(true) // comments + replies
+  allow_follow_notifications  Boolean @default(true) // follows, requests, accepted
+  allow_mention_notifications Boolean @default(true)
+  allow_repost_notifications  Boolean @default(true)
+
   two_factor_enabled       Boolean  @default(false)
   two_factor_secret        String?
   two_factor_temp_secret   String?
@@ -168,7 +176,9 @@ model Follow {
   follower User @relation("Follower", fields: [follower_id], references: [id])
   followed User @relation("Followed", fields: [followed_id], references: [id])
 
+  // follower_id lookups are already served by the unique index below.
   @@unique([follower_id, followed_id])
+  @@index([followed_id, status])
 }
 
 model Block {
@@ -205,6 +215,9 @@ model Post {
   reposts     Repost[]
   saves       Save[]
   storyShares Story[]   @relation("StorySharedPost")
+
+  @@index([user_id, created_at])
+  @@index([created_at])
 }
 
 model Comment {
@@ -226,6 +239,9 @@ model Comment {
   replies Comment[] @relation("CommentReplies")
   likes   Like[]
   reports Report[]
+
+  @@index([post_id, created_at])
+  @@index([user_id])
 }
 
 model Like {
@@ -502,6 +518,9 @@ model Message {
 
   // Relations
   statuses MessageStatus[]
+
+  @@index([conversation_id, created_at])
+  @@index([sender_id])
 }
 
 model MessageStatus {
@@ -666,6 +685,8 @@ model Notification {
 
   user             User             @relation(fields: [user_id], references: [id])
   typeNotification TypeNotification @relation(fields: [type_notification_id], references: [id])
+
+  @@index([user_id, created_at])
 }
 
 model Report {

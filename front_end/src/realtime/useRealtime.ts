@@ -6,7 +6,12 @@ import {
   applyRemoteStoryStat,
   fetchStories,
 } from "../features/stories/storiesSlice";
-import { addNotification } from "../features/notifications/notificationsSlice";
+import {
+  fetchUnreadCount,
+  notificationReceived,
+  notificationsRemoved,
+} from "../features/notifications/notificationsSlice";
+import type { Notification } from "../features/notifications/notificationsSlice";
 import { receiveMessage } from "../features/messages/messagesSlice";
 
 /**
@@ -37,24 +42,16 @@ export function useRealtime() {
       }, 800);
     };
 
-    const onNotification = (n: any) => {
-      const actorId =
-        n?.metadata?.actor_id ??
-        n?.metadata?.viewer_id ??
-        n?.metadata?.sender_id ??
-        n?.metadata?.liker_id ??
-        n?.metadata?.commenter_id ??
-        "";
-      dispatch(
-        addNotification({
-          type: "like",
-          userId: String(actorId),
-          username: "",
-          content: n?.message ?? n?.title ?? "New activity",
-          postId: n?.source_type === "story" ? undefined : n?.source_id,
-        } as any)
-      );
-      if (n?.message) toast(n.message);
+    // Live notification (same payload shape as GET /notifications).
+    const onNotification = (n: Notification) => {
+      if (!n?.id) return;
+      dispatch(notificationReceived(n));
+      if (n.message) toast(n.message);
+    };
+
+    // The action behind a notification was undone (unlike, unfollow, ...).
+    const onNotificationRemoved = (p: { ids?: string[]; count?: number }) => {
+      if (Array.isArray(p?.ids)) dispatch(notificationsRemoved({ ids: p.ids, count: p.count }));
     };
 
     const onStoryView = (p: any) => {
@@ -96,7 +93,8 @@ export function useRealtime() {
       toast(m?.shared_story_id ? `${who} sent you a story` : `${who}: ${m?.content ?? ""}`);
     };
 
-    socket.on("notification:new", onNotification);
+    socket.on("new_notification", onNotification);
+    socket.on("notification_removed", onNotificationRemoved);
     socket.on("story:view", onStoryView);
     socket.on("story:reaction", onStoryReaction);
     socket.on("story:new", onStoryNew);
@@ -107,8 +105,12 @@ export function useRealtime() {
 
     connectSocket();
 
+    // Badge in the header / sidebar: start from the server's unread count.
+    dispatch(fetchUnreadCount());
+
     return () => {
-      socket.off("notification:new", onNotification);
+      socket.off("new_notification", onNotification);
+      socket.off("notification_removed", onNotificationRemoved);
       socket.off("story:view", onStoryView);
       socket.off("story:reaction", onStoryReaction);
       socket.off("story:new", onStoryNew);

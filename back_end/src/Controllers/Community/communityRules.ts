@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../../config/prismaClient";
+import { requireCommunityAdmin } from "./communityAccess";
 
 // Get all rules for a community
 const getCommunityRules = async (req: Request, res: Response, next: NextFunction) => {
@@ -32,6 +31,9 @@ const createCommunityRule = async (req: Request, res: Response, next: NextFuncti
   const { title, description, order } = req.body;
 
   try {
+    const access = await requireCommunityAdmin(req, res, communityId);
+    if (!access) return;
+
     if (!title || !description) {
       return res.status(400).json({
         status: "error",
@@ -67,6 +69,9 @@ const updateCommunityRule = async (req: Request, res: Response, next: NextFuncti
   const { title, description, order } = req.body;
 
   try {
+    const access = await requireCommunityAdmin(req, res, communityId);
+    if (!access) return;
+
     const updateData: any = {};
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
@@ -110,6 +115,9 @@ const deleteCommunityRule = async (req: Request, res: Response, next: NextFuncti
   const { communityId, ruleId } = req.params as { [key: string]: string };
 
   try {
+    const access = await requireCommunityAdmin(req, res, communityId);
+    if (!access) return;
+
     const deletedRule = await prisma.communityRule.deleteMany({
       where: {
         id: ruleId,

@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import bcrypt from "bcrypt";
+import { setRefreshTokenCookie } from "../../services/sessionService";
 
 export const changePassword = async (req: Request, res: Response) => {
   try {
@@ -34,10 +35,15 @@ export const changePassword = async (req: Request, res: Response) => {
 
     const hashed = await bcrypt.hash(newPassword, 10);
 
-    await prisma.user.update({
+    // Bumping token_version invalidates every refresh token issued before the
+    // change (all other devices). This session gets a fresh one so the user
+    // who just changed their password stays signed in here.
+    const updated = await prisma.user.update({
       where: { id: userId },
-      data: { password_hash: hashed },
+      data: { password_hash: hashed, token_version: { increment: 1 } },
+      select: { id: true, token_version: true },
     });
+    setRefreshTokenCookie(res, updated);
 
     return res.status(200).json({ success: true, message: "Password updated" });
   } catch (error) {

@@ -1,4 +1,6 @@
 import { Request, Response } from "express";
+import { NotificationService } from "../../services/notificationService";
+import { canViewPost } from "../../services/postVisibility";
 import prisma from "../../config/prismaClient";
 import { isBlockedEitherWay } from "../../services/BlockService";
 
@@ -12,7 +14,7 @@ export const toggleRepost = async (req: Request, res: Response) => {
     }
 
     const post = await prisma.post.findUnique({ where: { id: postId } });
-    if (!post) {
+    if (!post || !(await canViewPost(userId, postId))) {
       return res.status(404).json({ message: "Post not found" });
     }
 
@@ -27,6 +29,9 @@ export const toggleRepost = async (req: Request, res: Response) => {
 
     if (existingRepost) {
       await prisma.repost.delete({ where: { id: existingRepost.id } });
+
+      // Withdraw the "reposted your post" notification.
+      NotificationService.removeNotification("repost", userId, postId);
       
       const updatedPost = await prisma.post.findUnique({
         where: { id: postId },
@@ -41,6 +46,14 @@ export const toggleRepost = async (req: Request, res: Response) => {
 
     await prisma.repost.create({
       data: { user_id: userId, original_post_id: postId },
+    });
+
+    NotificationService.notify("repost", {
+      recipientId: post.user_id,
+      actorId: userId,
+      sourceId: postId,
+      sourceType: "post",
+      metadata: { post_id: postId },
     });
 
     const updatedPost = await prisma.post.findUnique({

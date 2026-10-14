@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { getBlockedUserIds } from "../../services/BlockService";
+import { visiblePostWhere } from "../../services/postVisibility";
 
 export const getMyLikedPosts = async (req: Request, res: Response) => {
   try {
@@ -13,6 +14,7 @@ export const getMyLikedPosts = async (req: Request, res: Response) => {
         post_id: { not: null },
         post: {
           user_id: { notIn: blockedIds }, // Filter out liked posts from blocked users
+          AND: [visiblePostWhere(userId)],
         },
       },
       include: {

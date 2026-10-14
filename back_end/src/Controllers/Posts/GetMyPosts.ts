@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { getBlockedUserIds } from "../../services/BlockService";
+import { visiblePostWhere } from "../../services/postVisibility";
 
 export const getMyPosts = async (req: Request, res: Response) => {
   const userId = req.user?.id;
@@ -106,6 +107,7 @@ export const getMyReposts = async (req: Request, res: Response) => {
         user_id: userId,
         originalPost: {
           user_id: { notIn: blockedIds }, // Filter out reposts of posts from blocked users
+          AND: [visiblePostWhere(userId)],
         },
       },
       orderBy: { created_at: "desc" },

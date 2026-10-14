@@ -2,7 +2,6 @@ import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypt
 
 const algorithm = 'aes-256-gcm';
 const ivLength = 16;
-const saltLength = 64;
 const tagLength = 16;
 
 const getKey = (secretKey: string): Buffer => {

@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { canViewPost } from "../../services/postVisibility";
 import prisma from "../../config/prismaClient";
 import { verifyAccessToken } from "../../util/jwt";
 
@@ -48,7 +49,8 @@ export const getComment = async (req: Request, res: Response) => {
       select: { user_id: true }
     }) as any;
 
-    if (!post) {
+    // Same answer for "does not exist" and "not visible to you".
+    if (!post || !(await canViewPost(req.user?.id ?? userId, postId))) {
       return res.status(404).json({ message: "Post not found" });
     }
 

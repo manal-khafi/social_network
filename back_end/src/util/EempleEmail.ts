@@ -1,4 +1,3 @@
-import { initializeEmailService } from "../config/EmailConfig";
 import { getTransporter } from "../config/EmailConfig";
 
 // Public base URL of the frontend, used to build links inside outgoing emails.

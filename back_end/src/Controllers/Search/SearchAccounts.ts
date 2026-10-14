@@ -27,8 +27,8 @@ export const searchAccounts = async (req: Request, res: Response) => {
 
     const blockedIds = viewerId ? await getBlockedUserIds(viewerId) : [];
 
-    let followingIds = new Set<string>();
-    let pendingIds = new Set<string>();
+    const followingIds = new Set<string>();
+    const pendingIds = new Set<string>();
     if (viewerId) {
       const follows = await prisma.follow.findMany({
         where: { follower_id: viewerId, status: { in: ["accepted", "pending"] } },

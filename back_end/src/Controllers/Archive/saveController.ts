@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
+import { visiblePostWhere } from "../../services/postVisibility";
 
 // Définition locale pour éviter l'erreur TS2307
 type AuthRequest = Request & {
@@ -29,6 +30,7 @@ export const getArchivedPosts = async (req: AuthRequest, res: Response) => {
     const archivedSaves = await prisma.save.findMany({
       where: {
         user_id: userId,
+        post: visiblePostWhere(userId),
       },
       include: {
         post: {

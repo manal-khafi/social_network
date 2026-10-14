@@ -12,6 +12,7 @@ export const getPrivacySettings = async (req: Request, res: Response) => {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
+        is_private: true,
         allow_comments: true,
         allow_mentions: true,
         show_activity_status: true,
@@ -38,6 +39,7 @@ export const updatePrivacySettings = async (req: Request, res: Response) => {
     }
 
     const {
+      is_private,
       allow_comments,
       allow_mentions,
       show_activity_status,
@@ -46,6 +48,7 @@ export const updatePrivacySettings = async (req: Request, res: Response) => {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
+        ...(typeof is_private === "boolean" && { is_private }),
         ...(typeof allow_comments === "boolean" && { allow_comments }),
         ...(typeof allow_mentions === "boolean" && { allow_mentions }),
         ...(typeof show_activity_status === "boolean" && {
@@ -53,6 +56,7 @@ export const updatePrivacySettings = async (req: Request, res: Response) => {
         }),
       },
       select: {
+        is_private: true,
         allow_comments: true,
         allow_mentions: true,
         show_activity_status: true,

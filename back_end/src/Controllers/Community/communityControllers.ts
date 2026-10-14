@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../../config/prismaClient";
+import { requireCommunityAdmin } from "./communityAccess";
 
 
 const createCommunity = async (req: Request, res: Response, next: NextFunction) => {
@@ -15,17 +14,13 @@ const createCommunity = async (req: Request, res: Response, next: NextFunction) 
             });
         }
         
-        let created_by = (req as any).user?.id;
-        
+        const created_by = req.user?.id;
+
         if (!created_by) {
-            const firstUser = await prisma.user.findFirst();
-            if (!firstUser) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "No user found in database. Please create a user first.",
-                });
-            }
-            created_by = firstUser.id;
+            return res.status(401).json({
+                status: "error",
+                message: "Not authenticated",
+            });
         }
         
         // Find or create OWNER/ADMIN role
@@ -143,7 +138,10 @@ const modifyCommunity = async (req: Request, res: Response, next: NextFunction) 
     try {
         const { id } = req.params as { [key: string]: string };
         const { name, description, bio, banner_url, avatar_url, is_private, type } = req.body;
-        
+
+        const access = await requireCommunityAdmin(req, res, id);
+        if (!access) return;
+
         // Build update object with only provided fields
         const updateData: any = {};
         if (name) updateData.name = name;
@@ -183,6 +181,10 @@ const modifyCommunity = async (req: Request, res: Response, next: NextFunction) 
 const deleteCommunity = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params as { [key: string]: string };
+
+        const access = await requireCommunityAdmin(req, res, id);
+        if (!access) return;
+
         await prisma.community.delete({
             where: { id: id },
         });

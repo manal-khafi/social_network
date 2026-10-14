@@ -1,5 +1,4 @@
 import prisma from '../util/prisma';
-import { AppError } from '../util/error';
 
 export class RelationshipService {
   /**

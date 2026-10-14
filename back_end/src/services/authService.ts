@@ -18,7 +18,9 @@ const signOptions: SignOptions = {
 
 export const forgotPassword = async (email: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error("No user found with this email");
+  // Unknown email: do nothing, and let the caller answer exactly as it does
+  // for a known one, so the endpoint cannot be used to enumerate accounts.
+  if (!user) return;
 
   const resetToken = jwt.sign(
     { userId: user.id, email: user.email },
@@ -51,7 +53,8 @@ export const resetPassword = async (token: string, newPassword: string) => {
 
   await prisma.user.update({
     where: { id: payload.userId },
-    data: { password_hash: hashedPassword },
+    // token_version bump: revoke every refresh token issued before the reset.
+    data: { password_hash: hashedPassword, token_version: { increment: 1 } },
   });
 
   console.log("Password reset successful");

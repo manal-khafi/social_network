@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
+import { NotificationService } from "../../services/notificationService";
 
 const Acceptdemande = async (req: Request, res: Response) => {
   try {
@@ -32,6 +33,14 @@ const Acceptdemande = async (req: Request, res: Response) => {
     await prisma.follow.update({
       where: { id: demandeId },
       data: { status: "accepted" }
+    });
+
+    // Tell the requester their request went through.
+    NotificationService.notify("follow_accepted", {
+      recipientId: followRequest.follower_id,
+      actorId: userId,
+      sourceId: userId,
+      sourceType: "user",
     });
 
     res.status(200).json({ message: "Follow request accepted" });

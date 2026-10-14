@@ -3,7 +3,8 @@ import type { Request, Response } from "express";
 /**
  * ICE servers for WebRTC. Always returns free public STUN; adds a TURN relay
  * only when TURN_URL is configured (see .env.example). Keeps TURN credentials
- * out of the frontend bundle.
+ * out of the frontend bundle; the route is behind authMiddleware so only
+ * signed-in users can read them.
  */
 export const getIceServers = (_req: Request, res: Response) => {
   const iceServers: Array<{ urls: string | string[]; username?: string; credential?: string }> = [

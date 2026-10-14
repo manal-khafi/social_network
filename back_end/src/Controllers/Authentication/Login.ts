@@ -1,7 +1,20 @@
 import prisma from "../../config/prismaClient";
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import { generateAccessToken, generateRefreshToken } from "../../util/jwt";
+import { generateTwoFactorLoginToken } from "../../util/jwt";
+import { issueLoginSession, sessionUserInclude } from "../../services/sessionService";
+
+// Compared against when the account does not exist (or has no password), so
+// that case costs the same bcrypt work as a wrong password and response time
+// does not reveal which accounts exist.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync("no-such-account", 10);
+
+// One answer for "no such account" and "wrong password".
+const invalidCredentials = (res: Response) =>
+  res.status(401).json({
+    success: false,
+    message: "Invalid credentials",
+  });
 
 export const Login = async (req: Request, res: Response) => {
   try {
@@ -21,21 +34,24 @@ export const Login = async (req: Request, res: Response) => {
           { username: loginIdentifier }
         ]
       },
-      include: {
-        role: {
-          include: {
-            rolePermissions: {
-              include: { permission: true },
-            },
-          },
-        },
-      },
+      include: sessionUserInclude,
     });
 
-    if (!user) {
-      return res.status(404).json({
+    const isValidPassword = await bcrypt.compare(
+      String(password),
+      user?.password_hash ?? DUMMY_PASSWORD_HASH
+    );
+
+    if (!user || !user.password_hash || !isValidPassword) {
+      return invalidCredentials(res);
+    }
+
+    // Account-state checks come only after the password is proven, so their
+    // messages cannot be used to probe which emails are registered.
+    if (!user.is_active) {
+      return res.status(403).json({
         success: false,
-        message: "User not found",
+        message: "This account has been deactivated. Contact support to reactivate.",
       });
     }
 
@@ -46,66 +62,27 @@ export const Login = async (req: Request, res: Response) => {
       });
     }
 
-    if (!user.password_hash) {
-      return res.status(400).json({
-        success: false,
-        message: "Incorrect credentials",
+    // 2FA enabled: the password alone is not enough. Issue no access/refresh
+    // token yet, only a short-lived challenge that must be exchanged together
+    // with a TOTP code at POST /api/auth/2fa/verify-login.
+    if (user.two_factor_enabled) {
+      return res.status(200).json({
+        success: true,
+        requiresTwoFactor: true,
+        twoFactorToken: generateTwoFactorLoginToken({
+          id: user.id,
+          token_version: user.token_version,
+        }),
+        message: "Two-factor authentication code required",
       });
     }
 
-    const isValidPassword = await bcrypt.compare(
-      password,
-      user.password_hash
-    );
+    const session = await issueLoginSession(res, user);
 
-    if (!isValidPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "Incorrect credentials",
-      });
-    }
-    const permissions =
-      user.role?.rolePermissions.map((rp: { permission: { code: string } }) => rp.permission.code) || [];
-    
-    const tokenPayload = {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      avatar_url: user.avatar_url ?? null,
-      role: user.role?.name,
-      permissions,
-    };
-
-    const token = generateAccessToken(tokenPayload);
-    const refreshToken = generateRefreshToken({ 
-      id: user.id,
-      token_version: user.token_version
-    });
-    
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', 
-      sameSite: 'lax', // Changed from 'strict' to 'lax'
-      maxAge: 24 * 60 * 60 * 1000 
-    });
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { last_login: new Date() },
-    });
-    
     return res.status(200).json({
       success: true,
       message: "Signed in successfully",
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role?.name,
-        permissions,
-        onboarding_done: user.onboarding_done
-      },
+      ...session,
     });
   } catch (error) {
     console.error("login failed:", error);

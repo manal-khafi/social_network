@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/axios';
 import { useAppSelector } from '../../hooks'; // Pour récupérer le token d'authentification
 import { ArrowLeft, UserX, Loader2, AlertCircle } from 'lucide-react';
 import { Card } from '../../Components/ui/card';
 import { Button } from '../../Components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { toast } from 'sonner';
-
-// --- CONFIGURATION API ---
-const API_BASE_URL = "http://localhost:3500/api";
 
 export default function BlockedContactsView() {
   const navigate = useNavigate();
@@ -26,13 +23,7 @@ export default function BlockedContactsView() {
 const fetchBlockedList = async () => {
   try {
     setLoading(true);
-    console.log("Tentative de connexion sur : http://localhost:3500/api/blocks");
-    
-    const response = await axios.get("http://localhost:3500/api/blocks", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    
-    console.log("Réponse reçue :", response.data);
+    const response = await api.get("/blocks");
     setBlockedUsers(response.data.data || []);
   } catch (err: any) {
     if (!err.response) {
@@ -52,9 +43,8 @@ const fetchBlockedList = async () => {
   const handleUnblock = async (userId: string, username: string) => {
     try {
       // Ton controller DELETE /api/blocks attend { blockedUserId } dans le body
-      await axios.delete(`${API_BASE_URL}/blocks`, {
+      await api.delete("/blocks", {
         data: { blockedUserId: userId },
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       toast.success(`@${username} unblocked`);

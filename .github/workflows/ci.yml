@@ -6,7 +6,7 @@ on:
   pull_request:
 
 # Dummy value: prisma.config.ts requires DATABASE_URL to load, but nothing in CI
-# opens a DB connection (typecheck + unit tests + build only).
+# opens a DB connection (typecheck + lint + tests with a mocked Prisma + build only).
 env:
   DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
 
@@ -26,6 +26,9 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npm run typecheck
+      - run: npm run lint
+      # Unit tests + auth integration tests (supertest against the Express app,
+      # Prisma and SMTP mocked: no database or network needed).
       - run: npm test
 
   frontend:
@@ -41,6 +44,7 @@ jobs:
           cache: npm
           cache-dependency-path: front_end/package-lock.json
       - run: npm ci
+      - run: npm run lint
       - run: npm run build
 
   docker:

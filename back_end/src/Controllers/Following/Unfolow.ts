@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { isBlockedEitherWay } from "../../services/BlockService";
+import { NotificationService } from "../../services/notificationService";
 
 const Unfollow = async (req: Request, res: Response) => {
   try {
@@ -27,19 +28,26 @@ const Unfollow = async (req: Request, res: Response) => {
       where: {
         follower_id: userId,
         followed_id: userIdToUnfollow,
-        status: "accepted"
-        
+        // accepted = unfollow, pending = cancel a follow request not answered yet
+        status: { in: ["accepted", "pending"] }
       }
     });
 
     if (!existingFollow) {
-      return res.status(400).json({ message: "You are not following this user or request not accepted" });
+      return res.status(400).json({ message: "You are not following this user and have no pending request" });
     }
     await prisma.follow.delete({
       where: { id: existingFollow.id }
     });
 
-    res.status(200).json({ message: "Successfully unfollowed the user" });
+    // Withdraw the "started following you" / "requested to follow you" notification.
+    NotificationService.removeNotification(["follow", "follow_request"], userId, userIdToUnfollow);
+
+    res.status(200).json({
+      message: existingFollow.status === "pending"
+        ? "Follow request cancelled"
+        : "Successfully unfollowed the user"
+    });
 
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });

@@ -3,8 +3,6 @@ import { verifyResetToken, resetPassword } from "../../services/authService";
 
 export const verifyResetTokenController = async (req: Request, res: Response) => {
   const { token } = req.params as { [key: string]: string };
-  console.log(token);
-  
   if (!token) return res.status(400).json({ success: false, message: "Token requis" });
 
   const user = await verifyResetToken(token as string);
@@ -14,11 +12,7 @@ export const verifyResetTokenController = async (req: Request, res: Response) =>
 };
 
 export const resetPasswordController = async (req: Request, res: Response) => {
-  console.log("🔥 RESET PASSWORD HIT");
-  console.log("BODY:", req.body);
   const { token, newPassword } = req.body;
-  console.log("Received token:", token);
-  console.log("Received newPassword:", newPassword);
   if (!token || !newPassword) return res.status(400).json({ success: false, message: "Champs manquants" });
 
   try {

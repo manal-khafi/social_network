@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
+import { publicUserSelect } from "../../util/publicUser";
 
 export class ReportController {
   static async createReport(req: Request, res: Response) {
@@ -32,8 +33,8 @@ export class ReportController {
       const reports = await prisma.report.findMany({
         where: status ? { status: status as any } : {},
         include: {
-          reporter: true,
-          reportedUser: true,
+          reporter: { select: publicUserSelect },
+          reportedUser: { select: publicUserSelect },
           post: true,
           comment: true,
         },
@@ -51,8 +52,8 @@ export class ReportController {
       const report = await prisma.report.findUnique({
         where: { id },
         include: {
-          reporter: true,
-          reportedUser: true,
+          reporter: { select: publicUserSelect },
+          reportedUser: { select: publicUserSelect },
           post: true,
           comment: true,
         },
@@ -98,12 +99,12 @@ export class ReportController {
 
       const reportsMade = await prisma.report.findMany({
         where: { reporter_id: userId },
-        include: { reportedUser: true, post: true, comment: true },
+        include: { reportedUser: { select: publicUserSelect }, post: true, comment: true },
       });
 
       const reportsReceived = await prisma.report.findMany({
         where: { reported_user_id: userId },
-        include: { reporter: true, post: true, comment: true },
+        include: { reporter: { select: publicUserSelect }, post: true, comment: true },
       });
 
       res.status(200).json({ reportsMade, reportsReceived });

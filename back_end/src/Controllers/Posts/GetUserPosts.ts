@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { getBlockedUserIds, isBlockedEitherWay } from "../../services/BlockService";
+import { visiblePostWhere } from "../../services/postVisibility";
 
 const canViewUserContent = async (viewerId: string, targetUserId: string) => {
   const targetUser = await prisma.user.findUnique({
@@ -51,7 +52,8 @@ export const getUserPosts = async (req: Request, res: Response) => {
     const posts = await prisma.post.findMany({
       where: {
         user_id: userId,
-        is_deleted: false,
+        // Hides archived, private and (for non-friends) friends-only posts
+        AND: [visiblePostWhere(viewerId)],
       },
       orderBy: { created_at: "desc" },
       include: {
@@ -149,6 +151,7 @@ export const getUserReposts = async (req: Request, res: Response) => {
         user_id: userId,
         originalPost: {
           user_id: { notIn: blockedIds },
+          AND: [visiblePostWhere(viewerId)],
         },
       },
       orderBy: { created_at: "desc" },

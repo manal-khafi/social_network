@@ -1,6 +1,7 @@
 import {Request, Response } from "express";
 import prisma from "../../config/prismaClient";
 import { isBlockedEitherWay } from "../../services/BlockService";
+import { NotificationService } from "../../services/notificationService";
 
 const Follow = async (req: Request, res: Response) => {
   try {
@@ -54,6 +55,13 @@ const Follow = async (req: Request, res: Response) => {
         }
       });
 
+      NotificationService.notify("follow_request", {
+        recipientId: userIdToFollow,
+        actorId: userId,
+        sourceId: userIdToFollow,
+        sourceType: "user",
+      });
+
       return res.status(201).json({ message: "Follow request sent", status: "PENDING" });
     }
 
@@ -64,6 +72,13 @@ const Follow = async (req: Request, res: Response) => {
         followed_id: userIdToFollow,
         status: "accepted"
       }
+    });
+
+    NotificationService.notify("follow", {
+      recipientId: userIdToFollow,
+      actorId: userId,
+      sourceId: userIdToFollow,
+      sourceType: "user",
     });
 
     return res.status(201).json({ message: "Successfully followed the user", status: "ACCEPTED" });

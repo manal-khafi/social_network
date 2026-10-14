@@ -91,9 +91,9 @@ export const Register = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 9. When SMTP isn't configured, users would be locked out (no verify email),
-    // so auto-verify. Set AUTH_AUTO_VERIFY=false in production to force email verification.
-    const autoVerify = process.env.AUTH_AUTO_VERIFY !== "false";
+    // 9. Email verification is REQUIRED by default. AUTH_AUTO_VERIFY=true skips it
+    // and is a development convenience only (e.g. no SMTP configured locally).
+    const autoVerify = process.env.AUTH_AUTO_VERIFY === "true";
 
     // 10. Create the user
     const newUser = await prisma.user.create({
@@ -116,7 +116,9 @@ export const Register = async (req: Request, res: Response) => {
       },
     });
 
-    // 11. Send the verification email (never fails registration if SMTP is down)
+    // 11. Send the verification email. If it cannot be sent the account could
+    // never be activated, so roll the registration back instead of silently
+    // marking it verified; the user can simply register again later.
     let emailSent = false;
     if (!autoVerify) {
       try {
@@ -124,9 +126,12 @@ export const Register = async (req: Request, res: Response) => {
         await sendVerificationEmail(email, username, token);
         emailSent = true;
       } catch (mailErr) {
-        logger.warn({ err: mailErr, userId: newUser.id }, "verification email failed to send");
-        // fall back to verified so the account isn't stuck
-        await prisma.user.update({ where: { id: newUser.id }, data: { is_verified: true } });
+        logger.error({ err: mailErr, userId: newUser.id }, "verification email failed to send");
+        await prisma.user.delete({ where: { id: newUser.id } });
+        return res.status(503).json({
+          success: false,
+          message: "We could not send the verification email. Please try again later.",
+        });
       }
     }
 

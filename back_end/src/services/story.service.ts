@@ -1,4 +1,5 @@
 import prisma from '../util/prisma';
+import { canViewPost } from './postVisibility';
 import { AppError } from '../util/error';
 import { RelationshipService } from './relationship.service';
 import { NotificationService } from './notificationService';
@@ -131,7 +132,9 @@ export class StoryService {
         where: { id: data.shared_post_id },
         select: { id: true, user_id: true, is_deleted: true, visibility: true },
       });
-      if (!post || post.is_deleted) throw new AppError('Post not found', 404);
+      if (!post || post.is_deleted || !(await canViewPost(userId, post.id))) {
+        throw new AppError('Post not found', 404);
+      }
       if (post.visibility !== 'public' && post.user_id !== userId) {
         throw new AppError('This post cannot be reshared', 403);
       }

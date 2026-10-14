@@ -1,4 +1,5 @@
 import jwt, { SignOptions, Secret } from "jsonwebtoken";
+import { createHmac } from "crypto";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -63,4 +64,27 @@ export const generateEmailVerifyToken = (payload: object) =>
 export const verifyEmailVerifyToken = (token: string) =>
   jwt.verify(token, emailVerifySecret);
 
-// console.log("DEBUG SECRET:", process.env.AUTH_SECRET);
+// --- Two-factor login challenge ---
+// Issued by /login once the password is correct for an account with 2FA
+// enabled; exchanged (with a TOTP code) for a real session. It is signed with
+// a key derived from AUTH_SECRET, NOT AUTH_SECRET itself, so it can never be
+// accepted as an access token by verifyAccessToken.
+const twoFactorLoginSecret: Secret = createHmac("sha256", AUTH_SECRET)
+  .update("two-factor-login-challenge")
+  .digest("hex");
+const TWO_FACTOR_LOGIN_PURPOSE = "2fa_login";
+
+export const generateTwoFactorLoginToken = (payload: { id: string; token_version: number }) =>
+  jwt.sign({ ...payload, purpose: TWO_FACTOR_LOGIN_PURPOSE }, twoFactorLoginSecret, { expiresIn: "5m" });
+
+export const verifyTwoFactorLoginToken = (token: string) => {
+  const decoded = jwt.verify(token, twoFactorLoginSecret) as {
+    id?: string;
+    token_version?: number;
+    purpose?: string;
+  };
+  if (decoded.purpose !== TWO_FACTOR_LOGIN_PURPOSE || !decoded.id) {
+    throw new Error("Invalid two-factor login token");
+  }
+  return { id: decoded.id, token_version: decoded.token_version };
+};

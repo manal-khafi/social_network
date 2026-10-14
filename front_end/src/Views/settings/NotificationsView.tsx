@@ -1,6 +1,12 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAppSelector, useAppDispatch } from '../../hooks';
-import { toggleAllNotifications, toggleNotification} from '../../features/settings/settingsSlice';
+import {
+  fetchNotificationSettings,
+  updateNotificationSettings,
+} from '../../features/settings/settingsSlice';
+import type { NotificationPreferences } from '../../features/settings/settingsSlice';
 import { ArrowLeft, Bell, Smartphone, Mail, MessageSquare } from 'lucide-react';
 import { Card } from '../../Components/ui/card';
 import { Switch } from '../../Components/ui/switch';
@@ -12,6 +18,19 @@ export default function NotificationsView() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { notifications } = useAppSelector((state) => state.settings);
+
+  // Preferences live on the server; load the saved values when the page opens.
+  useEffect(() => {
+    dispatch(fetchNotificationSettings());
+  }, [dispatch]);
+
+  const savePreferences = async (changes: Partial<NotificationPreferences>) => {
+    try {
+      await dispatch(updateNotificationSettings(changes)).unwrap();
+    } catch (message) {
+      toast.error(typeof message === 'string' ? message : 'Failed to save notification settings');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,7 +57,15 @@ export default function NotificationsView() {
             </div>
             <Switch
               checked={notifications.all}
-              onCheckedChange={() => dispatch(toggleAllNotifications())}
+              onCheckedChange={(checked) =>
+                savePreferences({
+                  likes: checked,
+                  comments: checked,
+                  follows: checked,
+                  mentions: checked,
+                  reposts: checked,
+                })
+              }
             />
           </div>
         </Card>
@@ -105,7 +132,7 @@ export default function NotificationsView() {
             </div>
             <Switch
               checked={notifications.likes}
-              onCheckedChange={() => dispatch(toggleNotification('likes'))}
+              onCheckedChange={(checked) => savePreferences({ likes: checked })}
               disabled={!notifications.all}
             />
           </div>
@@ -115,11 +142,11 @@ export default function NotificationsView() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Comments</p>
-              <p className="text-sm text-muted-foreground">When someone comments on your post</p>
+              <p className="text-sm text-muted-foreground">When someone comments on your post or replies to you</p>
             </div>
             <Switch
               checked={notifications.comments}
-              onCheckedChange={() => dispatch(toggleNotification('comments'))}
+              onCheckedChange={(checked) => savePreferences({ comments: checked })}
               disabled={!notifications.all}
             />
           </div>
@@ -129,11 +156,11 @@ export default function NotificationsView() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">New Followers</p>
-              <p className="text-sm text-muted-foreground">When someone follows you</p>
+              <p className="text-sm text-muted-foreground">When someone follows you, asks to, or accepts your request</p>
             </div>
             <Switch
               checked={notifications.follows}
-              onCheckedChange={() => dispatch(toggleNotification('follows'))}
+              onCheckedChange={(checked) => savePreferences({ follows: checked })}
               disabled={!notifications.all}
             />
           </div>
@@ -147,7 +174,7 @@ export default function NotificationsView() {
             </div>
             <Switch
               checked={notifications.mentions}
-              onCheckedChange={() => dispatch(toggleNotification('mentions'))}
+              onCheckedChange={(checked) => savePreferences({ mentions: checked })}
               disabled={!notifications.all}
             />
           </div>
@@ -161,7 +188,7 @@ export default function NotificationsView() {
             </div>
             <Switch
               checked={notifications.reposts}
-              onCheckedChange={() => dispatch(toggleNotification('reposts'))}
+              onCheckedChange={(checked) => savePreferences({ reposts: checked })}
               disabled={!notifications.all}
             />
           </div>

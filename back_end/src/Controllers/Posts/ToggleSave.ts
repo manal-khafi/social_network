@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { canViewPost } from "../../services/postVisibility";
 import prisma from "../../config/prismaClient";
 import { isBlockedEitherWay } from "../../services/BlockService";
 
@@ -12,7 +13,7 @@ export const toggleSave = async (req: Request, res: Response) => {
     }
 
     const post = await prisma.post.findUnique({ where: { id: postId } });
-    if (!post) {
+    if (!post || !(await canViewPost(userId, postId))) {
       return res.status(404).json({ message: "Post not found" });
     }
 
