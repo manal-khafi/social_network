@@ -72,7 +72,7 @@ describe("POST /api/account/me/deactivate", () => {
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 
-  it("works for a Google / Facebook account, which has no password", async () => {
+  it("works for a Google account, which has no password", async () => {
     prismaMock.user.findUnique.mockResolvedValue({ ...passwordUser, password_hash: null });
     const res = await auth(request(app).post("/api/account/me/deactivate")).send({ reason: "x" });
     expect(res.status).toBe(200);

@@ -6,8 +6,8 @@ import fs from "fs";
 import { logger } from "../util/logger";
 
 /**
- * Firebase Admin SDK, used to verify the ID tokens sent by Google / Facebook
- * sign-in (see Controllers/Authentication/social.ts).
+ * Firebase Admin SDK: file uploads to Firebase Storage (upload.controller.ts)
+ * and removing a deleted user's files / Firebase account (accountcontroller.ts).
  *
  * Credentials come from ONE of:
  *   FIREBASE_SERVICE_ACCOUNT_PATH  path to the service-account JSON file
@@ -15,8 +15,8 @@ import { logger } from "../util/logger";
  * FIREBASE_STORAGE_BUCKET is optional (only needed for server-side Storage).
  *
  * Firebase is optional: when it is not configured (or the credentials are
- * invalid) the API still starts, `isFirebaseConfigured` is false and social
- * login answers 503 instead of crashing the whole server.
+ * invalid) the API still starts, `isFirebaseConfigured` is false and uploads
+ * answer 503 instead of crashing the whole server.
  */
 const loadServiceAccount = (): Record<string, any> | null => {
   const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;

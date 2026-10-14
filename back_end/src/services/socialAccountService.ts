@@ -9,7 +9,7 @@ export interface SocialProfile {
   emailVerified: boolean;
   name?: string | null;
   picture?: string | null;
-  /** e.g. "google.com", "facebook.com" (same values Firebase uses). */
+  /** e.g. "google.com" (same values Firebase uses). */
   provider: string;
 }
 

@@ -110,26 +110,19 @@ site's public URL (e.g. `https://www.anmougar.online`), and `ALLOWED_ORIGINS`
 set to the same URL (needed by the Socket.IO connection and by the origin check
 on write requests).
 
-### Google / Facebook sign-in
+### Google sign-in
 
 Sign-in runs on the backend as full-page redirects (no Firebase popup), so it
 works in every mobile browser. The browser opens
-`https://<the site's domain>/api/authentication/google` (or `/facebook`)
-through the `/api/*` rewrite, the provider sends it back to the matching
-`/callback`, and the backend sets the refresh cookie and redirects to
+`https://<the site's domain>/api/authentication/google` through the `/api/*`
+rewrite, Google sends it back to `/api/authentication/google/callback`, and the backend sets the refresh cookie and redirects to
 `/home#token=...`. Going through the site's domain rather than the
 `onrender.com` hostname is what makes that cookie first-party.
 
-Web service environment: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
-`FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`. Then, once:
-
-- Google Cloud Console > APIs & Services > Credentials > the OAuth 2.0 web
-  client: add `https://<the site's domain>/api/authentication/google/callback`
-  to the authorized redirect URIs
-- Facebook for Developers > Facebook Login > Settings: add
-  `https://<the site's domain>/api/authentication/facebook/callback` to the
-  valid OAuth redirect URIs (and make sure the app asks for the `email`
-  permission)
+Web service environment: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. Then,
+once, in Google Cloud Console > APIs & Services > Credentials > the OAuth 2.0
+web client: add `https://<the site's domain>/api/authentication/google/callback`
+to the authorized redirect URIs.
 
 ## Local development (unchanged)
 

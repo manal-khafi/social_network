@@ -55,18 +55,7 @@ export const resetPasswordLimiter = rateLimit({
 	legacyHeaders: false,
 });
 
-export const socialLoginLimiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	limit: 10, // Limit each IP to 10 social logins per 15 minutes
-	message: {
-        success: false,
-        message: "Too many login attempts, please try again after 15 minutes"
-    },
-	standardHeaders: true,
-	legacyHeaders: false,
-});
-
-// Server-side Google / Facebook sign-in: each attempt is two full-page
+// Server-side Google sign-in: each attempt is two full-page
 // requests (start + callback), and the browser is mid-redirect, so over the
 // limit it goes back to the app with an error instead of a bare JSON page.
 export const oauthLimiter = rateLimit({

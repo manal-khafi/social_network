@@ -105,7 +105,7 @@ export const logoutUser = createAsyncThunk<void, void, { state: { auth: AuthStat
     } catch (error) {
       console.error("Logout API failed", error);
     } finally {
-      // Google / Facebook users also hold a Firebase session in this browser.
+      // Google users also hold a Firebase session in this browser.
       await firebaseSignOut().catch(() => undefined);
       // Onboarding draft of the account that is leaving.
       try {

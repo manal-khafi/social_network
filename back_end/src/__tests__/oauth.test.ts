@@ -29,8 +29,8 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
 /** Starts the flow and returns the state + cookie the callback must bring back. */
-const start = async (provider: "google" | "facebook") => {
-  const res = await request(app).get(`/api/authentication/${provider}`);
+const start = async () => {
+  const res = await request(app).get("/api/authentication/google");
   const location = new URL(res.headers.location);
   return { res, location, state: location.searchParams.get("state")!, cookie: res.headers["set-cookie"] };
 };
@@ -40,8 +40,6 @@ beforeEach(() => {
   vi.stubEnv("FRONTEND_URL", "https://app.example.com");
   vi.stubEnv("GOOGLE_CLIENT_ID", "gid");
   vi.stubEnv("GOOGLE_CLIENT_SECRET", "gsecret");
-  vi.stubEnv("FACEBOOK_APP_ID", "fid");
-  vi.stubEnv("FACEBOOK_APP_SECRET", "fsecret");
   prismaMock.user.findUnique.mockImplementation(async ({ include }: any) =>
     include ? { ...googleUser, role: null } : googleUser
   );
@@ -52,9 +50,9 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("GET /api/authentication/:provider", () => {
+describe("GET /api/authentication/google", () => {
   it("redirects to Google with a state that is also kept in a cookie", async () => {
-    const { res, location, state, cookie } = await start("google");
+    const { res, location, state, cookie } = await start();
 
     expect(res.status).toBe(302);
     expect(location.origin + location.pathname).toBe("https://accounts.google.com/o/oauth2/v2/auth");
@@ -66,18 +64,27 @@ describe("GET /api/authentication/:provider", () => {
     expect(String(cookie)).toContain(`oauth_state=google%3A${state}`);
   });
 
-  it("sends the user back to the app when the provider is not configured", async () => {
-    vi.stubEnv("FACEBOOK_APP_ID", "");
-    const res = await request(app).get("/api/authentication/facebook");
+  it("sends the user back to the app when Google is not configured", async () => {
+    vi.stubEnv("GOOGLE_CLIENT_ID", "");
+    const res = await request(app).get("/api/authentication/google");
 
     expect(res.status).toBe(302);
     expect(res.headers.location).toBe("https://app.example.com/#oauth_error=not_configured");
   });
+
+  it("no longer offers Facebook sign-in", async () => {
+    // No such route: unmatched /api paths answer 401/404, never an OAuth redirect.
+    for (const path of ["/api/authentication/facebook", "/api/authentication/facebook/callback?code=x&state=y"]) {
+      const res = await request(app).get(path);
+      expect(res.status).not.toBe(302);
+      expect(res.headers.location).toBeUndefined();
+    }
+  });
 });
 
-describe("GET /api/authentication/:provider/callback", () => {
+describe("GET /api/authentication/google/callback", () => {
   it("rejects a callback whose state does not match the cookie", async () => {
-    const { cookie } = await start("google");
+    const { cookie } = await start();
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
@@ -90,7 +97,7 @@ describe("GET /api/authentication/:provider/callback", () => {
   });
 
   it("signs in with Google and returns to /home with the token in the fragment", async () => {
-    const { state, cookie } = await start("google");
+    const { state, cookie } = await start();
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string) =>
@@ -110,9 +117,35 @@ describe("GET /api/authentication/:provider/callback", () => {
     expect(prismaMock.user.findUnique).toHaveBeenCalledWith({ where: { email: "alice@example.com" } });
   });
 
+  it("links a verified Google email to the existing email/password account", async () => {
+    const local = { ...googleUser, provider: "local", is_verified: false };
+    prismaMock.user.findUnique.mockImplementation(async ({ include }: any) => (include ? { ...local, role: null } : local));
+    prismaMock.user.update.mockImplementation(async ({ data }: any) => ({ ...local, ...data }));
+    const { state, cookie } = await start();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) =>
+        String(url).includes("/token")
+          ? json({ access_token: "google-at" })
+          : json({ email: "alice@example.com", email_verified: true })
+      )
+    );
+
+    const res = await request(app)
+      .get(`/api/authentication/google/callback?code=abc&state=${state}`)
+      .set("Cookie", cookie);
+
+    expect(res.headers.location).toMatch(/\/home#token=/);
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { provider: "google.com", is_verified: true },
+    });
+  });
+
   it("does not attach an unverified Google email to an email/password account", async () => {
     prismaMock.user.findUnique.mockResolvedValue({ ...googleUser, provider: "local" });
-    const { state, cookie } = await start("google");
+    const { state, cookie } = await start();
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string) =>
@@ -132,17 +165,17 @@ describe("GET /api/authentication/:provider/callback", () => {
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 
-  it("reports a Facebook account that shares no email", async () => {
-    const { state, cookie } = await start("facebook");
+  it("reports a Google account that shares no email", async () => {
+    const { state, cookie } = await start();
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string) =>
-        String(url).includes("/oauth/access_token") ? json({ access_token: "fb-at" }) : json({ id: "1", name: "Bob" })
+        String(url).includes("/token") ? json({ access_token: "google-at" }) : json({ sub: "1", name: "Bob" })
       )
     );
 
     const res = await request(app)
-      .get(`/api/authentication/facebook/callback?code=abc&state=${state}`)
+      .get(`/api/authentication/google/callback?code=abc&state=${state}`)
       .set("Cookie", cookie);
 
     expect(res.headers.location).toBe("https://app.example.com/#oauth_error=no_email");

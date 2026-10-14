@@ -1,23 +1,13 @@
 import { initializeApp } from "firebase/app";
-import {
-  getAuth,
-  signInWithPopup,
-  GoogleAuthProvider,
-  FacebookAuthProvider,
-  browserLocalPersistence,
-  setPersistence,
-  signOut,
-} from "firebase/auth";
+import { getAuth, browserLocalPersistence, setPersistence, signOut } from "firebase/auth";
 
 // Firebase configuration. Values come from VITE_FIREBASE_* at build time and
 // fall back to the existing project so local builds keep working unconfigured.
 //
-// authDomain is the app's own domain: the sign-in helper pages (/__/auth/*) are
-// served from it through a rewrite to <project>.firebaseapp.com (Render static
-// site rule, see DEPLOYMENT.md). With the default firebaseapp.com domain,
-// browsers that partition third-party storage (Safari, Firefox, Chrome on
-// mobile...) lose the sign-in state: "Unable to process request due to missing
-// initial state".
+// Sign-in no longer goes through Firebase (Google sign-in is a backend OAuth
+// redirect, see Components/Authentication/auth/socialAuth.tsx). The auth
+// instance remains so logout also ends a Firebase session left over from the
+// old popup sign-in.
 const firebaseConfig = {
   // `||`, not `??`: Docker Compose passes unset VITE_FIREBASE_* build args as
   // empty strings, which must fall back too.
@@ -35,29 +25,6 @@ const app = initializeApp(firebaseConfig);
 // 🔐 Auth
 export const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence);
-
-// Providers
-const googleProvider = new GoogleAuthProvider();
-const facebookProvider = new FacebookAuthProvider();
-
-/** Popup sign-in on every device; resolves with the Firebase user. */
-const signInWith = async (provider: GoogleAuthProvider | FacebookAuthProvider, name: string) => {
-  try {
-    // DEBUG(social-login): remove once mobile sign-in is confirmed working.
-    console.log(`[social-auth] ${name}: calling signInWithPopup (authDomain: ${auth.config.authDomain})`);
-    const result = await signInWithPopup(auth, provider);
-    console.log(`[social-auth] ${name}: popup returned user`, result.user?.uid ?? null);
-    return result.user;
-  } catch (error) {
-    const e = error as { code?: string; message?: string };
-    console.log(`[social-auth] ${name}: popup failed`, e?.code, e?.message);
-    console.error(`${name} sign-in error:`, error);
-    throw error;
-  }
-};
-
-export const loginWithGoogle = () => signInWith(googleProvider, "Google");
-export const loginWithFacebook = () => signInWith(facebookProvider, "Facebook");
 
 export const firebaseSignOut = async () => {
   await signOut(auth);

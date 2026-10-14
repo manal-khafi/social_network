@@ -189,7 +189,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     startSocialAuth(provider);
   };
 
-  // Back from a failed Google / Facebook sign-in.
+  // Back from a failed Google sign-in.
   useEffect(() => {
     const error = takeOAuthError();
     const msg = error && oauthErrorMessage(error.code, t);
@@ -313,10 +313,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
       <div className="space-y-3">
         <SocialButton provider="google" onClick={() => onSocialAuth("google")} />
-        <SocialButton
-          provider="facebook"
-          onClick={() => onSocialAuth("facebook")}
-        />
       </div>
 
       <div className="mt-6 text-center">

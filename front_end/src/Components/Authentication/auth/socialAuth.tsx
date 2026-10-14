@@ -1,9 +1,9 @@
 import api from "../../../api/axios";
 
-export type SocialProvider = "google" | "facebook";
+export type SocialProvider = "google";
 
 /**
- * Google / Facebook sign-in: a full-page redirect to the backend, which runs
+ * Google sign-in: a full-page redirect to the backend, which runs
  * the OAuth flow and sends the browser back to the app with the session
  * (see consumeOAuthRedirect). No popups, so it works in every mobile browser.
  */
@@ -39,7 +39,7 @@ export const consumeOAuthRedirect = (): string | null => {
     const provider = params.get("provider");
     pendingOAuthError = {
       code: error,
-      provider: provider === "google" || provider === "facebook" ? provider : null,
+      provider: provider === "google" ? provider : null,
     };
   }
   return token;

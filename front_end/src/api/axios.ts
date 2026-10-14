@@ -35,11 +35,6 @@ api.interceptors.request.use(
   (config) => {
     const url = config.url ?? "";
 
-    // Don't attach token for social login (if your backend expects it public)
-    if (url.includes("/authentication/social-login")) {
-      return config;
-    }
-
     let token = store.getState().auth.token;
 
     // If Redux lost token (refresh), try localStorage auth_session

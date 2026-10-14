@@ -11,7 +11,7 @@ const ALLOWED_TYPES = ["image/", "video/", "audio/"];
  * Uploads one image / video / audio recording to Firebase Storage with the Admin SDK and returns
  * its download URL. Going through the API (instead of the browser writing to
  * Storage directly) means the upload is authorized by the backend JWT, so it
- * works for email/password users as well as Google / Facebook ones.
+ * works for email/password users as well as Google ones.
  *
  * multer has already written the file to a temp path (see Routes/Upload.ts);
  * it is always removed once the request is done.

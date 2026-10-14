@@ -99,7 +99,7 @@ export default function AccountSettingsView() {
     }
   }, [currentUser, userStatus, dispatch]);
 
-  // Google / Facebook accounts have no password to confirm with.
+  // Google accounts have no password to confirm with.
   const requiresPassword = currentUser?.has_password !== false;
 
   const resetPasswordForm = () => {

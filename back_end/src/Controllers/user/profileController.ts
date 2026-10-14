@@ -125,7 +125,7 @@ export const getCurrentUserProfile = async (req: Request, res: Response) => {
         allow_mentions: user.allow_mentions,
         show_activity_status: user.show_activity_status,
         cover_image: user.cover_image ?? null,
-        // false for Google / Facebook accounts: no password to confirm with
+        // false for Google accounts: no password to confirm with
         has_password: Boolean(user.password_hash),
       }
 

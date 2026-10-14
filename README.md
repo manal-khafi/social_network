@@ -17,8 +17,8 @@ Compose stack that runs the whole thing behind nginx.
 
 ## Features
 
-- **Authentication**: email + password with email verification, Google and
-  Facebook sign-in (Firebase), password reset by email, optional TOTP
+- **Authentication**: email + password with email verification, Google
+  sign-in, password reset by email, optional TOTP
   two-factor authentication, rate-limited auth endpoints
 - **Profiles**: avatar, cover image, bio, private accounts, onboarding flow
 - **Posts**: text and media, public / friends / private visibility, like, save,
@@ -330,9 +330,9 @@ Migrations are applied when the backend container starts. Set up TLS (section
 
 ## Known limitations / in progress
 
-- **Social login needs a Firebase service account.** Without
-  `FIREBASE_SERVICE_ACCOUNT_PATH` or `FIREBASE_SERVICE_ACCOUNT`, Google and
-  Facebook sign-in return 503.
+- **Google sign-in needs OAuth credentials.** Without `GOOGLE_CLIENT_ID` and
+  `GOOGLE_CLIENT_SECRET`, the Google button returns to the login screen with
+  "not available right now" (see DEPLOYMENT.md).
 - **No admin UI.** Reviewing reports requires the platform role `ADMIN`, and
   nothing in the app assigns it. Set it directly in the database:
 

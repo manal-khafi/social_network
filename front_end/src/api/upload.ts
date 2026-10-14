@@ -5,7 +5,7 @@ export type UploadFolder = "avatars" | "covers" | "posts" | "stories" | "communi
 /**
  * Uploads a file through the backend (POST /api/upload), which stores it in
  * Firebase Storage and returns its URL. Authorized by the backend JWT, so it
- * works for email/password users as well as Google / Facebook ones.
+ * works for email/password users as well as Google ones.
  */
 export async function uploadFile(
   file: Blob,

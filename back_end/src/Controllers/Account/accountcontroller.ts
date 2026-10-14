@@ -56,7 +56,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
 /**
  * The deactivate / delete endpoints re-check who is asking. Email/password
- * accounts must enter their password; Google / Facebook accounts have none, so
+ * accounts must enter their password; Google accounts have none, so
  * their signed-in session is the proof (the UI makes them type a confirmation).
  */
 const checkIdentity = async (
@@ -152,7 +152,7 @@ export const deleteAccount = async (req: Request, res: Response) => {
   }
 };
 
-/** The user's uploaded files and their Firebase Auth account (Google / Facebook sign-in). */
+/** The user's uploaded files and their Firebase Auth account (Google sign-in). */
 const deleteExternalData = async (user: { id: string; email: string }) => {
   if (bucket) {
     await bucket

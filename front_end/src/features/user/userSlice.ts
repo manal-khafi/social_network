@@ -22,7 +22,7 @@ export interface UserProfile {
   allow_read_receipts?: boolean;
 
   cover_image?: string | null;
-  /** Own profile only: false for Google / Facebook accounts. */
+  /** Own profile only: false for Google accounts. */
   has_password?: boolean;
   isBlocked?: boolean;
   followersCount?: number;
