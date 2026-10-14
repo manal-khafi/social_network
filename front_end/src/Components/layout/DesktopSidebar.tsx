@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Home, Users, PlusCircle, Mail, User, Settings, LogOut, Heart, Search } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../hooks';
+import { selectMyAvatar } from '../../features/user/userSlice';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { logoutUser } from '../../features/auth/authSlice';
 import { selectUnreadConversationCount } from '../../features/messages/messagesSlice';
@@ -20,6 +21,7 @@ export default function DesktopSidebar() {
   const { user: authUser, isLoggingOut } = useAppSelector((state) => state.auth);
   const { unreadCount } = useAppSelector((state) => state.notifications);
   const unreadConversations = useAppSelector(selectUnreadConversationCount);
+  const myAvatar = useAppSelector(selectMyAvatar);
   const logoUrl = new URL('../../../logo.png', import.meta.url).href;
 
   // Use detailed profile if available, otherwise fallback to basic auth user
@@ -73,7 +75,7 @@ export default function DesktopSidebar() {
         >
           <div className="flex items-center gap-3">
             <Avatar className="w-12 h-12">
-              <AvatarImage src={user.avatar_url ?? ('avatar' in user ? user.avatar : undefined) ?? undefined} />
+              <AvatarImage src={myAvatar} />
               <AvatarFallback>{(user.username?.[0] ?? '?').toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

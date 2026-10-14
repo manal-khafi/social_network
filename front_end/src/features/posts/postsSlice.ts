@@ -642,7 +642,30 @@ const postsSlice = createSlice({
         if (state.postComments[deletedId]) {
           delete state.postComments[deletedId];
         }
-      });
+      })
+      // New avatar saved (userSlice.updateMyAvatar; matched by type to avoid an
+      // import cycle): update the copies held by the posts and comments in store.
+      .addMatcher(
+        (action): action is PayloadAction<{ id: string; avatar_url?: string | null }> =>
+          action.type === "user/updateMyAvatar/fulfilled",
+        (state, action) => {
+          const { id, avatar_url } = action.payload;
+          const avatar = avatar_url ?? undefined;
+          const patchPosts = (posts: Post[]) => {
+            for (const post of posts) if (post.userId === id) post.avatar = avatar;
+          };
+          const patchComments = (comments: Comment[]) => {
+            for (const comment of comments) {
+              if (comment.userId === id) comment.avatar = avatar;
+              if (comment.replies) patchComments(comment.replies);
+            }
+          };
+          [state.feed, state.savedPosts, state.archivedPosts, state.myPosts, state.myReposts].forEach(patchPosts);
+          Object.values(state.userPosts).forEach(patchPosts);
+          Object.values(state.userReposts).forEach(patchPosts);
+          Object.values(state.postComments).forEach((entry) => patchComments(entry.comments));
+        }
+      );
   },
 });
 

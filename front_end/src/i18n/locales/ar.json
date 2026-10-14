@@ -688,7 +688,17 @@
     "unreadCount_few": "{{count}} رسائل غير مقروءة",
     "unreadCount_many": "{{count}} رسالة غير مقروءة",
     "unreadCount_other": "{{count}} رسالة غير مقروءة",
-    "archivedChats": "المحادثات المؤرشفة"
+    "archivedChats": "المحادثات المؤرشفة",
+    "voiceMessage": "رسالة صوتية",
+    "sentYouAVoiceMessage": "أرسل إليك رسالة صوتية",
+    "recordVoice": "تسجيل رسالة صوتية",
+    "stopRecording": "إيقاف وإرسال",
+    "playVoice": "تشغيل الرسالة الصوتية",
+    "pauseVoice": "إيقاف الرسالة الصوتية مؤقتًا",
+    "micDenied": "اسمح بالوصول إلى الميكروفون لتسجيل رسالة صوتية",
+    "recordingNotSupported": "تسجيل الصوت غير مدعوم في هذا المتصفح",
+    "voiceSendFailed": "تعذّر إرسال الرسالة الصوتية",
+    "voicePlayFailed": "لا يمكن تشغيل هذه الرسالة الصوتية في هذا المتصفح"
   },
   "settings": {
     "title": "الإعدادات",

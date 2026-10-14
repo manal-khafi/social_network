@@ -224,28 +224,28 @@ export default function MyProfileView() {
       />
 
       <div className="p-4">
-        <div className="flex justify-around text-center border-t border-b border-border py-3 my-4">
-          <div>
+        <div className="grid grid-cols-3 gap-2 text-center border-t border-b border-border py-3 my-4">
+          <div className="min-w-0">
             <p className="font-semibold">{myPosts.length}</p>
-            <p className="text-sm text-muted-foreground">{t("profile.posts")}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{t("profile.posts")}</p>
           </div>
 
           <button
             type="button"
             onClick={() => myUserId && setFollowersOpen(true)}
-            className={myUserId ? "hover:underline" : "cursor-default pointer-events-none"}
+            className={`min-w-0 ${myUserId ? "hover:underline" : "cursor-default pointer-events-none"}`}
           >
             <p className="font-semibold">{followers.length.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground">{t("profile.followers")}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{t("profile.followers")}</p>
           </button>
 
           <button
             type="button"
             onClick={() => myUserId && setFollowingOpen(true)}
-            className={myUserId ? "hover:underline" : "cursor-default pointer-events-none"}
+            className={`min-w-0 ${myUserId ? "hover:underline" : "cursor-default pointer-events-none"}`}
           >
             <p className="font-semibold">{following.length.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground">{t("profile.following")}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{t("profile.following")}</p>
           </button>
         </div>
       </div>
@@ -271,13 +271,13 @@ export default function MyProfileView() {
 
       <Tabs defaultValue="posts" className="mt-4">
         <TabsList className="w-full justify-start rounded-none border-b">
-          <TabsTrigger value="posts" className="flex-1">
+          <TabsTrigger value="posts" className="flex-1 min-w-0 px-1 text-xs sm:text-sm">
             {t("profile.posts")}
           </TabsTrigger>
-          <TabsTrigger value="reposts" className="flex-1">
+          <TabsTrigger value="reposts" className="flex-1 min-w-0 px-1 text-xs sm:text-sm">
             {t("profile.reposts")}
           </TabsTrigger>
-          <TabsTrigger value="saved" className="flex-1">
+          <TabsTrigger value="saved" className="flex-1 min-w-0 px-1 text-xs sm:text-sm">
             {t("profile.saved")}
           </TabsTrigger>
         </TabsList>

@@ -175,12 +175,12 @@ export default function UserProfileView() {
               <Button
                 onClick={handleFollowClick}
                 variant={user.isFollowing ? 'outline' : 'default'}
-                className={`flex-1 ${user.isFollowing || user.followRequestPending ? '' : 'bg-[#d6955b] hover:bg-[#c58549]'}`}
+                className={`flex-1 min-w-0 ${user.isFollowing || user.followRequestPending ? '' : 'bg-[#d6955b] hover:bg-[#c58549]'}`}
                 disabled={user.followRequestPending}
               >
                 {getFollowButtonText()}
               </Button>
-              <Link to={`/home/inbox/${user.id}`} className="flex-1">
+              <Link to={`/home/inbox/${user.id}`} className="flex-1 min-w-0">
                 <Button variant="outline" className="w-full">
                   <MessageCircle className="w-4 h-4 me-2" />
                   {t('profile.message')}
@@ -189,6 +189,7 @@ export default function UserProfileView() {
               <Button
                 variant="outline"
                 size="icon"
+                className="shrink-0"
                 aria-label={t('profile.call')}
                 onClick={() =>
                   startCall(
@@ -205,18 +206,18 @@ export default function UserProfileView() {
       />
 
       <div className="p-4">
-        <div className="flex justify-around text-center border-t border-b border-border py-3 my-4">
-          <div>
+        <div className="grid grid-cols-3 gap-2 text-center border-t border-b border-border py-3 my-4">
+          <div className="min-w-0">
             <p className="font-semibold">{posts.length}</p>
-            <p className="text-sm text-muted-foreground">{t('profile.posts')}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{t('profile.posts')}</p>
           </div>
-          <button type="button" onClick={() => setFollowersOpen(true)} className="hover:underline">
+          <button type="button" onClick={() => setFollowersOpen(true)} className="min-w-0 hover:underline">
             <p className="font-semibold">{followersCount.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground">{t('profile.followers')}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{t('profile.followers')}</p>
           </button>
-          <button type="button" onClick={() => setFollowingOpen(true)} className="hover:underline">
+          <button type="button" onClick={() => setFollowingOpen(true)} className="min-w-0 hover:underline">
             <p className="font-semibold">{followingCount.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground">{t('profile.following')}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{t('profile.following')}</p>
           </button>
         </div>
       </div>
@@ -242,8 +243,8 @@ export default function UserProfileView() {
 
       <Tabs defaultValue="posts" className="mt-4">
         <TabsList className="w-full justify-start rounded-none border-b">
-          <TabsTrigger value="posts" className="flex-1">{t('profile.posts')}</TabsTrigger>
-          <TabsTrigger value="reposts" className="flex-1">{t('profile.reposts')}</TabsTrigger>
+          <TabsTrigger value="posts" className="flex-1 min-w-0 px-1 text-xs sm:text-sm">{t('profile.posts')}</TabsTrigger>
+          <TabsTrigger value="reposts" className="flex-1 min-w-0 px-1 text-xs sm:text-sm">{t('profile.reposts')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="posts" className="p-4 space-y-4">

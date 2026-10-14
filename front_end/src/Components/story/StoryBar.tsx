@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks";
+import { selectMyAvatar } from "../../features/user/userSlice";
 import { fetchStories, selectStoryGroups } from "../../features/stories/storiesSlice";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import StoryComposer from "./StoryComposer";
@@ -47,7 +48,7 @@ export default function StoryBar() {
   const authUser = useAppSelector((s) => s.auth.user);
   const meId = currentUser?.id ?? authUser?.id;
   const meName = currentUser?.username ?? authUser?.username;
-  const meAvatar = currentUser?.avatar_url ?? undefined;
+  const meAvatar = useAppSelector(selectMyAvatar);
   const [composerOpen, setComposerOpen] = useState(false);
 
   useEffect(() => {

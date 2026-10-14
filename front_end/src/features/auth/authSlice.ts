@@ -193,7 +193,18 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.token = null;
         state.error = action.payload ?? "Unauthorized";
-      });
+      })
+      // New avatar saved (userSlice.updateMyAvatar; matched by type to avoid an
+      // import cycle): keep the session user, and its persisted copy, in step.
+      .addMatcher(
+        (action): action is PayloadAction<{ avatar_url?: string | null }> =>
+          action.type === "user/updateMyAvatar/fulfilled",
+        (state, action) => {
+          if (!state.user) return;
+          state.user.avatar_url = action.payload.avatar_url ?? null;
+          persistAuth(state.token, state.user);
+        }
+      );
   },
 });
 

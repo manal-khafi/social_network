@@ -211,7 +211,22 @@ const storiesSlice = createSlice({
           }
         }
         state.groups = state.groups.filter((g) => g.items.length > 0);
-      });
+      })
+      // New avatar saved (userSlice.updateMyAvatar; matched by type to avoid an
+      // import cycle): update the author shown on the user's own stories.
+      .addMatcher(
+        (action): action is PayloadAction<{ id: string; avatar_url?: string | null }> =>
+          action.type === "user/updateMyAvatar/fulfilled",
+        (state, action) => {
+          const { id, avatar_url } = action.payload;
+          for (const group of state.groups) {
+            if (group.user.id === id) group.user.avatar_url = avatar_url ?? null;
+            for (const story of group.items) {
+              if (story.user?.id === id) story.user.avatar_url = avatar_url ?? null;
+            }
+          }
+        }
+      );
   },
 });
 

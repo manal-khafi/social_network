@@ -660,7 +660,17 @@
     "timeDays": "{{n}}d",
     "unreadCount_one": "{{count}} unread message",
     "unreadCount_other": "{{count}} unread messages",
-    "archivedChats": "Archived Chats"
+    "archivedChats": "Archived Chats",
+    "voiceMessage": "Voice message",
+    "sentYouAVoiceMessage": "sent you a voice message",
+    "recordVoice": "Record a voice message",
+    "stopRecording": "Stop and send",
+    "playVoice": "Play voice message",
+    "pauseVoice": "Pause voice message",
+    "micDenied": "Allow microphone access to record a voice message",
+    "recordingNotSupported": "Voice recording is not supported in this browser",
+    "voiceSendFailed": "Failed to send voice message",
+    "voicePlayFailed": "This voice message cannot be played in this browser"
   },
   "settings": {
     "title": "Settings",

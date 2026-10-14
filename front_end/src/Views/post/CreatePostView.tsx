@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { createPost } from "../../features/posts/postsSlice";
-import { fetchCurrentUserProfile } from "../../features/user/userSlice";
+import { fetchCurrentUserProfile, selectMyAvatar } from "../../features/user/userSlice";
 import { Button } from "../../Components/ui/button";
 import { Textarea } from "../../Components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "../../Components/ui/avatar";
@@ -54,7 +54,7 @@ export default function CreatePostView() {
 
   const resolvedUser = currentUser ?? null;
 
-  const avatarSrc = resolvedUser?.avatar_url || "";
+  const avatarSrc = useAppSelector(selectMyAvatar) || "";
   const displayName = resolvedUser?.display_name || resolvedUser?.username || "User";
   const handle = resolvedUser?.username ? `@${resolvedUser.username}` : "@unknown";
 
@@ -252,7 +252,7 @@ export default function CreatePostView() {
                   </PopoverTrigger>
 
                   <PopoverContent className="w-auto p-0 border-0" align="start" side="top">
-                    <EmojiPicker onEmojiClick={handleEmojiClick} width={350} height={400} />
+                    <EmojiPicker onEmojiClick={handleEmojiClick} width="min(350px, calc(100vw - 24px))" height={400} />
                   </PopoverContent>
                 </Popover>
 

@@ -174,9 +174,12 @@ export class ConversationService {
     const content = (data.content ?? '').trim();
     if (!content) throw new AppError('Message is empty', 400);
 
-    // Media messages carry the uploaded file's URL as their content.
+    // Media messages carry the uploaded file's URL as their content. "file" is
+    // used for voice messages (audio recording URL).
     const type =
-      data.message_type === 'image' || data.message_type === 'video' ? data.message_type : 'text';
+      data.message_type === 'image' || data.message_type === 'video' || data.message_type === 'file'
+        ? data.message_type
+        : 'text';
     if (type !== 'text' && !/^https?:\/\/\S+$/.test(content)) {
       throw new AppError('Media message must be a URL', 400);
     }

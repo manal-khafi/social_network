@@ -660,7 +660,17 @@
     "timeDays": "{{n}} d",
     "unreadCount_one": "{{count}} mensaje sin leer",
     "unreadCount_other": "{{count}} mensajes sin leer",
-    "archivedChats": "Chats archivados"
+    "archivedChats": "Chats archivados",
+    "voiceMessage": "Mensaje de voz",
+    "sentYouAVoiceMessage": "te envió un mensaje de voz",
+    "recordVoice": "Grabar un mensaje de voz",
+    "stopRecording": "Detener y enviar",
+    "playVoice": "Reproducir mensaje de voz",
+    "pauseVoice": "Pausar mensaje de voz",
+    "micDenied": "Permite el acceso al micrófono para grabar un mensaje de voz",
+    "recordingNotSupported": "La grabación de voz no es compatible con este navegador",
+    "voiceSendFailed": "No se pudo enviar el mensaje de voz",
+    "voicePlayFailed": "Este mensaje de voz no se puede reproducir en este navegador"
   },
   "settings": {
     "title": "Configuración",

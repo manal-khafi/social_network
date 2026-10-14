@@ -56,20 +56,20 @@ export default function PostHeader({
       </Link>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link to={profilePath} className="hover:underline">
-              <p className="font-semibold">{post.username}</p>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Link to={profilePath} className="hover:underline min-w-0">
+              <p className="font-semibold truncate">{post.username}</p>
             </Link>
 
             {post.isEdited && (
-              <span className="text-xs text-muted-foreground italic">{t("posts.edited")}</span>
+              <span className="text-xs text-muted-foreground italic shrink-0">{t("posts.edited")}</span>
             )}
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 hover:bg-muted rounded-full">
+              <button className="p-1 hover:bg-muted rounded-full shrink-0">
                 <MoreVertical className="w-5 h-5 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>

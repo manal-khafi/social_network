@@ -234,7 +234,7 @@ export default function CommentItem({
                       onEmojiClick={(emojiData) =>
                         setReplyText((prev) => prev + emojiData.emoji)
                       }
-                      width={350}
+                      width="min(350px, calc(100vw - 24px))"
                       height={400}
                     />
                   </PopoverContent>

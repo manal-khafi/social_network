@@ -4,10 +4,11 @@ import fs from "fs/promises";
 import path from "path";
 import { bucket } from "../config/fireBase";
 
-const ALLOWED_FOLDERS = ["avatars", "covers", "posts", "stories", "communities"];
+const ALLOWED_FOLDERS = ["avatars", "covers", "posts", "stories", "communities", "voice"];
+const ALLOWED_TYPES = ["image/", "video/", "audio/"];
 
 /**
- * Uploads one image/video to Firebase Storage with the Admin SDK and returns
+ * Uploads one image / video / audio recording to Firebase Storage with the Admin SDK and returns
  * its download URL. Going through the API (instead of the browser writing to
  * Storage directly) means the upload is authorized by the backend JWT, so it
  * works for email/password users as well as Google / Facebook ones.
@@ -23,8 +24,8 @@ export const uploadFile = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "No file provided" });
     }
 
-    if (!file.mimetype.startsWith("image/") && !file.mimetype.startsWith("video/")) {
-      return res.status(400).json({ message: "File must be an image or a video" });
+    if (!ALLOWED_TYPES.some((type) => file.mimetype.startsWith(type))) {
+      return res.status(400).json({ message: "File must be an image, a video or an audio recording" });
     }
 
     const folder = req.body?.folder;

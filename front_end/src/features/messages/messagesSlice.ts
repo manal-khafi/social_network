@@ -46,6 +46,8 @@ export interface MessageExtras {
   poll?: MessagePoll;
   event?: MessageEvent;
   location?: MessageLocation;
+  /** URL of a voice message's audio recording. */
+  voice?: string;
   voiceDuration?: number;
 }
 
@@ -144,6 +146,7 @@ const summarize = (m: ApiMessage | null): string => {
   }
   if (m.message_type === "image") return i18n.t("messages.photo");
   if (m.message_type === "video") return i18n.t("messages.video");
+  if (m.message_type === "file") return i18n.t("messages.voiceMessage");
   if (m.message_type === "text" && isLocationContent(m.content)) return i18n.t("messages.location");
   return m.content ?? "";
 };
@@ -163,6 +166,30 @@ const mapConversation = (c: ApiConversation): Conversation => ({
   lastMessageAt: c.last_message?.created_at,
 });
 
+// A voice message is a "file" message whose content is the recording's URL with
+// its length in seconds in the fragment: "https://...#voice=23". (Browsers often
+// cannot read the duration of a freshly recorded file, so it travels with it.)
+const VOICE_FRAGMENT = /#voice=(\d+)$/;
+
+export const encodeVoice = (url: string, seconds: number) =>
+  `${url}#voice=${Math.max(0, Math.round(seconds))}`;
+
+const mapVoiceMessage = (m: ApiMessage): Message => {
+  const content = m.content ?? "";
+  const match = VOICE_FRAGMENT.exec(content);
+  return {
+    id: m.id,
+    senderId: m.sender_id,
+    content: "",
+    type: "voice",
+    voice: content.replace(VOICE_FRAGMENT, ""),
+    voiceDuration: match ? Number(match[1]) : undefined,
+    timestamp: rel(m.created_at),
+    createdAt: m.created_at,
+    isRead: true,
+  };
+};
+
 const mapLocationMessage = (m: ApiMessage): Message => {
   const coords = parseLocation(m.content ?? "");
   return {
@@ -179,7 +206,11 @@ const mapLocationMessage = (m: ApiMessage): Message => {
 
 // Image / video messages carry the media URL as their content.
 const mapMessage = (m: ApiMessage): Message =>
-  m.message_type === "text" && isLocationContent(m.content) ? mapLocationMessage(m) : mapMediaMessage(m);
+  m.message_type === "file"
+    ? mapVoiceMessage(m)
+    : m.message_type === "text" && isLocationContent(m.content)
+    ? mapLocationMessage(m)
+    : mapMediaMessage(m);
 
 const mapMediaMessage = (m: ApiMessage): Message => ({
   id: m.id,
@@ -241,9 +272,9 @@ export const fetchConversation = createAsyncThunk(
 export const sendMessage = createAsyncThunk(
   "messages/sendMessage",
   async (
-    // Text messages send their content; image / video messages send the uploaded
-    // media URL. The other extras are accepted so the composer can describe
-    // richer messages, but the API ignores them for now.
+    // Text messages send their content; image / video / voice messages send the
+    // uploaded media URL. The other extras are accepted so the composer can
+    // describe richer messages, but the API ignores them for now.
     payload: { conversationId: string; content: string; type?: MessageType } & MessageExtras,
     { rejectWithValue }
   ) => {
@@ -253,15 +284,22 @@ export const sendMessage = createAsyncThunk(
         : payload.type === "video" && payload.video
         ? "video"
         : null;
+    const isVoice = payload.type === "voice" && !!payload.voice;
     const content = (
       mediaType
         ? payload[mediaType] ?? ""
+        : isVoice
+        ? encodeVoice(payload.voice ?? "", payload.voiceDuration ?? 0)
         : payload.type === "location" && payload.location
         ? encodeLocation(payload.location.lat, payload.location.lng)
         : payload.content ?? ""
     ).trim();
     if (!content) return rejectWithValue("empty");
-    const m = await messagesApi.sendMessage(payload.conversationId, content, mediaType ?? "text");
+    const m = await messagesApi.sendMessage(
+      payload.conversationId,
+      content,
+      mediaType ?? (isVoice ? "file" : "text")
+    );
     return mapMessage(m);
   }
 );
@@ -393,6 +431,8 @@ const messagesSlice = createSlice({
               ? m.content
               : m.type === "location"
               ? i18n.t("messages.location")
+              : m.type === "voice"
+              ? i18n.t("messages.voiceMessage")
               : m.type === "video"
               ? i18n.t("messages.video")
               : i18n.t("messages.photo");

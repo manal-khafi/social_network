@@ -132,7 +132,7 @@ export function CreateCommunity() {
   };
 
   return (
-    <div className="min-h-screen w-screen bg-background">
+    <div className="min-h-screen w-full bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">

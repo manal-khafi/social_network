@@ -179,14 +179,14 @@ export default function PostCard({ post }: PostCardProps) {
 
         {/* Repost indicator */}
         {post.originalPost && (
-          <div className="mb-2 text-sm text-muted-foreground flex items-center gap-1">
+          <div className="mb-2 text-sm text-muted-foreground flex items-center gap-1 min-w-0 break-all">
             <Repeat className="w-4 h-4" />
             {t("posts.repostedFrom", { username: post.originalPost.username })}
           </div>
         )}
 
         {/* Post Content */}
-        <p className="mb-3 whitespace-pre-wrap text-[15px] leading-6">{post.content}</p>
+        <p className="mb-3 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[15px] leading-6">{post.content}</p>
 
         {/* Post Media */}
         <PostMedia post={post} media={media} handleDoubleTapLike={handleDoubleTapLike} />

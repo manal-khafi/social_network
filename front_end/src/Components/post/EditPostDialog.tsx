@@ -166,7 +166,7 @@ export default function EditPostDialog({ post, open, onOpenChange }: EditPostDia
                 <PopoverContent className="w-auto p-0 border-0" align="start" side="top">
                   <EmojiPicker
                     onEmojiClick={(emojiData) => setContent((prev) => prev + emojiData.emoji)}
-                    width={350}
+                    width="min(350px, calc(100vw - 24px))"
                     height={400}
                   />
                 </PopoverContent>

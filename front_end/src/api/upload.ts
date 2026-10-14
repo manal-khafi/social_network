@@ -1,6 +1,6 @@
 import api from "./axios";
 
-export type UploadFolder = "avatars" | "covers" | "posts" | "stories" | "communities";
+export type UploadFolder = "avatars" | "covers" | "posts" | "stories" | "communities" | "voice";
 
 /**
  * Uploads a file through the backend (POST /api/upload), which stores it in

@@ -103,6 +103,8 @@ export function useRealtime() {
           ? "messages.sentYouAPhoto"
           : m?.message_type === "video"
           ? "messages.sentYouAVideo"
+          : m?.message_type === "file"
+          ? "messages.sentYouAVoiceMessage"
           : isLocationContent(m?.content)
           ? "messages.sentYouALocation"
           : null;

@@ -660,7 +660,17 @@
     "timeDays": "{{n}} T.",
     "unreadCount_one": "{{count}} ungelesene Nachricht",
     "unreadCount_other": "{{count}} ungelesene Nachrichten",
-    "archivedChats": "Archivierte Chats"
+    "archivedChats": "Archivierte Chats",
+    "voiceMessage": "Sprachnachricht",
+    "sentYouAVoiceMessage": "hat dir eine Sprachnachricht gesendet",
+    "recordVoice": "Sprachnachricht aufnehmen",
+    "stopRecording": "Stoppen und senden",
+    "playVoice": "Sprachnachricht abspielen",
+    "pauseVoice": "Sprachnachricht pausieren",
+    "micDenied": "Erlaube den Mikrofonzugriff, um eine Sprachnachricht aufzunehmen",
+    "recordingNotSupported": "Sprachaufnahmen werden in diesem Browser nicht unterstützt",
+    "voiceSendFailed": "Sprachnachricht konnte nicht gesendet werden",
+    "voicePlayFailed": "Diese Sprachnachricht kann in diesem Browser nicht abgespielt werden"
   },
   "settings": {
     "title": "Einstellungen",

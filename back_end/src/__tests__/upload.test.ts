@@ -66,6 +66,19 @@ describe("POST /api/upload", () => {
     );
   });
 
+  it("accepts a voice recording in the voice folder", async () => {
+    const res = await request(app)
+      .post("/api/upload")
+      .set("Authorization", `Bearer ${token}`)
+      .field("folder", "voice")
+      .attach("file", Buffer.from("fake-audio"), { filename: "voice.webm", contentType: "audio/webm" });
+
+    expect(res.status).toBe(201);
+    const [, options] = bucketMock.upload.mock.calls[0];
+    expect(options.destination).toMatch(/^users\/user-1\/voice\/\d+-[0-9a-f-]+\.webm$/);
+    expect(options.metadata.contentType).toBe("audio/webm");
+  });
+
   it("rejects a missing file, a non-media file and an unknown folder", async () => {
     const auth = { Authorization: `Bearer ${token}` };
 

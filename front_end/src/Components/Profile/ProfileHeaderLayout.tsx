@@ -35,21 +35,22 @@ export default function ProfileHeaderLayout({
       </div>
 
       <div className="p-4">
-        <div className="flex items-end justify-between -mt-16 mb-4">
-          <Avatar className="w-24 h-24 border-4 border-background">
+        {/* The action buttons drop below the avatar when they don't fit beside it. */}
+        <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-3 -mt-16 mb-4">
+          <Avatar className="w-24 h-24 shrink-0 border-4 border-background">
             <AvatarImage src={avatarUrl ?? undefined} />
             <AvatarFallback className="text-2xl">
               {(username?.[0] ?? '?').toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-end gap-2 min-w-0 max-w-full">
             {actionsSlot}
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold">{displayName}</h1>
-        <p className="text-muted-foreground">@{username}</p>
-        {bio && <p className="mt-3">{bio}</p>}
+        <h1 className="text-xl sm:text-2xl font-bold break-words [overflow-wrap:anywhere]">{displayName}</h1>
+        <p className="text-muted-foreground truncate">@{username}</p>
+        {bio && <p className="mt-3 whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{bio}</p>}
       </div>
     </>
   );

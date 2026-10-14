@@ -20,7 +20,7 @@ import { useCall } from '../../features/call/CallProvider';
 import { 
   ArrowLeft, Send, Smile, Image as ImageIcon, Mic, Paperclip, 
   Phone, Video, MoreVertical, CheckCheck, Check, MapPin, 
-  Calendar, BarChart3, Play, Archive, Ban, Trash2, UserCircle, X, Loader2
+  Calendar, BarChart3, Play, Pause, Archive, Ban, Trash2, UserCircle, X, Loader2
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../../Components/ui/avatar';
 import { Input } from '../../Components/ui/input';
@@ -31,6 +31,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from 'sonner';
 import EmojiPicker from 'emoji-picker-react';
 import { uploadPostMedia } from '../../utils/uploadStoryMedia';
+import { uploadFile } from '../../api/upload';
 import { useTranslation } from 'react-i18next';
 
 // The chat is a full-screen layer at z-[60]; portalled popovers, menus and
@@ -55,6 +56,13 @@ export default function ChatView() {
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Voice recording (MediaRecorder): the live recorder, its audio chunks, the
+  // 1 s display timer, and whether the recording was cancelled instead of sent.
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<number | null>(null);
+  const recordingStartedAtRef = useRef(0);
+  const recordingCancelledRef = useRef(false);
   
   const myId = useAppSelector((state) => state.auth.user?.id);
   const conversation = useAppSelector(
@@ -220,28 +228,102 @@ export default function ChatView() {
     );
   };
 
-  const toggleRecording = () => {
-    if (!isRecording) {
-      setIsRecording(true);
-      setRecordingTime(0);
-      const interval = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-      (window as any).recordingInterval = interval;
-    } else {
-      setIsRecording(false);
-      clearInterval((window as any).recordingInterval);
-      if (conversationId && recordingTime > 0) {
-        dispatch(sendMessage({ 
-          conversationId, 
-          content: 'Voice message', 
-          type: 'voice',
-          voiceDuration: recordingTime
-        }));
-      }
-      setRecordingTime(0);
-    }
+  const stopRecordingTimer = () => {
+    if (recordingTimerRef.current !== null) window.clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = null;
   };
+
+  const startRecording = async () => {
+    if (!conversationId) return;
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      toast.error(t('messages.recordingNotSupported'));
+      return;
+    }
+
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      toast.error(t('messages.micDenied'));
+      return;
+    }
+
+    // webm/opus on Chrome and Firefox, mp4 on Safari.
+    const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((type) =>
+      MediaRecorder.isTypeSupported(type)
+    );
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    const targetConversationId = conversationId;
+    audioChunksRef.current = [];
+    recordingCancelledRef.current = false;
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) audioChunksRef.current.push(e.data);
+    };
+
+    recorder.onstop = async () => {
+      stream.getTracks().forEach((track) => track.stop());
+      const seconds = Math.round((Date.now() - recordingStartedAtRef.current) / 1000);
+      const type = (recorder.mimeType || mimeType || 'audio/webm').split(';')[0];
+      const blob = new Blob(audioChunksRef.current, { type });
+      audioChunksRef.current = [];
+      // Cancelled, or too short to be anything but an accidental tap.
+      if (recordingCancelledRef.current || seconds < 1 || blob.size === 0) return;
+
+      setIsSending(true);
+      try {
+        const url = await uploadFile(blob, 'voice', `voice.${type.includes('mp4') ? 'mp4' : 'webm'}`);
+        await dispatch(
+          sendMessage({
+            conversationId: targetConversationId,
+            content: '',
+            type: 'voice',
+            voice: url,
+            voiceDuration: seconds,
+          })
+        ).unwrap();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t('messages.voiceSendFailed'));
+      } finally {
+        setIsSending(false);
+      }
+    };
+
+    recorderRef.current = recorder;
+    recordingStartedAtRef.current = Date.now();
+    recorder.start();
+    setRecordingTime(0);
+    setIsRecording(true);
+    recordingTimerRef.current = window.setInterval(() => {
+      setRecordingTime(Math.round((Date.now() - recordingStartedAtRef.current) / 1000));
+    }, 1000);
+  };
+
+  /** Stops the recording; it is uploaded and sent unless `cancel` is true. */
+  const stopRecording = (cancel = false) => {
+    stopRecordingTimer();
+    recordingCancelledRef.current = cancel;
+    if (recorderRef.current && recorderRef.current.state !== 'inactive') recorderRef.current.stop();
+    recorderRef.current = null;
+    setIsRecording(false);
+    setRecordingTime(0);
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) stopRecording();
+    else startRecording();
+  };
+
+  // Leaving the chat mid-recording discards it and releases the microphone.
+  useEffect(
+    () => () => {
+      stopRecordingTimer();
+      recordingCancelledRef.current = true;
+      if (recorderRef.current && recorderRef.current.state !== 'inactive') recorderRef.current.stop();
+      recorderRef.current = null;
+    },
+    [conversationId]
+  );
 
   const handleEmojiClick = (emojiData: any) => {
     setMessage(prev => prev + emojiData.emoji);
@@ -360,16 +442,8 @@ export default function ChatView() {
           
           {msg.type === 'location' && <LocationCard location={msg.location} />}
           
-          {msg.type === 'voice' && msg.voiceDuration && (
-            <div className="flex items-center gap-3 min-w-[200px]">
-              <button className="p-2 rounded-full bg-primary-foreground/20">
-                <Play className="w-4 h-4" />
-              </button>
-              <div className="flex-1 h-1 bg-primary-foreground/20 rounded-full">
-                <div className="h-full w-1/3 bg-primary-foreground/60 rounded-full" />
-              </div>
-              <span className="text-sm">{t('messages.secondsShort', { n: msg.voiceDuration })}</span>
-            </div>
+          {msg.type === 'voice' && msg.voice && (
+            <VoiceMessage src={msg.voice} duration={msg.voiceDuration} isSender={isSender} />
           )}
           
           <div className="flex items-center gap-1 mt-1">
@@ -516,6 +590,13 @@ export default function ChatView() {
           <div className="mb-2 flex items-center gap-2 text-red-500 animate-pulse">
             <div className="w-2 h-2 bg-red-500 rounded-full" />
             <span className="text-sm">{t('messages.recording', { seconds: recordingTime })}</span>
+            <button
+              type="button"
+              onClick={() => stopRecording(true)}
+              className="ms-auto text-sm text-muted-foreground hover:text-foreground"
+            >
+              {t('actions.cancel')}
+            </button>
           </div>
         )}
         
@@ -577,7 +658,7 @@ export default function ChatView() {
             <PopoverContent className={`w-auto p-0 border-0 ${ABOVE_CHAT}`} align="start" side="top">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
-                width={350}
+                width="min(350px, calc(100vw - 24px))"
                 height={400}
               />
             </PopoverContent>
@@ -691,13 +772,101 @@ export default function ChatView() {
               variant="ghost"
               size="icon"
               onClick={toggleRecording}
+              disabled={isSending}
+              aria-label={isRecording ? t('messages.stopRecording') : t('messages.recordVoice')}
               className={`shrink-0 ${isRecording ? 'bg-red-500 text-white hover:bg-red-600' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              <Mic className="w-5 h-5" />
+              {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
             </Button>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+const formatClock = (seconds: number) => {
+  const s = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+
+/**
+ * Voice message player: play / pause, a progress bar that can be clicked to
+ * seek, and the time. `duration` comes with the message because browsers often
+ * cannot read the length of a recording made with MediaRecorder.
+ */
+function VoiceMessage({ src, duration, isSender }: { src: string; duration?: number; isSender: boolean }) {
+  const { t } = useTranslation();
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [loadedDuration, setLoadedDuration] = useState(0);
+
+  const total = duration || loadedDuration;
+  const progress = total > 0 ? Math.min(1, current / total) : 0;
+
+  const toggle = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) audio.pause();
+    else audio.play().catch(() => toast.error(t('messages.voicePlayFailed')));
+  };
+
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio || total <= 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    let ratio = (e.clientX - rect.left) / rect.width;
+    if (getComputedStyle(e.currentTarget).direction === 'rtl') ratio = 1 - ratio;
+    const next = Math.min(1, Math.max(0, ratio)) * total;
+    try {
+      audio.currentTime = next;
+      setCurrent(next);
+    } catch {
+      // not seekable yet
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-3 min-w-[200px]">
+      <audio
+        ref={audioRef}
+        src={src}
+        preload="metadata"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onEnded={() => {
+          setPlaying(false);
+          setCurrent(0);
+        }}
+        onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
+        onLoadedMetadata={(e) => {
+          const d = e.currentTarget.duration;
+          if (Number.isFinite(d)) setLoadedDuration(d);
+        }}
+      />
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={playing ? t('messages.pauseVoice') : t('messages.playVoice')}
+        className={`p-2 rounded-full shrink-0 ${isSender ? 'bg-primary-foreground/20' : 'bg-foreground/10'}`}
+      >
+        {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+      </button>
+      <div
+        onClick={seek}
+        className={`flex-1 h-1.5 rounded-full cursor-pointer overflow-hidden ${
+          isSender ? 'bg-primary-foreground/20' : 'bg-foreground/15'
+        }`}
+      >
+        <div
+          className={`h-full rounded-full ${isSender ? 'bg-primary-foreground/80' : 'bg-foreground/60'}`}
+          style={{ width: `${progress * 100}%` }}
+        />
+      </div>
+      <span className="text-sm tabular-nums shrink-0">
+        {formatClock(playing || current > 0 ? current : total)}
+      </span>
     </div>
   );
 }

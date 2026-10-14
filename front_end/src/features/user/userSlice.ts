@@ -485,7 +485,10 @@ const userSlice = createSlice({
 
       // avatar (backend)
       .addCase(updateMyAvatar.fulfilled, (state, action) => {
-        state.currentUser = action.payload;
+        // The endpoint returns only part of the profile: keep the rest (counts...).
+        state.currentUser = state.currentUser
+          ? { ...state.currentUser, ...action.payload }
+          : action.payload;
       })
 
       // cover image (backend)
@@ -650,6 +653,12 @@ export default userSlice.reducer;
 
 // selectors
 export const selectCurrentUser = (state: RootState) => state.user.currentUser;
+/** The signed-in user's avatar: one source for every place that shows it. */
+export const selectMyAvatar = (state: RootState): string | undefined =>
+  state.user.currentUser?.avatar_url ??
+  state.auth.user?.avatar_url ??
+  state.auth.user?.avatar ??
+  undefined;
 export const selectViewedUser = (state: RootState) => state.user.viewedUser;
 export const selectBlockedUsers = (state: RootState) => state.user.blockedUsers;
 export const selectBlockedCount = (state: RootState) => state.user.blockedCount;

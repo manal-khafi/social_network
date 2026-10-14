@@ -660,7 +660,17 @@
     "timeDays": "{{n}} j",
     "unreadCount_one": "{{count}} message non lu",
     "unreadCount_other": "{{count}} messages non lus",
-    "archivedChats": "Conversations archivées"
+    "archivedChats": "Conversations archivées",
+    "voiceMessage": "Message vocal",
+    "sentYouAVoiceMessage": "vous a envoyé un message vocal",
+    "recordVoice": "Enregistrer un message vocal",
+    "stopRecording": "Arrêter et envoyer",
+    "playVoice": "Lire le message vocal",
+    "pauseVoice": "Mettre le message vocal en pause",
+    "micDenied": "Autorisez l'accès au micro pour enregistrer un message vocal",
+    "recordingNotSupported": "L'enregistrement vocal n'est pas pris en charge par ce navigateur",
+    "voiceSendFailed": "Impossible d'envoyer le message vocal",
+    "voicePlayFailed": "Ce message vocal ne peut pas être lu dans ce navigateur"
   },
   "settings": {
     "title": "Paramètres",

@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useAppSelector } from "../../../hooks";
+import { selectMyAvatar } from "../../../features/user/userSlice";
 import type { Post, Comment } from "../../../features/posts/postsSlice";
 import { Avatar, AvatarImage, AvatarFallback } from "../../ui/avatar";
 import { Button } from "../../ui/button";
@@ -46,6 +47,7 @@ export default function PostComments({
 }: PostCommentsProps) {
   const { currentUser } = useAppSelector((state) => state.user);
   const authUser = useAppSelector((state) => state.auth.user);
+  const myAvatar = useAppSelector(selectMyAvatar);
   const { t } = useTranslation();
 
   return (
@@ -83,7 +85,7 @@ export default function PostComments({
       {/* Add Comment Input */}
       <div className="flex gap-2">
         <Avatar className="w-8 h-8">
-          <AvatarImage src={currentUser?.avatar_url ?? authUser?.avatar ?? undefined} />
+          <AvatarImage src={myAvatar} />
           <AvatarFallback>
             {((currentUser?.username || authUser?.username || "?")[0] || "?").toUpperCase()}
           </AvatarFallback>
