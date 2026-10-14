@@ -53,7 +53,7 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
       <CommunityBanner community={community} />
 
       {/* Community Info */}
-      <div className="px-3 sm:px-4 lg:px-8 py-8 ps-[70px] pe-[70px]">
+      <div className="sm:px-4 lg:px-8 py-4 sm:py-8">
         <CommunityInfoCard
           community={community}
           members={page.members}
@@ -73,23 +73,24 @@ export function CommunityPage({ communityId, onBack }: CommunityPageProps) {
 
         {/* Tabs */}
         <Tabs defaultValue="members" className="pb-12">
-          <TabsList className={`w-full h-11 sm:h-12 bg-card border-2 shadow-sm grid ${page.isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
-            <TabsTrigger value="members" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          {/* Scrolls sideways on narrow screens instead of squeezing / overlapping. */}
+          <TabsList className="w-full h-11 sm:h-12 bg-card border-2 shadow-sm flex justify-start overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <TabsTrigger value="members" className="h-9 sm:h-10 flex-none shrink-0 whitespace-nowrap px-3 sm:flex-1 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
               {t("communities.members")}
             </TabsTrigger>
-            <TabsTrigger value="about" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="about" className="h-9 sm:h-10 flex-none shrink-0 whitespace-nowrap px-3 sm:flex-1 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
               {t("communities.about")}
             </TabsTrigger>
             {page.isAdmin && (
-              <TabsTrigger value="admin" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsTrigger value="admin" className="h-9 sm:h-10 flex-none shrink-0 whitespace-nowrap px-3 sm:flex-1 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
                 {t("communities.admin")}
               </TabsTrigger>
             )}
             {page.isAdmin && (
-              <TabsTrigger value="settings" className="h-9 sm:h-10 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsTrigger value="settings" className="h-9 sm:h-10 flex-none shrink-0 whitespace-nowrap px-3 sm:flex-1 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 me-1 sm:me-2" />
                 {t("nav.settings")}
               </TabsTrigger>

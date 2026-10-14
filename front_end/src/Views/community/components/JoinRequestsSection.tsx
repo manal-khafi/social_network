@@ -21,7 +21,7 @@ export function JoinRequestsSection({
   const { t, i18n } = useTranslation();
   return (
     <Card className="border-2">
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         <div className="mb-6">
           <h3 className="text-xl font-semibold mb-2">
             {t("communities.joinRequestsCount", { n: joinRequests.length })}
@@ -48,16 +48,16 @@ export function JoinRequestsSection({
                 return (
                   <Card key={request.id} className="border-2 border-border hover:border-secondary dark:hover:border-primary transition-colors">
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-4 flex-1">
-                          <Avatar className="h-12 w-12 border-2 border-border">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                        <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                          <Avatar className="h-12 w-12 shrink-0 border-2 border-border">
                             <AvatarImage src={userAvatar} />
                             <AvatarFallback className="bg-gradient-to-br from-[#18534f] to-[#226d68] text-white font-semibold">
                               {initials}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-x-2 mb-1">
                               <h4 className="font-semibold text-foreground">
                                 {userName}
                               </h4>
@@ -76,7 +76,7 @@ export function JoinRequestsSection({
                             )}
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 sm:shrink-0">
                           <Button
                             size="sm"
                             onClick={() => handleApproveRequest(request.id, request.user_id)}

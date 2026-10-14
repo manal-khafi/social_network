@@ -39,7 +39,7 @@ export function RulesManager({
   const { t } = useTranslation();
   return (
     <Card className="border-2">
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         <div className="mb-6">
           <h3 className="text-xl font-semibold mb-2">
             {t("communities.manageRulesCount", { n: rules.length })}
@@ -99,8 +99,8 @@ export function RulesManager({
                       onCancel={() => setEditingRuleId(null)}
                     />
                   ) : (
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
+                    <div className="flex items-start justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0 break-words">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-sm font-bold">
                             {index + 1}
@@ -109,7 +109,7 @@ export function RulesManager({
                         </div>
                         <p className="text-sm text-muted-foreground ms-8">{rule.description}</p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 shrink-0">
                         <Button
                           size="sm"
                           variant="outline"

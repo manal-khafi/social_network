@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { fetchUserProfile, toggleFollow, fetchFollowers, fetchFollowing } from '../../features/user/userSlice';
 import { fetchUserPosts, fetchUserReposts } from '../../features/posts/postsSlice';
-import { MessageCircle, Lock, Phone } from 'lucide-react';
+import { MessageCircle, Lock, Phone, UserCheck, UserPlus, Clock } from 'lucide-react';
 import { useCall } from '../../features/call/CallProvider';
 import { Button } from '../../Components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../Components/ui/tabs';
@@ -172,18 +172,34 @@ export default function UserProfileView() {
             </Link>
           ) : (
             <>
+              {/* Below md the three actions are same-size icon buttons; the text
+                  labels come back from md up (the label stays as aria-label). */}
               <Button
                 onClick={handleFollowClick}
                 variant={user.isFollowing ? 'outline' : 'default'}
-                className={`flex-1 min-w-0 ${user.isFollowing || user.followRequestPending ? '' : 'bg-[#d6955b] hover:bg-[#c58549]'}`}
+                className={`size-9 px-0 md:size-auto md:h-9 md:px-4 md:flex-1 md:min-w-0 ${user.isFollowing || user.followRequestPending ? '' : 'bg-[#d6955b] hover:bg-[#c58549]'}`}
                 disabled={user.followRequestPending}
+                aria-label={getFollowButtonText()}
+                title={getFollowButtonText()}
               >
-                {getFollowButtonText()}
+                {user.isFollowing ? (
+                  <UserCheck className="w-4 h-4" />
+                ) : user.followRequestPending ? (
+                  <Clock className="w-4 h-4" />
+                ) : (
+                  <UserPlus className="w-4 h-4" />
+                )}
+                <span className="hidden md:inline">{getFollowButtonText()}</span>
               </Button>
-              <Link to={`/home/inbox/${user.id}`} className="flex-1 min-w-0">
-                <Button variant="outline" className="w-full">
-                  <MessageCircle className="w-4 h-4 me-2" />
-                  {t('profile.message')}
+              <Link
+                to={`/home/inbox/${user.id}`}
+                className="shrink-0 md:flex-1 md:min-w-0"
+                aria-label={t('profile.message')}
+                title={t('profile.message')}
+              >
+                <Button variant="outline" className="size-9 px-0 md:size-auto md:h-9 md:px-4 md:w-full" tabIndex={-1}>
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="hidden md:inline">{t('profile.message')}</span>
                 </Button>
               </Link>
               <Button
@@ -191,6 +207,7 @@ export default function UserProfileView() {
                 size="icon"
                 className="shrink-0"
                 aria-label={t('profile.call')}
+                title={t('profile.call')}
                 onClick={() =>
                   startCall(
                     { id: user.id, username: user.username, avatar: user.avatar_url ?? undefined },

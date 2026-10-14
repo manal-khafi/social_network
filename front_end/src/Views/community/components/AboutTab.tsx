@@ -20,7 +20,7 @@ export function AboutTab({
   return (
     <TabsContent value="about" className="mt-6">
       <Card className="border-2">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="space-y-6">
             <div>
               <h3 className="text-xl font-semibold mb-3">{t("communities.aboutName", { name: community.name })}</h3>

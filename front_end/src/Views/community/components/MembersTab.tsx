@@ -19,7 +19,7 @@ export function MembersTab({
   return (
     <TabsContent value="members" className="mt-6">
       <Card className="border-2">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="mb-6">
             <h3 className="text-xl font-semibold mb-2">
               {t("communities.membersTitle", { n: members.length })}
@@ -43,17 +43,17 @@ export function MembersTab({
                   return (
                     <Card key={member.id} className="group hover:shadow-md transition-all duration-300 hover:border-secondary dark:hover:border-primary">
                       <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-14 w-14 border-2 border-border group-hover:border-secondary dark:group-hover:border-primary transition-colors">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                            <Avatar className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 border-2 border-border group-hover:border-secondary dark:group-hover:border-primary transition-colors">
                               <AvatarImage src={member.user?.avatar_url || member.avatar} />
                               <AvatarFallback className="bg-gradient-to-br from-[#18534f] to-[#226d68] text-white font-semibold">
                                 {initials}
                               </AvatarFallback>
                             </Avatar>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-semibold text-foreground group-hover:text-primary dark:group-hover:text-foreground transition-colors">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <h4 className="font-semibold truncate text-foreground group-hover:text-primary dark:group-hover:text-foreground transition-colors">
                                   {userName}
                                 </h4>
                                 {member.role === 'ADMIN' && (
@@ -62,7 +62,7 @@ export function MembersTab({
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-sm text-muted-foreground">{member.user?.username ? `@${member.user.username}` : member.username}</p>
+                              <p className="text-sm text-muted-foreground truncate">{member.user?.username ? `@${member.user.username}` : member.username}</p>
                               {member.joinedAt && (
                                 <p className="text-xs text-muted-foreground mt-1">
                                   {t("communities.memberSince", { date: new Date(member.joinedAt).toLocaleDateString(i18n.language) })}

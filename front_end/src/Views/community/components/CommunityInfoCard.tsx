@@ -42,13 +42,12 @@ export function CommunityInfoCard({
                       {community.type || t("communities.noCategory")}
                     </Badge>
                   </div>
-                  <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-4 line-clamp-2">{community.bio || community.description}</p>
-                  <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
+                  <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-4 line-clamp-2 break-words [overflow-wrap:anywhere]">{community.bio || community.description}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 sm:gap-x-6 text-xs sm:text-sm text-muted-foreground">
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      <span>
-                        <span className="font-semibold text-foreground">{(community._count?.members || members.length).toLocaleString()}</span>{" "}
-                        members
+                      <span className="font-semibold text-foreground">
+                        {t("communities.membersCount", { count: community._count?.members || members.length })}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2">
