@@ -244,7 +244,19 @@ export default function StoryOverlayLayer({
       className="absolute inset-0"
       style={{ touchAction: editable ? "none" : "auto" }}
     >
-      {overlays.map((ov) => {
+      {/* drawings cover the whole canvas, under every other overlay, and are not draggable */}
+      {overlays
+        .filter((ov) => ov.type === "drawing" && ov.drawingUrl)
+        .map((ov) => (
+          <img
+            key={ov.id}
+            src={ov.drawingUrl}
+            alt=""
+            draggable={false}
+            className="absolute inset-0 w-full h-full pointer-events-none select-none"
+          />
+        ))}
+      {overlays.filter((ov) => ov.type !== "drawing").map((ov) => {
         const selected = editable && selectedId === ov.id;
         return (
           <div

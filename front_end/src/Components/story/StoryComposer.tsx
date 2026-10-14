@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { uploadFile } from "../../api/upload";
 import { toast } from "sonner";
 import { useAppDispatch } from "../../hooks";
 import { createStory } from "../../features/stories/storiesSlice";
@@ -10,7 +11,8 @@ import MusicPicker, { type SelectedMusic } from "./MusicPicker";
 import MentionPicker from "./MentionPicker";
 import GifPicker from "./GifPicker";
 import { STORY_BACKGROUNDS, FONT_FAMILIES } from "./storyConfig";
-import StoryModeChooser from "./components/StoryModeChooser";
+import StoryCamera from "./components/StoryCamera";
+import DrawingEditor from "./components/DrawingEditor";
 import StoryCanvas from "./components/StoryCanvas";
 import StoryToolRail from "./components/StoryToolRail";
 import StoryShareBar from "./components/StoryShareBar";
@@ -34,7 +36,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
   const dispatch = useAppDispatch();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [mode, setMode] = useState<Mode>(sharedPost ? "text" : "choose");
+  const [mode, setMode] = useState<Mode>(sharedPost ? "text" : "camera");
   const [media, setMedia] = useState<{
     url: string;
     type: "image" | "video";
@@ -46,7 +48,6 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
   const [overlays, setOverlays] = useState<StoryOverlay[]>([]);
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null);
   const [music, setMusic] = useState<SelectedMusic | null>(null);
-  const [visibility, setVisibility] = useState<StoryVisibility>("public");
 
   const [showMusic, setShowMusic] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
@@ -60,7 +61,8 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     options: string[];
     prompt: string;
   } | null>(null);
-  const [showVisibility, setShowVisibility] = useState(false);
+  const [drawing, setDrawing] = useState(false);
+  const [savingDrawing, setSavingDrawing] = useState(false);
   const [textDraft, setTextDraft] = useState<{
     open: boolean;
     value: string;
@@ -71,7 +73,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
   }>({ open: false, value: "", color: "#ffffff", font: FONT_FAMILIES[0].value, bg: false, editingId: null });
 
   const [uploading, setUploading] = useState(false);
-  const [posting, setPosting] = useState(false);
+  const [posting, setPosting] = useState<StoryVisibility | null>(null);
 
   // Play the selected track on the editing canvas (Instagram behaviour).
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -79,7 +81,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     if (!previewAudioRef.current) previewAudioRef.current = new Audio();
     const audio = previewAudioRef.current;
     const editing =
-      open && (mode === "media" || mode === "text") && !showMusic && !showEmoji && !textDraft.open && !stickerDraft;
+      open && (mode === "media" || mode === "text") && !showMusic && !showEmoji && !textDraft.open && !stickerDraft && !drawing;
     const preview = music?.preview_url;
     if (!preview || !editing) {
       audio.pause();
@@ -90,21 +92,19 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     audio.loop = true;
     audio.play().catch(() => {});
     return () => audio.pause();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, mode, showMusic, showEmoji, textDraft.open, stickerDraft, music?.preview_url, music?.start_sec]);
+  }, [open, mode, showMusic, showEmoji, textDraft.open, stickerDraft, drawing, music?.preview_url, music?.start_sec]);
 
   const reset = () => {
-    setMode(sharedPost ? "text" : "choose");
+    setMode(sharedPost ? "text" : "camera");
     setMedia(null);
     setBgIndex(0);
     setCaption("");
     setOverlays([]);
     setSelectedOverlayId(null);
     setMusic(null);
-    setVisibility("public");
     setShowMusic(false);
     setShowEmoji(false);
-    setShowVisibility(false);
+    setDrawing(false);
     setTextDraft({ open: false, value: "", color: "#ffffff", font: FONT_FAMILIES[0].value, bg: false, editingId: null });
   };
 
@@ -113,10 +113,17 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     onClose();
   };
 
-  const handleFile = async (file: File) => {
+  /** Back from editing to the camera (Instagram: the X discards the capture). */
+  const backToCamera = () => {
+    const keepOpen = !sharedPost;
+    reset();
+    if (!keepOpen) onClose();
+  };
+
+  const handleFile = async (file: File, durationSec?: number) => {
     setUploading(true);
     try {
-      const result = await uploadStoryMedia(file);
+      const result = await uploadStoryMedia(file, durationSec);
       setMedia({
         url: result.url,
         type: result.type,
@@ -263,6 +270,23 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     setShowMention(false);
   };
 
+  const saveDrawing = async (png: Blob | null) => {
+    if (!png) {
+      setDrawing(false);
+      return;
+    }
+    setSavingDrawing(true);
+    try {
+      const url = await uploadFile(png, "stories", "drawing.png");
+      setOverlays((prev) => [...prev, { id: uid(), type: "drawing", drawingUrl: url, x: 0.5, y: 0.5 }]);
+      setDrawing(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("errors.uploadFailed"));
+    } finally {
+      setSavingDrawing(false);
+    }
+  };
+
   const canShare =
     mode === "media"
       ? !!media
@@ -279,9 +303,9 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     560
   );
 
-  const share = async () => {
+  const share = async (visibility: StoryVisibility) => {
     if (!canShare || posting) return;
-    setPosting(true);
+    setPosting(visibility);
     try {
       const payload = {
         content_url: mode === "media" ? media!.url : caption.trim() || "text",
@@ -310,7 +334,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("stories.couldNotShareStory"));
     } finally {
-      setPosting(false);
+      setPosting(null);
     }
   };
 
@@ -327,62 +351,88 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-black text-white flex flex-col">
-      {/* top bar */}
-      <div className="flex items-center justify-between p-3">
-        <button onClick={close} aria-label={t("actions.close")}><X className="w-6 h-6" /></button>
-        <span className="text-sm font-semibold">{t("stories.createStory")}</span>
-        <div className="w-6" />
-      </div>
-
-      {mode === "choose" && (
-        <StoryModeChooser fileRef={fileRef} uploading={uploading} setMode={setMode} />
-      )}
-
-      {(mode === "media" || mode === "text") && (
-        <StoryCanvas
-          mode={mode}
-          media={media}
-          previewStyle={previewStyle}
-          sharedPost={sharedPost}
-          overlays={overlays}
-          selectedOverlayId={selectedOverlayId}
-          setSelectedOverlayId={setSelectedOverlayId}
-          patchOverlay={patchOverlay}
-          openTextEditor={openTextEditor}
-          removeSelectedOverlay={removeSelectedOverlay}
-          music={music}
-          caption={caption}
-          setCaption={setCaption}
-          bgIndex={bgIndex}
-          setBgIndex={setBgIndex}
+    <div className="fixed inset-0 z-[100] bg-black text-white flex flex-col h-[100dvh] overflow-hidden">
+      {mode === "camera" && (
+        <StoryCamera
+          onCapture={(file, durationSec) => handleFile(file, durationSec)}
+          onPickGallery={() => fileRef.current?.click()}
+          onTextMode={() => setMode("text")}
+          onClose={close}
+          uploading={uploading}
         />
       )}
 
-      {/* tool rail */}
       {(mode === "media" || mode === "text") && (
-        <StoryToolRail
-          openTextEditor={() => openTextEditor()}
-          setShowEmoji={setShowEmoji}
-          setShowGif={setShowGif}
-          setShowMention={setShowMention}
-          openSticker={openSticker}
-          music={music}
-          setShowMusic={setShowMusic}
-        />
-      )}
+        <>
+          {/* top bar */}
+          <div className="flex items-center justify-between px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2">
+            <button onClick={backToCamera} aria-label={t("actions.close")} className="p-1.5">
+              <X className="w-6 h-6" />
+            </button>
+            <span className="text-sm font-semibold">{t("stories.createStory")}</span>
+            <div className="w-9" />
+          </div>
 
-      {/* bottom action bar */}
-      {(mode === "media" || mode === "text") && (
-        <StoryShareBar
-          visibility={visibility}
-          setVisibility={setVisibility}
-          showVisibility={showVisibility}
-          setShowVisibility={setShowVisibility}
-          share={share}
-          canShare={canShare}
-          posting={posting}
-        />
+          <StoryCanvas
+            mode={mode}
+            media={media}
+            previewStyle={previewStyle}
+            sharedPost={sharedPost}
+            overlays={overlays}
+            selectedOverlayId={selectedOverlayId}
+            setSelectedOverlayId={setSelectedOverlayId}
+            patchOverlay={patchOverlay}
+            openTextEditor={openTextEditor}
+            removeSelectedOverlay={removeSelectedOverlay}
+            music={music}
+            caption={caption}
+            setCaption={setCaption}
+          >
+            {drawing ? (
+              <DrawingEditor onDone={saveDrawing} saving={savingDrawing} />
+            ) : (
+              <StoryToolRail
+                openTextEditor={() => openTextEditor()}
+                setShowEmoji={setShowEmoji}
+                setShowGif={setShowGif}
+                setShowMention={setShowMention}
+                openSticker={openSticker}
+                openDrawing={() => {
+                  setSelectedOverlayId(null);
+                  setDrawing(true);
+                }}
+                music={music}
+                setShowMusic={setShowMusic}
+              />
+            )}
+          </StoryCanvas>
+
+          {/* text story: background picker; photo / video: caption */}
+          {mode === "text" ? (
+            <div className="flex gap-2 justify-center px-3 pt-3 overflow-x-auto [scrollbar-width:none]">
+              {STORY_BACKGROUNDS.map((bg, i) => (
+                <button
+                  key={i}
+                  onClick={() => setBgIndex(i)}
+                  aria-label={`${i + 1}`}
+                  className={`w-8 h-8 rounded-full shrink-0 border-2 ${i === bgIndex ? "border-white scale-110" : "border-white/30"}`}
+                  style={{ background: bg }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="px-3 pt-3">
+              <input
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder={t("stories.addACaption")}
+                className="w-full max-w-[380px] mx-auto block rounded-full bg-white/10 px-4 py-2 text-sm outline-none placeholder:text-white/50"
+              />
+            </div>
+          )}
+
+          <StoryShareBar share={share} canShare={canShare && !drawing} posting={posting} />
+        </>
       )}
 
       <input

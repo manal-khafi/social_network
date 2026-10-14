@@ -1,6 +1,7 @@
 // Editing state shared between StoryComposer and its sub-components.
 
-export type Mode = "choose" | "text" | "media";
+/** camera: capture / pick media; text: coloured-background story; media: editing a photo / video. */
+export type Mode = "camera" | "text" | "media";
 
 export interface StoryMedia {
   url: string;

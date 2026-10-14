@@ -469,7 +469,15 @@
     "someone": "شخص ما",
     "repliedToYourStory": "ردّ {{who}} على قصتك",
     "answeredYourQuestion": "أجاب {{who}} عن سؤالك",
-    "sentYouAStory": "أرسل {{who}} إليك قصة"
+    "sentYouAStory": "أرسل {{who}} إليك قصة",
+    "cameraNotAvailable": "الكاميرا غير متاحة",
+    "pickFromGallery": "اختر من المعرض",
+    "cameraHint": "انقر لالتقاط صورة، واضغط مطولًا لتسجيل فيديو",
+    "gallery": "المعرض",
+    "flipCamera": "تبديل الكاميرا",
+    "takePhoto": "التقاط صورة (اضغط مطولًا للتسجيل)",
+    "draw": "رسم",
+    "undo": "تراجع"
   },
   "communities": {
     "title": "المجتمعات",

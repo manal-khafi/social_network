@@ -64,6 +64,11 @@ export const validateStoryCreation = (
           return next(new AppError('Invalid mention', 400));
         }
       }
+      if (ov.type === 'drawing') {
+        if (typeof ov.drawingUrl !== 'string' || !/^https:\/\//i.test(ov.drawingUrl)) {
+          return next(new AppError('Invalid drawing', 400));
+        }
+      }
       if (ov.type === 'gif') {
         if (typeof ov.gifUrl !== 'string' || !/^https:\/\//i.test(ov.gifUrl)) {
           return next(new AppError('Invalid GIF', 400));

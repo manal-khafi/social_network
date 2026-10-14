@@ -1,9 +1,8 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Music2, Trash2 } from "lucide-react";
 import type { StoryOverlay, SharedPostRef } from "../../../api/storiesApi";
 import type { SelectedMusic } from "../MusicPicker";
 import StoryOverlayLayer from "../StoryOverlayLayer";
-import { STORY_BACKGROUNDS } from "../storyConfig";
 import type { Mode, StoryMedia } from "./types";
 import { useTranslation } from "react-i18next";
 
@@ -21,14 +20,14 @@ interface StoryCanvasProps {
   music: SelectedMusic | null;
   caption: string;
   setCaption: (value: string) => void;
-  bgIndex: number;
-  setBgIndex: (index: number) => void;
+  /** Rendered on top of the canvas (tool rail, drawing layer). */
+  children?: ReactNode;
 }
 
 /**
  * The 9:16 editing canvas (media or coloured background, overlays, music pill,
- * selected-overlay controls) with the background swatches and caption input
- * underneath.
+ * selected-overlay controls). It fills the space it is given while keeping its
+ * 9:16 shape, so it is full-bleed on a phone and centred on a wide screen.
  */
 export default function StoryCanvas({
   mode,
@@ -44,14 +43,13 @@ export default function StoryCanvas({
   music,
   caption,
   setCaption,
-  bgIndex,
-  setBgIndex,
+  children,
 }: StoryCanvasProps) {
   const { t } = useTranslation();
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 pb-3">
+    <div className="relative flex-1 min-h-0 w-full flex items-center justify-center">
       <div
-        className="relative w-full max-w-[380px] aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl"
+        className="relative w-full max-w-[min(100%,calc((100dvh-9rem)*9/16))] aspect-[9/16] max-h-full overflow-hidden sm:rounded-2xl"
         style={previewStyle}
         onClick={() => setSelectedOverlayId(null)}
       >
@@ -74,6 +72,21 @@ export default function StoryCanvas({
           </div>
         )}
 
+        {/* text story: type straight onto the background */}
+        {mode === "text" && !sharedPost && (
+          <div className="absolute inset-0 flex items-center justify-center p-8">
+            <textarea
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              placeholder={t("stories.typeSomething")}
+              rows={4}
+              maxLength={500}
+              className="w-full bg-transparent text-center text-3xl font-extrabold text-white placeholder:text-white/60 outline-none resize-none drop-shadow"
+            />
+          </div>
+        )}
+
         <StoryOverlayLayer
           overlays={overlays}
           editable
@@ -84,7 +97,7 @@ export default function StoryCanvas({
 
         {/* music pill */}
         {music && (
-          <div className="absolute top-3 start-3 flex items-center gap-2 bg-black/50 rounded-full ps-1 pe-3 py-1 text-xs backdrop-blur">
+          <div className="absolute top-3 start-3 flex items-center gap-2 bg-black/50 rounded-full ps-1 pe-3 py-1 text-xs backdrop-blur max-w-[calc(100%-4.5rem)]">
             {music.cover_url ? (
               <img
                 src={music.cover_url}
@@ -95,16 +108,7 @@ export default function StoryCanvas({
             ) : (
               <Music2 className="w-4 h-4 ms-1" />
             )}
-            <span className="max-w-[140px] truncate">{music.title} · {music.artist}</span>
-          </div>
-        )}
-
-        {/* text-story caption shown centred */}
-        {mode === "text" && caption.trim() && overlays.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center p-6">
-            <p className="text-2xl font-extrabold text-center drop-shadow" style={{ whiteSpace: "pre-wrap" }}>
-              {caption}
-            </p>
+            <span className="truncate">{music.title} · {music.artist}</span>
           </div>
         )}
 
@@ -116,38 +120,18 @@ export default function StoryCanvas({
                 const ov = overlays.find((o) => o.id === selectedOverlayId);
                 if (ov?.type === "text") openTextEditor(ov);
               }}
-              className="px-3 py-1 rounded-full bg-white/20 text-xs"
+              className="px-3 py-1 rounded-full bg-black/40 text-xs"
             >
               {t("actions.edit")}
             </button>
-            <button onClick={removeSelectedOverlay} className="p-2 rounded-full bg-white/20">
+            <button onClick={removeSelectedOverlay} className="p-2 rounded-full bg-black/40">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
         )}
+
+        {children}
       </div>
-
-      {/* text-story: background swatches */}
-      {mode === "text" && (
-        <div className="flex gap-2 mt-3 overflow-x-auto max-w-full">
-          {STORY_BACKGROUNDS.map((bg, i) => (
-            <button
-              key={i}
-              onClick={() => setBgIndex(i)}
-              className={`w-8 h-8 rounded-full shrink-0 border-2 ${i === bgIndex ? "border-white" : "border-transparent"}`}
-              style={{ background: bg }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* caption */}
-      <input
-        value={caption}
-        onChange={(e) => setCaption(e.target.value)}
-        placeholder={mode === "text" ? t("stories.typeSomething") : t("stories.addACaption")}
-        className="mt-3 w-full max-w-[380px] rounded-full bg-white/10 px-4 py-2 text-sm outline-none placeholder:text-white/50"
-      />
     </div>
   );
 }

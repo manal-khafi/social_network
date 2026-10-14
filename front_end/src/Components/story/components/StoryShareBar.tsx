@@ -1,69 +1,55 @@
-import type { Dispatch, SetStateAction } from "react";
-import { Loader2, Sparkles, Check, ChevronDown } from "lucide-react";
+import { Loader2, Star } from "lucide-react";
 import type { StoryVisibility } from "../../../api/storiesApi";
-import { VISIBILITY_OPTIONS } from "../storyConfig";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
+import { useAppSelector } from "../../../hooks";
+import { selectMyAvatar } from "../../../features/user/userSlice";
 import { useTranslation } from "react-i18next";
 
 interface StoryShareBarProps {
-  visibility: StoryVisibility;
-  setVisibility: (visibility: StoryVisibility) => void;
-  showVisibility: boolean;
-  setShowVisibility: Dispatch<SetStateAction<boolean>>;
-  share: () => void;
+  share: (visibility: StoryVisibility) => void;
   canShare: boolean;
-  posting: boolean;
+  /** Audience being posted to, while a post is in flight. */
+  posting: StoryVisibility | null;
 }
 
-/** Bottom bar: audience selector and the "Share to story" button. */
-export default function StoryShareBar({
-  visibility,
-  setVisibility,
-  showVisibility,
-  setShowVisibility,
-  share,
-  canShare,
-  posting,
-}: StoryShareBarProps) {
+/** Bottom bar (Instagram style): post to "Your story" or to "Close friends". */
+export default function StoryShareBar({ share, canShare, posting }: StoryShareBarProps) {
   const { t } = useTranslation();
+  const avatar = useAppSelector(selectMyAvatar);
+  const username = useAppSelector((s) => s.user.currentUser?.username ?? s.auth.user?.username ?? "");
+  const busy = posting !== null;
+
   return (
-    <div className="flex items-center gap-3 p-3 border-t border-white/10">
-      <div className="relative">
-        <button
-          onClick={() => setShowVisibility((v) => !v)}
-          className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-2 text-xs"
-        >
-          {t(VISIBILITY_OPTIONS.find((o) => o.value === visibility)?.label ?? "stories.visibility.public")}
-          <ChevronDown className="w-3 h-3" />
-        </button>
-        {showVisibility && (
-          <div className="absolute bottom-full mb-2 start-0 w-52 rounded-xl bg-neutral-900 border border-white/10 overflow-hidden">
-            {VISIBILITY_OPTIONS.map((o) => (
-              <button
-                key={o.value}
-                onClick={() => {
-                  setVisibility(o.value);
-                  setShowVisibility(false);
-                }}
-                className="w-full text-start px-3 py-2 hover:bg-white/10"
-              >
-                <p className="text-sm flex items-center gap-2">
-                  {t(o.label)}
-                  {visibility === o.value && <Check className="w-3 h-3" />}
-                </p>
-                <p className="text-[11px] text-white/50">{t(o.hint)}</p>
-              </button>
-            ))}
-          </div>
+    <div className="flex items-center gap-2 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <button
+        onClick={() => share("public")}
+        disabled={!canShare || busy}
+        className="flex-1 min-w-0 flex items-center justify-center gap-2 rounded-full bg-white/15 backdrop-blur px-3 py-2.5 text-sm font-semibold disabled:opacity-50"
+      >
+        {posting === "public" ? (
+          <Loader2 className="w-5 h-5 animate-spin" />
+        ) : (
+          <Avatar className="w-6 h-6 shrink-0">
+            <AvatarImage src={avatar} />
+            <AvatarFallback className="text-[10px] text-black">{username[0]?.toUpperCase() ?? "?"}</AvatarFallback>
+          </Avatar>
         )}
-      </div>
+        <span className="truncate">{t("stories.yourStory")}</span>
+      </button>
 
       <button
-        onClick={share}
-        disabled={!canShare || posting}
-        className="flex-1 flex items-center justify-center gap-2 rounded-full bg-white text-black font-semibold py-2.5 disabled:opacity-50"
+        onClick={() => share("close_friends")}
+        disabled={!canShare || busy}
+        className="flex-1 min-w-0 flex items-center justify-center gap-2 rounded-full bg-white/15 backdrop-blur px-3 py-2.5 text-sm font-semibold disabled:opacity-50"
       >
-        {posting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-        {t("stories.shareToStory")}
+        {posting === "close_friends" ? (
+          <Loader2 className="w-5 h-5 animate-spin" />
+        ) : (
+          <span className="grid place-items-center w-6 h-6 shrink-0 rounded-full bg-green-500">
+            <Star className="w-3.5 h-3.5 fill-white text-white" />
+          </span>
+        )}
+        <span className="truncate">{t("stories.visibility.closeFriends")}</span>
       </button>
     </div>
   );

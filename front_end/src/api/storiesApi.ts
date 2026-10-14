@@ -37,7 +37,8 @@ export type StoryOverlayType =
   | "link"
   | "poll"
   | "question"
-  | "gif";
+  | "gif"
+  | "drawing";
 
 export interface StoryOverlay {
   id: string;
@@ -61,6 +62,8 @@ export interface StoryOverlay {
   prompt?: string;
   // gif sticker
   gifUrl?: string;
+  // free-hand drawing: transparent PNG covering the whole canvas
+  drawingUrl?: string;
 }
 
 export interface GifResult {

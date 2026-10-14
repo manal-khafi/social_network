@@ -449,7 +449,15 @@
     "someone": "Quelqu'un",
     "repliedToYourStory": "{{who}} a répondu à votre story",
     "answeredYourQuestion": "{{who}} a répondu à votre question",
-    "sentYouAStory": "{{who}} vous a envoyé une story"
+    "sentYouAStory": "{{who}} vous a envoyé une story",
+    "cameraNotAvailable": "Caméra indisponible",
+    "pickFromGallery": "Choisir dans la galerie",
+    "cameraHint": "Touchez pour une photo, maintenez pour une vidéo",
+    "gallery": "Galerie",
+    "flipCamera": "Changer de caméra",
+    "takePhoto": "Prendre une photo (maintenir pour filmer)",
+    "draw": "Dessiner",
+    "undo": "Annuler"
   },
   "communities": {
     "title": "Communautés",

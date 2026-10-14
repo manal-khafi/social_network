@@ -63,10 +63,11 @@ function readVideoMeta(file: File): Promise<{ duration: number; width: number; h
 
     video.onloadedmetadata = () => {
       const duration = video.duration || 0;
+      const seekTo = Number.isFinite(duration) ? Math.min(0.1, duration / 2) : 0.1;
       const width = video.videoWidth;
       const height = video.videoHeight;
       // Seek a touch in to grab a non-black poster frame.
-      video.currentTime = Math.min(0.1, duration / 2);
+      video.currentTime = seekTo;
       video.onseeked = () => {
         try {
           const canvas = document.createElement("canvas");
@@ -123,7 +124,9 @@ function readImageSize(file: File): Promise<{ width: number; height: number }> {
  */
 export async function uploadMedia(
   file: File,
-  folder: UploadFolder
+  folder: UploadFolder,
+  /** Length of a clip recorded in the browser: MediaRecorder files often report none. */
+  knownDurationSec?: number
 ): Promise<UploadedStoryMedia> {
   const isVideo = file.type.startsWith("video/");
   const isImage = file.type.startsWith("image/");
@@ -140,6 +143,7 @@ export async function uploadMedia(
 
   // Read metadata first so we can reject an over-long clip before uploading it.
   const meta = await readVideoMeta(file);
+  if (!Number.isFinite(meta.duration)) meta.duration = knownDurationSec ?? 0;
   if (meta.duration && meta.duration > MAX_VIDEO_SEC) {
     throw new Error(
       `Video is too long (${Math.round(meta.duration)}s, max ${MAX_VIDEO_SEC}s). Trim it and try again.`
@@ -164,7 +168,8 @@ export async function uploadMedia(
 }
 
 /** Story media (folder: stories). */
-export const uploadStoryMedia = (file: File) => uploadMedia(file, "stories");
+export const uploadStoryMedia = (file: File, knownDurationSec?: number) =>
+  uploadMedia(file, "stories", knownDurationSec);
 
 /** Post media (folder: posts). */
 export const uploadPostMedia = (file: File) => uploadMedia(file, "posts");
