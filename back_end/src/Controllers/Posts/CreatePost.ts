@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prismaClient";
+import { NotificationService } from "../../services/notificationService";
 
 const MAX_CONTENT = 5000;
 const MAX_MEDIA = 10;
@@ -91,6 +92,8 @@ export const createPost = async (req: Request, res: Response) => {
       commentsAllowed: post.user.allow_comments !== false,
       likesVisible: true,
     };
+
+    NotificationService.notifyPostMentions({ actorId: req.user.id, content: post.content, postId: post.id });
 
     return res
       .status(201)

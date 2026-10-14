@@ -54,6 +54,8 @@ interface PostsState {
   userPosts: { [userId: string]: Post[] };
   userReposts: { [userId: string]: Post[] };
   postComments: { [postId: string]: { comments: Comment[]; postOwnerId: string } };
+  /** Posts opened on their own (e.g. from a notification), by id. */
+  postById: { [postId: string]: Post };
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   loadMoreStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
   nextOffset: number | null;
@@ -70,6 +72,7 @@ const initialState: PostsState = {
   userPosts: {},
   userReposts: {},
   postComments: {},
+  postById: {},
   status: 'idle',
   loadMoreStatus: 'idle',
   nextOffset: 0,
@@ -87,6 +90,7 @@ const updatePostInAllLists = (state: PostsState, postId: string, updates: Partia
     state.savedPosts,
     state.myReposts,
     state.archivedPosts,
+    Object.values(state.postById),
   ];
 
   for (const list of listsToUpdate) {
@@ -115,6 +119,16 @@ export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
     nextOffset: response.data.nextOffset as number | null,
     hasMore: response.data.hasMore as boolean,
   };
+});
+
+/** One post by id (GET /posts/:postId), for the post page opened from a notification. */
+export const fetchPostById = createAsyncThunk('posts/fetchPostById', async (postId: string, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/posts/${postId}`);
+    return response.data.post as Post;
+  } catch (err: any) {
+    return rejectWithValue(err?.response?.status === 404 ? 'not_found' : 'error');
+  }
 });
 
 export const fetchMyPosts = createAsyncThunk('posts/fetchMyPosts', async () => {
@@ -475,6 +489,9 @@ const postsSlice = createSlice({
       })
       .addCase(createPost.rejected, (state, action) => {
         state.error = action.error.message || 'Failed to create post';
+      })
+      .addCase(fetchPostById.fulfilled, (state, action) => {
+        state.postById[action.payload.id] = action.payload;
       })
       .addCase(togglePostLike.fulfilled, (state, action) => {
         const { postId, liked, likes } = action.payload;

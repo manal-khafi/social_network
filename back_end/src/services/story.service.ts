@@ -5,6 +5,9 @@ import { RelationshipService } from './relationship.service';
 import { NotificationService } from './notificationService';
 import { MusicService } from './musicService';
 import { emitToUsers } from '../realtime/io';
+import { parseMentions } from '../util/mentions';
+import { ConversationService } from './conversation.service';
+import { logger } from '../util/logger';
 
 // Hosts we trust for client-supplied music preview / cover URLs when the
 // authoritative provider lookup is unavailable.
@@ -239,6 +242,11 @@ export class StoryService {
       await NotificationService.createStoryReshareNotification(sharedStoryOwnerId, userId, story.id);
     }
 
+    // Fire-and-forget: tell the users @mentioned in the story.
+    this.notifyStoryMentions(userId, story.id, data).catch((err) =>
+      logger.warn({ err, storyId: story.id }, 'failed to notify story mentions')
+    );
+
     // Nudge accepted followers so their story bar refreshes live.
     const followers = await prisma.follow.findMany({
       where: { followed_id: userId, status: 'accepted' },
@@ -251,6 +259,39 @@ export class StoryService {
     );
 
     return this.hydrate(story, userId, EMPTY_SETS);
+  }
+
+  /** Usernames tagged in a story: mention stickers, text stickers and the caption. */
+  static storyMentions(data: Pick<CreateStoryInput, 'caption' | 'overlays' | 'content_type' | 'content_url'>) {
+    const overlays = Array.isArray(data.overlays) ? (data.overlays as any[]) : [];
+    const names = [
+      ...overlays
+        .filter((o) => o && o.type === 'mention' && typeof o.text === 'string')
+        .map((o) => String(o.text).replace(/^@/, '').trim()),
+      ...overlays
+        .filter((o) => o && o.type === 'text' && typeof o.text === 'string')
+        .flatMap((o) => parseMentions(o.text)),
+      ...parseMentions(data.caption),
+      ...(data.content_type === 'text' ? parseMentions(data.content_url) : []),
+    ].filter(Boolean);
+    return parseMentions(names.map((n) => `@${n}`).join(' '));
+  }
+
+  /**
+   * Each mentioned user who can see the story gets a "mention" notification
+   * and a story-mention card in their DMs with the author.
+   */
+  private static async notifyStoryMentions(userId: string, storyId: string, data: CreateStoryInput) {
+    const story = await prisma.story.findUnique({ where: { id: storyId }, select: { visibility: true } });
+    if (!story) return;
+    const users = await NotificationService.resolveMentionedUsers(userId, this.storyMentions(data));
+    for (const u of users) {
+      // Only people allowed to watch the story (e.g. close friends) are told.
+      const canView = await RelationshipService.canViewStory(u.id, userId, story.visibility);
+      if (!canView) continue;
+      await NotificationService.createStoryMentionNotification(u.id, userId, storyId);
+      await ConversationService.sendStoryMention(userId, u.id, storyId);
+    }
   }
 
   /**

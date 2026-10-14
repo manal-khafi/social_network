@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../hooks";
 import {
@@ -19,6 +19,8 @@ import { formatTime } from "../../../utils/timeUtils";
 import { useTimeTicker } from "../../../hooks/useTimeTicker";
 import { PATHS } from "../../../routes/paths";
 import { useTranslation } from "react-i18next";
+import { useMentionAutocomplete } from "../../../Components/mention/useMentionAutocomplete";
+import { renderMentionText } from "../../../utils/mentionUtils";
 
 interface CommentItemProps {
   comment: Comment;
@@ -46,6 +48,12 @@ export default function CommentItem({
   const [replyText, setReplyText] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(comment.content);
+  const replyMentionRef = useRef<HTMLInputElement>(null);
+  const replyMention = useMentionAutocomplete<HTMLInputElement>(
+    replyMentionRef, replyText, setReplyText);
+  const editMentionRef = useRef<HTMLInputElement>(null);
+  const editMention = useMentionAutocomplete<HTMLInputElement>(
+    editMentionRef, editText, setEditText);
 
   const currentUserId = authUser?.id;
   const isPostOwner = postOwnerId === currentUserId;
@@ -137,16 +145,23 @@ export default function CommentItem({
         <div className="flex-1 min-w-0">
           {isEditing ? (
             <div>
+              <div className="relative">
               <Input
+                ref={editMentionRef}
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
+                onSelect={editMention.onSelect}
+                onBlur={editMention.onBlur}
                 className="h-8 text-sm"
                 autoFocus
                 onKeyDown={(e) => {
+                  if (editMention.handleKeyDown(e)) return;
                   if (e.key === "Enter") handleSaveEdit();
                   if (e.key === "Escape") handleCancelEdit();
                 }}
               />
+              {editMention.dropdown}
+              </div>
               <div className="flex gap-2 mt-2">
                 <Button onClick={handleSaveEdit} size="sm">
                   {t("actions.save")}
@@ -165,7 +180,7 @@ export default function CommentItem({
                 >
                   {comment.username}
                 </Link>
-                <p className="text-sm mt-0.5 break-words">{comment.content}</p>
+                <p className="text-sm mt-0.5 break-words whitespace-pre-wrap">{renderMentionText(comment.content)}</p>
               </div>
 
               <div className="flex items-center gap-4 mt-1 px-3">
@@ -215,9 +230,15 @@ export default function CommentItem({
             <div className="flex gap-2 mt-2">
               <div className="relative flex-1">
                 <Input
+                  ref={replyMentionRef}
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleReply()}
+                  onSelect={replyMention.onSelect}
+                  onBlur={replyMention.onBlur}
+                  onKeyDown={(e) => {
+                    if (replyMention.handleKeyDown(e)) return;
+                    if (e.key === "Enter") handleReply();
+                  }}
                   placeholder={t("posts.replyTo", { username: comment.username })}
                   className="h-8 text-sm pe-10"
                   autoFocus
@@ -239,6 +260,7 @@ export default function CommentItem({
                     />
                   </PopoverContent>
                 </Popover>
+                {replyMention.dropdown}
               </div>
 
               <Button

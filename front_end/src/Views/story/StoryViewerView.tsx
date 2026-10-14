@@ -34,6 +34,7 @@ import QuestionResponsesSheet from "../../Components/story/QuestionResponsesShee
 import { DEFAULT_REACTIONS } from "../../api/storiesApi";
 import { IMAGE_STORY_MS, MAX_VIDEO_STORY_MS } from "../../Components/story/storyConfig";
 import { useTranslation } from "react-i18next";
+import { renderMentionText } from "../../utils/mentionUtils";
 
 function timeAgo(iso: string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -481,7 +482,7 @@ export default function StoryViewerView() {
           {isText && !overlays.length && story.caption && (
             <div className="absolute inset-0 flex items-center justify-center p-8">
               <p className="text-white text-2xl font-extrabold text-center drop-shadow whitespace-pre-wrap">
-                {story.caption}
+                {renderMentionText(story.caption, "font-bold underline")}
               </p>
             </div>
           )}
@@ -491,7 +492,7 @@ export default function StoryViewerView() {
         {!isText && story.caption && (
           <div className="absolute bottom-24 start-4 end-4 z-20 text-center">
             <span className="inline-block bg-black/45 text-white text-sm px-3 py-1.5 rounded-lg">
-              {story.caption}
+              {renderMentionText(story.caption, "font-bold underline")}
             </span>
           </div>
         )}

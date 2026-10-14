@@ -275,7 +275,8 @@
     "toggleFullscreen": "Toggle fullscreen",
     "pauseVideo": "Pause video",
     "playVideo": "Play video",
-    "seekVideo": "Seek video"
+    "seekVideo": "Seek video",
+    "postNotFound": "This post is not available"
   },
   "time": {
     "justNow": "Just now",
@@ -680,7 +681,14 @@
     "micDenied": "Allow microphone access to record a voice message",
     "recordingNotSupported": "Voice recording is not supported in this browser",
     "voiceSendFailed": "Failed to send voice message",
-    "voicePlayFailed": "This voice message cannot be played in this browser"
+    "voicePlayFailed": "This voice message cannot be played in this browser",
+    "mentionedYouInTheirStory": "mentioned you in their story",
+    "storyMentionReceived": "@{{username}} mentioned you in their story",
+    "storyMentionSent": "You mentioned @{{username}} in your story",
+    "storyMentionPreview": "Mentioned you in their story",
+    "storySharePreview": "Sent a story",
+    "storyUnavailable": "This story is no longer available",
+    "addToYourStory": "Add to your story"
   },
   "settings": {
     "title": "Settings",

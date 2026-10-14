@@ -105,6 +105,8 @@ export function useRealtime() {
           ? "messages.sentYouAVideo"
           : m?.message_type === "file"
           ? "messages.sentYouAVoiceMessage"
+          : m?.message_type === "story_mention"
+          ? "messages.mentionedYouInTheirStory"
           : isLocationContent(m?.content)
           ? "messages.sentYouALocation"
           : null;

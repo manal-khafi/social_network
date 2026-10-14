@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 
 // Every other page is its own chunk, fetched the first time its route is opened.
 const FeedView = lazy(() => import("./Views/feed/FeedView"));
+const PostDetailView = lazy(() => import("./Views/post/PostDetailView"));
 const CreatePostView = lazy(() => import("./Views/post/CreatePostView"));
 const StoryViewerView = lazy(() => import("./Views/story/StoryViewerView"));
 const HighlightViewerView = lazy(() => import("./Views/story/HighlightViewerView"));
@@ -102,6 +103,7 @@ function AppContent() {
           <Route path="feed" element={<FeedView />} />
           <Route path="search" element={<SearchView />} />
           <Route path="create-post" element={<CreatePostView />} />
+          <Route path="post/:postId" element={<PostDetailView />} />
           <Route path="my-posts" element={<MyPostsView />} />
           <Route path="stories/:userId" element={<StoryViewerView />} />
           <Route path="story/:userId" element={<StoryViewerView />} />

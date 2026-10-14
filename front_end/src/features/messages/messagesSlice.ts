@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import * as messagesApi from "../../api/messagesApi";
-import type { ApiConversation, ApiMessage } from "../../api/messagesApi";
+import type { ApiConversation, ApiMessage, MessageStoryPreview } from "../../api/messagesApi";
 import type { RootState } from "../../store";
 import i18n from "../../i18n/i18n";
 
@@ -17,7 +17,10 @@ export type MessageType =
   | "poll"
   | "event"
   | "location"
-  | "voice";
+  | "voice"
+  // A story card: someone mentioned you in their story, or sent you a story.
+  | "story_mention"
+  | "story_share";
 
 export interface MessagePoll {
   question: string;
@@ -49,6 +52,8 @@ export interface MessageExtras {
   /** URL of a voice message's audio recording. */
   voice?: string;
   voiceDuration?: number;
+  /** Story shown as a card (story_mention / story_share). */
+  story?: MessageStoryPreview | null;
 }
 
 export interface Message extends MessageExtras {
@@ -147,6 +152,8 @@ const summarize = (m: ApiMessage | null): string => {
   if (m.message_type === "image") return i18n.t("messages.photo");
   if (m.message_type === "video") return i18n.t("messages.video");
   if (m.message_type === "file") return i18n.t("messages.voiceMessage");
+  if (m.message_type === "story_mention") return i18n.t("messages.storyMentionPreview");
+  if (m.story_id) return m.content || i18n.t("messages.storySharePreview");
   if (m.message_type === "text" && isLocationContent(m.content)) return i18n.t("messages.location");
   return m.content ?? "";
 };
@@ -205,8 +212,21 @@ const mapLocationMessage = (m: ApiMessage): Message => {
 };
 
 // Image / video messages carry the media URL as their content.
+const mapStoryMessage = (m: ApiMessage): Message => ({
+  id: m.id,
+  senderId: m.sender_id,
+  content: m.content ?? "", // the note sent with a shared story
+  type: m.message_type === "story_mention" ? "story_mention" : "story_share",
+  story: m.story ?? null,
+  timestamp: rel(m.created_at),
+  createdAt: m.created_at,
+  isRead: true,
+});
+
 const mapMessage = (m: ApiMessage): Message =>
-  m.message_type === "file"
+  m.message_type === "story_mention" || (m.story_id && m.message_type === "text")
+    ? mapStoryMessage(m)
+    : m.message_type === "file"
     ? mapVoiceMessage(m)
     : m.message_type === "text" && isLocationContent(m.content)
     ? mapLocationMessage(m)

@@ -279,7 +279,8 @@
     "toggleFullscreen": "تبديل وضع ملء الشاشة",
     "pauseVideo": "إيقاف الفيديو مؤقتًا",
     "playVideo": "تشغيل الفيديو",
-    "seekVideo": "التنقل في الفيديو"
+    "seekVideo": "التنقل في الفيديو",
+    "postNotFound": "هذا المنشور غير متاح"
   },
   "time": {
     "justNow": "الآن",
@@ -708,7 +709,14 @@
     "micDenied": "اسمح بالوصول إلى الميكروفون لتسجيل رسالة صوتية",
     "recordingNotSupported": "تسجيل الصوت غير مدعوم في هذا المتصفح",
     "voiceSendFailed": "تعذّر إرسال الرسالة الصوتية",
-    "voicePlayFailed": "لا يمكن تشغيل هذه الرسالة الصوتية في هذا المتصفح"
+    "voicePlayFailed": "لا يمكن تشغيل هذه الرسالة الصوتية في هذا المتصفح",
+    "mentionedYouInTheirStory": "أشار إليك في قصته",
+    "storyMentionReceived": "أشار إليك @{{username}} في قصته",
+    "storyMentionSent": "أشرت إلى @{{username}} في قصتك",
+    "storyMentionPreview": "أشار إليك في قصته",
+    "storySharePreview": "أرسل قصة",
+    "storyUnavailable": "هذه القصة لم تعد متاحة",
+    "addToYourStory": "أضف إلى قصتك"
   },
   "settings": {
     "title": "الإعدادات",

@@ -15,6 +15,8 @@ import { useTranslation } from "react-i18next";
 import { PATHS } from "../../routes/paths";
 import { isVideoUrl } from "../../utils/mediaUtils";
 import { uploadPostMedia } from "../../utils/uploadStoryMedia";
+import { useMentionAutocomplete } from "../../Components/mention/useMentionAutocomplete";
+import { renderMentionText } from "../../utils/mentionUtils";
 
 const MAX_MEDIA = 10;
 // `label` is an i18n key, resolved with t() at render time.
@@ -37,6 +39,9 @@ export default function CreatePostView() {
   const userStatus = useAppSelector((s) => s.user.status);
 
   const [content, setContent] = useState("");
+  const mentionRef = useRef<HTMLTextAreaElement>(null);
+  const mention = useMentionAutocomplete<HTMLTextAreaElement>(
+    mentionRef, content, setContent);
   const [media, setMedia] = useState<string[]>([]);
   const [uploading, setUploading] = useState(0);
   const [posting, setPosting] = useState(false);
@@ -175,13 +180,20 @@ export default function CreatePostView() {
             </div>
 
             {/* Content Input */}
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={t("posts.whatsOnYourMind")}
-              className="min-h-[150px] resize-none border-none focus-visible:ring-0 text-base"
-              maxLength={2200}
-            />
+            <div className="relative">
+              <Textarea
+                ref={mentionRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onSelect={mention.onSelect}
+                onKeyDown={mention.handleKeyDown}
+                onBlur={mention.onBlur}
+                placeholder={t("posts.whatsOnYourMind")}
+                className="min-h-[150px] resize-none border-none focus-visible:ring-0 text-base"
+                maxLength={2200}
+              />
+              {mention.dropdown}
+            </div>
 
             {/* Media Preview */}
             {(media.length > 0 || uploading > 0) && (
@@ -294,7 +306,7 @@ export default function CreatePostView() {
                     <span className="text-sm text-muted-foreground">· {t("posts.now")}</span>
                   </div>
 
-                  <p className="mt-1 whitespace-pre-wrap">{content}</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words">{renderMentionText(content)}</p>
 
                   {media.length > 0 && (
                     <div className="mt-3 grid grid-cols-2 gap-2">

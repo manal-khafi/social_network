@@ -275,7 +275,8 @@
     "toggleFullscreen": "Vollbild umschalten",
     "pauseVideo": "Video pausieren",
     "playVideo": "Video abspielen",
-    "seekVideo": "Im Video springen"
+    "seekVideo": "Im Video springen",
+    "postNotFound": "Dieser Beitrag ist nicht verfügbar"
   },
   "time": {
     "justNow": "Gerade eben",
@@ -680,7 +681,14 @@
     "micDenied": "Erlaube den Mikrofonzugriff, um eine Sprachnachricht aufzunehmen",
     "recordingNotSupported": "Sprachaufnahmen werden in diesem Browser nicht unterstützt",
     "voiceSendFailed": "Sprachnachricht konnte nicht gesendet werden",
-    "voicePlayFailed": "Diese Sprachnachricht kann in diesem Browser nicht abgespielt werden"
+    "voicePlayFailed": "Diese Sprachnachricht kann in diesem Browser nicht abgespielt werden",
+    "mentionedYouInTheirStory": "hat dich in der Story erwähnt",
+    "storyMentionReceived": "@{{username}} hat dich in der Story erwähnt",
+    "storyMentionSent": "Du hast @{{username}} in deiner Story erwähnt",
+    "storyMentionPreview": "Hat dich in der Story erwähnt",
+    "storySharePreview": "Hat eine Story gesendet",
+    "storyUnavailable": "Diese Story ist nicht mehr verfügbar",
+    "addToYourStory": "Zu deiner Story hinzufügen"
   },
   "settings": {
     "title": "Einstellungen",

@@ -21,22 +21,27 @@ import TextOverlayEditor from "./components/TextOverlayEditor";
 import StickerEditor from "./components/StickerEditor";
 import type { Mode } from "./components/types";
 import { useTranslation } from "react-i18next";
+import { useMentionAutocomplete } from "../mention/useMentionAutocomplete";
+import type { MessageStoryPreview } from "../../api/messagesApi";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   sharedPost?: SharedPostRef | null;
+  /** Re-share someone's story into your own (e.g. "Add to your story" on a mention). */
+  sharedStory?: MessageStoryPreview | null;
 }
 
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-export default function StoryComposer({ open, onClose, sharedPost = null }: Props) {
+export default function StoryComposer({ open, onClose, sharedPost = null, sharedStory = null }: Props) {
+  const resharing = !!sharedPost || !!sharedStory;
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [mode, setMode] = useState<Mode>(sharedPost ? "text" : "camera");
+  const [mode, setMode] = useState<Mode>(resharing ? "text" : "camera");
   const [media, setMedia] = useState<{
     url: string;
     type: "image" | "video";
@@ -45,6 +50,12 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
   } | null>(null);
   const [bgIndex, setBgIndex] = useState(0);
   const [caption, setCaption] = useState("");
+  const captionMentionRef = useRef<HTMLInputElement>(null);
+  const captionMention = useMentionAutocomplete<HTMLInputElement>(
+    captionMentionRef, caption, setCaption, {
+    placement: "above",
+    theme: "dark",
+  });
   const [overlays, setOverlays] = useState<StoryOverlay[]>([]);
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null);
   const [music, setMusic] = useState<SelectedMusic | null>(null);
@@ -95,7 +106,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
   }, [open, mode, showMusic, showEmoji, textDraft.open, stickerDraft, drawing, music?.preview_url, music?.start_sec]);
 
   const reset = () => {
-    setMode(sharedPost ? "text" : "camera");
+    setMode(resharing ? "text" : "camera");
     setMedia(null);
     setBgIndex(0);
     setCaption("");
@@ -115,7 +126,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
 
   /** Back from editing to the camera (Instagram: the X discards the capture). */
   const backToCamera = () => {
-    const keepOpen = !sharedPost;
+    const keepOpen = !resharing;
     reset();
     if (!keepOpen) onClose();
   };
@@ -291,7 +302,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
     mode === "media"
       ? !!media
       : mode === "text"
-      ? caption.trim().length > 0 || overlays.length > 0 || !!sharedPost
+      ? caption.trim().length > 0 || overlays.length > 0 || resharing
       : false;
 
   const background = STORY_BACKGROUNDS[bgIndex];
@@ -327,6 +338,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
             }
           : null,
         shared_post_id: sharedPost?.id,
+        shared_story_id: sharedStory?.id,
       };
       await dispatch(createStory(payload)).unwrap();
       toast.success(t("stories.storyShared"));
@@ -378,6 +390,7 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
             media={media}
             previewStyle={previewStyle}
             sharedPost={sharedPost}
+            sharedStory={sharedStory}
             overlays={overlays}
             selectedOverlayId={selectedOverlayId}
             setSelectedOverlayId={setSelectedOverlayId}
@@ -422,12 +435,19 @@ export default function StoryComposer({ open, onClose, sharedPost = null }: Prop
             </div>
           ) : (
             <div className="px-3 pt-3">
-              <input
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder={t("stories.addACaption")}
-                className="w-full max-w-[380px] mx-auto block rounded-full bg-white/10 px-4 py-2 text-sm outline-none placeholder:text-white/50"
-              />
+              <div className="relative w-full max-w-[380px] mx-auto">
+                <input
+                  ref={captionMentionRef}
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  onSelect={captionMention.onSelect}
+                  onKeyDown={captionMention.handleKeyDown}
+                  onBlur={captionMention.onBlur}
+                  placeholder={t("stories.addACaption")}
+                  className="w-full block rounded-full bg-white/10 px-4 py-2 text-sm outline-none placeholder:text-white/50"
+                />
+                {captionMention.dropdown}
+              </div>
             </div>
           )}
 

@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Music2, Trash2 } from "lucide-react";
 import type { StoryOverlay, SharedPostRef } from "../../../api/storiesApi";
@@ -5,12 +6,15 @@ import type { SelectedMusic } from "../MusicPicker";
 import StoryOverlayLayer from "../StoryOverlayLayer";
 import type { Mode, StoryMedia } from "./types";
 import { useTranslation } from "react-i18next";
+import { useMentionAutocomplete } from "../../../Components/mention/useMentionAutocomplete";
+import type { MessageStoryPreview } from "../../../api/messagesApi";
 
 interface StoryCanvasProps {
   mode: Mode;
   media: StoryMedia | null;
   previewStyle: CSSProperties;
   sharedPost: SharedPostRef | null;
+  sharedStory?: MessageStoryPreview | null;
   overlays: StoryOverlay[];
   selectedOverlayId: string | null;
   setSelectedOverlayId: (id: string | null) => void;
@@ -34,6 +38,7 @@ export default function StoryCanvas({
   media,
   previewStyle,
   sharedPost,
+  sharedStory = null,
   overlays,
   selectedOverlayId,
   setSelectedOverlayId,
@@ -46,6 +51,9 @@ export default function StoryCanvas({
   children,
 }: StoryCanvasProps) {
   const { t } = useTranslation();
+  const mentionRef = useRef<HTMLTextAreaElement>(null);
+  const mention = useMentionAutocomplete<HTMLTextAreaElement>(
+    mentionRef, caption, setCaption, { theme: "dark" });
   return (
     <div className="relative flex-1 min-h-0 w-full flex items-center justify-center">
       <div
@@ -72,18 +80,44 @@ export default function StoryCanvas({
           </div>
         )}
 
+        {/* re-shared story card */}
+        {sharedStory && (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[62%] aspect-[9/16] rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/80">
+            {sharedStory.content_type === "text" ? (
+              <div
+                className="w-full h-full grid place-items-center p-3 text-center text-sm font-bold"
+                style={{ background: sharedStory.bg_color ?? "#111827" }}
+              >
+                {sharedStory.caption || sharedStory.content_url}
+              </div>
+            ) : (
+              <img src={sharedStory.thumbnail_url || sharedStory.content_url} alt="" className="w-full h-full object-cover" />
+            )}
+            <span className="absolute top-2 start-2 text-xs font-semibold bg-black/50 rounded-full px-2 py-0.5">
+              @{sharedStory.user.username}
+            </span>
+          </div>
+        )}
+
         {/* text story: type straight onto the background */}
-        {mode === "text" && !sharedPost && (
+        {mode === "text" && !sharedPost && !sharedStory && (
           <div className="absolute inset-0 flex items-center justify-center p-8">
+            <div className="relative w-full">
             <textarea
+              ref={mentionRef}
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
+              onSelect={mention.onSelect}
+              onKeyDown={mention.handleKeyDown}
+              onBlur={mention.onBlur}
               onClick={(e) => e.stopPropagation()}
               placeholder={t("stories.typeSomething")}
               rows={4}
               maxLength={500}
               className="w-full bg-transparent text-center text-3xl font-extrabold text-white placeholder:text-white/60 outline-none resize-none drop-shadow"
             />
+            {mention.dropdown}
+            </div>
           </div>
         )}
 

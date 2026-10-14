@@ -7,10 +7,23 @@ export interface ApiMessage {
   sender: StoryUser | null;
   sender_id: string;
   content: string | null;
-  message_type: "text" | "image" | "video" | "file" | "call";
+  message_type: "text" | "image" | "video" | "file" | "call" | "story_mention";
   call_meta: { callType: "audio" | "video"; status: string; durationSec: number } | null;
   story_id: string | null;
+  /** Preview of the shared / mentioning story, when the message is about one. */
+  story?: MessageStoryPreview | null;
   created_at: string;
+}
+
+export interface MessageStoryPreview {
+  id: string;
+  user: StoryUser;
+  content_url: string;
+  content_type: "image" | "video" | "text" | "link";
+  thumbnail_url: string | null;
+  bg_color: string | null;
+  caption: string | null;
+  expired: boolean;
 }
 
 export interface ApiConversation {

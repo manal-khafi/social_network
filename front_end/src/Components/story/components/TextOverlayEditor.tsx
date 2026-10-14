@@ -1,7 +1,9 @@
+import { useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { TEXT_COLORS, FONT_FAMILIES } from "../storyConfig";
 import type { TextDraft } from "./types";
 import { useTranslation } from "react-i18next";
+import { useMentionAutocomplete } from "../../../Components/mention/useMentionAutocomplete";
 
 interface TextOverlayEditorProps {
   textDraft: TextDraft;
@@ -16,16 +18,30 @@ export default function TextOverlayEditor({
   commitText,
 }: TextOverlayEditorProps) {
   const { t } = useTranslation();
+  const mentionRef = useRef<HTMLTextAreaElement>(null);
+  const mention = useMentionAutocomplete<HTMLTextAreaElement>(
+    mentionRef,
+    textDraft.value,
+    (value) => setTextDraft((d) => ({ ...d, value })),
+    { theme: "dark" }
+  );
   return (
     <div className="absolute inset-0 z-40 bg-black/80 flex flex-col p-4">
-      <textarea
-        autoFocus
-        value={textDraft.value}
-        onChange={(e) => setTextDraft((d) => ({ ...d, value: e.target.value }))}
-        placeholder={t("stories.type")}
-        className="flex-1 bg-transparent text-center text-3xl font-extrabold outline-none resize-none"
-        style={{ color: textDraft.color, fontFamily: textDraft.font }}
-      />
+      <div className="relative flex-1 flex flex-col min-h-0">
+        <textarea
+          ref={mentionRef}
+          autoFocus
+          value={textDraft.value}
+          onChange={(e) => setTextDraft((d) => ({ ...d, value: e.target.value }))}
+          onSelect={mention.onSelect}
+          onKeyDown={mention.handleKeyDown}
+          onBlur={mention.onBlur}
+          placeholder={t("stories.type")}
+          className="flex-1 bg-transparent text-center text-3xl font-extrabold outline-none resize-none"
+          style={{ color: textDraft.color, fontFamily: textDraft.font }}
+        />
+        {mention.dropdown}
+      </div>
       <div className="flex items-center gap-2 overflow-x-auto py-2">
         {TEXT_COLORS.map((c) => (
           <button

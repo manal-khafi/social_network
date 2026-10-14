@@ -14,6 +14,7 @@ import {
 } from "../../api/highlightsApi";
 import { IMAGE_STORY_MS } from "../../Components/story/storyConfig";
 import { useTranslation } from "react-i18next";
+import { renderMentionText } from "../../utils/mentionUtils";
 
 export default function HighlightViewerView() {
   const { t } = useTranslation();
@@ -279,7 +280,7 @@ export default function HighlightViewerView() {
           {item.content_type === "text" && !(item.overlays ?? []).length && item.caption && (
             <div className="absolute inset-0 flex items-center justify-center p-8">
               <p className="text-white text-2xl font-extrabold text-center drop-shadow whitespace-pre-wrap">
-                {item.caption}
+                {renderMentionText(item.caption, "font-bold underline")}
               </p>
             </div>
           )}
@@ -288,7 +289,7 @@ export default function HighlightViewerView() {
         {item.content_type !== "text" && item.caption && (
           <div className="absolute bottom-6 start-4 end-4 z-20 text-center">
             <span className="inline-block bg-black/45 text-white text-sm px-3 py-1.5 rounded-lg">
-              {item.caption}
+              {renderMentionText(item.caption, "font-bold underline")}
             </span>
           </div>
         )}

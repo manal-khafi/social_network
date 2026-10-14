@@ -48,6 +48,7 @@ enum MessageType {
   video
   file
   call
+  story_mention
 }
 
 enum MessageStatusEnum {

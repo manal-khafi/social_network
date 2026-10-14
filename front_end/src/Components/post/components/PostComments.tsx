@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useAppSelector } from "../../../hooks";
 import { selectMyAvatar } from "../../../features/user/userSlice";
@@ -11,6 +12,7 @@ import { Smile } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import CommentItem from "./CommentItem";
 import { useTranslation } from "react-i18next";
+import { useMentionAutocomplete } from "../../../Components/mention/useMentionAutocomplete";
 
 interface PostCommentsProps {
   post: Post;
@@ -49,6 +51,9 @@ export default function PostComments({
   const authUser = useAppSelector((state) => state.auth.user);
   const myAvatar = useAppSelector(selectMyAvatar);
   const { t } = useTranslation();
+  const mentionRef = useRef<HTMLInputElement>(null);
+  const mention = useMentionAutocomplete<HTMLInputElement>(
+    mentionRef, comment, (next) => setComment(next), { placement: "above" });
 
   return (
     <>
@@ -91,13 +96,21 @@ export default function PostComments({
           </AvatarFallback>
         </Avatar>
 
-        <Input
-          placeholder={t("posts.addComment")}
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleComment()}
-          className="flex-1"
-        />
+        <div className="relative flex-1 min-w-0">
+          <Input
+            ref={mentionRef}
+            placeholder={t("posts.addComment")}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            onSelect={mention.onSelect}
+            onBlur={mention.onBlur}
+            onKeyDown={(e) => {
+              if (mention.handleKeyDown(e)) return;
+              if (e.key === "Enter") handleComment();
+            }}
+          />
+          {mention.dropdown}
+        </div>
 
         <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
           <PopoverTrigger>

@@ -31,8 +31,22 @@ const splitPeer = (participants: Peer[], userId: string) => {
   return { other, otherLastReadAt: allow_read_receipts ? peer.last_read_at : null };
 };
 
+// Shared / mentioned story, shown as a card in the chat.
+const storyPreviewSelect = {
+  id: true,
+  user_id: true,
+  content_url: true,
+  content_type: true,
+  thumbnail_url: true,
+  bg_color: true,
+  caption: true,
+  expires_at: true,
+  user: { select: userSelect },
+} as const;
+
 const messageInclude = {
   sender: { select: userSelect },
+  story: { select: storyPreviewSelect },
 } as const;
 
 export class ConversationService {
@@ -267,7 +281,48 @@ export class ConversationService {
       message_type: m.message_type,
       call_meta: m.call_meta ?? null,
       story_id: m.story_id ?? null,
+      story: m.story
+        ? {
+            id: m.story.id,
+            user: m.story.user,
+            content_url: m.story.content_url,
+            content_type: m.story.content_type,
+            thumbnail_url: m.story.thumbnail_url ?? null,
+            bg_color: m.story.bg_color ?? null,
+            caption: m.story.caption ?? null,
+            expired: new Date(m.story.expires_at) < new Date(),
+          }
+        : null,
       created_at: m.created_at,
     };
+  }
+
+  /**
+   * Instagram-style "mentioned you in their story" card in the DM between the
+   * story author and the mentioned user.
+   */
+  static async sendStoryMention(senderId: string, recipientId: string, storyId: string) {
+    const conversation = await getOrCreateDirectConversation(senderId, recipientId);
+    const message = await prisma.message.create({
+      data: {
+        conversation_id: conversation.id,
+        sender_id: senderId,
+        story_id: storyId,
+        content: null,
+        message_type: 'story_mention',
+      },
+      include: messageInclude,
+    });
+    await prisma.conversation.update({
+      where: { id: conversation.id },
+      data: { last_message_at: new Date() },
+    });
+    await prisma.messageStatus.upsert({
+      where: { message_id_user_id: { message_id: message.id, user_id: recipientId } },
+      update: { status: 'sent' },
+      create: { message_id: message.id, user_id: recipientId, status: 'sent' },
+    });
+    emitToUser(recipientId, 'message:new', this.shape(message));
+    return message;
   }
 }

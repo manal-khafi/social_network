@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { Notification } from '../../features/notifications/notificationsSlice';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import {
   deleteNotification,
@@ -26,6 +28,33 @@ export default function NotificationsView() {
   const isLoading = status === 'loading';
   const { followRequests } = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const myId = useAppSelector((state) => state.user.currentUser?.id ?? state.auth.user?.id);
+
+  /** Where tapping a notification goes: the post, the story or the person. */
+  const openNotification = (n: Notification) => {
+    if (!n.isRead) dispatch(markAsRead(n.id));
+    const meta = (n.metadata ?? {}) as Record<string, unknown>;
+    const str = (v: unknown) => (typeof v === 'string' && v ? v : null);
+
+    if (n.sourceType === 'story' || n.type.startsWith('story_')) {
+      // A mention / reshare is about the actor's story; the other story
+      // notifications (views, likes, replies...) are about the user's own.
+      const owner =
+        str(meta.story_owner_id) ??
+        (n.type === 'mention' || n.type === 'story_reshare' ? n.actor?.id : myId) ??
+        null;
+      if (owner) navigate(`/home/stories/${owner}`);
+      return;
+    }
+    const postId = str(meta.post_id) ?? (n.sourceType === 'post' ? n.sourceId : null);
+    if (postId) {
+      const showComments = ['comment', 'reply', 'mention'].includes(n.type) && !!meta.comment_id;
+      navigate(`/home/post/${postId}${showComments ? '?comments=1' : ''}`);
+      return;
+    }
+    if (n.actor?.username) navigate(`/home/profile/${encodeURIComponent(n.actor.username)}`);
+  };
 
   const handleAcceptRequest = (requestId: string, username: string) => {
     dispatch(acceptFollowRequest(requestId));
@@ -143,9 +172,7 @@ export default function NotificationsView() {
               <Card
                 key={notif.id}
                 className={`p-4 cursor-pointer transition-colors ${!notif.isRead ? 'bg-muted/30 border-primary/20' : ''}`}
-                onClick={() => {
-                  if (!notif.isRead) dispatch(markAsRead(notif.id));
-                }}
+                onClick={() => openNotification(notif)}
               >
                 <div className="flex gap-3">
                   <Avatar>

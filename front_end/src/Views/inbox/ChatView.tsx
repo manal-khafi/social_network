@@ -33,6 +33,9 @@ import EmojiPicker from 'emoji-picker-react';
 import { uploadPostMedia } from '../../utils/uploadStoryMedia';
 import { uploadFile } from '../../api/upload';
 import { useTranslation } from 'react-i18next';
+import { renderMentionText } from '../../utils/mentionUtils';
+import StoryComposer from '../../Components/story/StoryComposer';
+import type { MessageStoryPreview } from '../../api/messagesApi';
 
 // The chat is a full-screen layer at z-[60]; portalled popovers, menus and
 // dialogs default to z-50 and would open behind it.
@@ -54,6 +57,8 @@ export default function ChatView() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [attachment, setAttachment] = useState<{ file: File; previewUrl: string } | null>(null);
   const [isSending, setIsSending] = useState(false);
+  // "Add to your story" from a story-mention card: opens the composer on it.
+  const [reshareStory, setReshareStory] = useState<MessageStoryPreview | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Voice recording (MediaRecorder): the live recorder, its audio chunks, the
@@ -388,7 +393,20 @@ export default function ChatView() {
               : 'bg-muted'
           }`}
         >
-          {msg.type === 'text' && <p>{msg.content}</p>}
+          {msg.type === 'text' && (
+            <p className="whitespace-pre-wrap break-words">
+              {renderMentionText(msg.content, 'font-semibold underline')}
+            </p>
+          )}
+
+          {(msg.type === 'story_mention' || msg.type === 'story_share') && (
+            <StoryMessageCard
+              msg={msg}
+              isSender={isSender}
+              otherUsername={conversation?.username ?? ''}
+              onAddToStory={(story) => setReshareStory(story)}
+            />
+          )}
           
           {msg.type === 'sticker' && (
             <div className="text-5xl">{msg.sticker}</div>
@@ -584,6 +602,8 @@ export default function ChatView() {
         {messages.map(renderMessage)}
         <div ref={messagesEndRef} />
       </div>
+
+      <StoryComposer open={!!reshareStory} onClose={() => setReshareStory(null)} sharedStory={reshareStory} />
 
       <div className="bg-card border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {isRecording && (
@@ -781,6 +801,81 @@ export default function ChatView() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * A story inside the chat: "mentioned you in their story" (with "Add to your
+ * story" for the person mentioned) or a story sent to you. Tapping the preview
+ * opens the story while it is live.
+ */
+function StoryMessageCard({
+  msg,
+  isSender,
+  otherUsername,
+  onAddToStory,
+}: {
+  msg: Message;
+  isSender: boolean;
+  otherUsername: string;
+  onAddToStory: (story: MessageStoryPreview) => void;
+}) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const story = msg.story;
+  const mention = msg.type === 'story_mention';
+  const live = !!story && !story.expired;
+
+  const title = mention
+    ? isSender
+      ? t('messages.storyMentionSent', { username: otherUsername })
+      : t('messages.storyMentionReceived', { username: story?.user.username ?? otherUsername })
+    : t('messages.storySharePreview');
+
+  return (
+    <div className="w-44 max-w-full">
+      <p className="text-xs opacity-80 mb-2">{title}</p>
+      <button
+        type="button"
+        disabled={!live}
+        onClick={() => story && navigate(`/home/stories/${story.user.id}`)}
+        className="relative block w-full aspect-[9/16] rounded-xl overflow-hidden bg-black/20 disabled:cursor-default"
+      >
+        {!live ? (
+          <span className="absolute inset-0 grid place-items-center p-3 text-xs text-center opacity-80">
+            {t('messages.storyUnavailable')}
+          </span>
+        ) : story.content_type === 'text' ? (
+          <span
+            className="absolute inset-0 grid place-items-center p-3 text-center text-sm font-bold text-white"
+            style={{ background: story.bg_color ?? '#111827' }}
+          >
+            {story.caption || story.content_url}
+          </span>
+        ) : (
+          <img
+            src={story.thumbnail_url || story.content_url}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+        {story && (
+          <span className="absolute top-2 start-2 text-[11px] font-semibold text-white bg-black/50 rounded-full px-2 py-0.5">
+            @{story.user.username}
+          </span>
+        )}
+      </button>
+      {msg.content && <p className="mt-2 text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
+      {mention && !isSender && live && (
+        <button
+          type="button"
+          onClick={() => onAddToStory(story)}
+          className="mt-2 w-full rounded-lg bg-foreground/10 hover:bg-foreground/15 py-1.5 text-sm font-semibold"
+        >
+          {t('messages.addToYourStory')}
+        </button>
+      )}
     </div>
   );
 }

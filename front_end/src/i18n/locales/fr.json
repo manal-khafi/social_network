@@ -275,7 +275,8 @@
     "toggleFullscreen": "Basculer en plein écran",
     "pauseVideo": "Mettre la vidéo en pause",
     "playVideo": "Lire la vidéo",
-    "seekVideo": "Se déplacer dans la vidéo"
+    "seekVideo": "Se déplacer dans la vidéo",
+    "postNotFound": "Cette publication n'est pas disponible"
   },
   "time": {
     "justNow": "À l'instant",
@@ -680,7 +681,14 @@
     "micDenied": "Autorisez l'accès au micro pour enregistrer un message vocal",
     "recordingNotSupported": "L'enregistrement vocal n'est pas pris en charge par ce navigateur",
     "voiceSendFailed": "Impossible d'envoyer le message vocal",
-    "voicePlayFailed": "Ce message vocal ne peut pas être lu dans ce navigateur"
+    "voicePlayFailed": "Ce message vocal ne peut pas être lu dans ce navigateur",
+    "mentionedYouInTheirStory": "vous a mentionné dans sa story",
+    "storyMentionReceived": "@{{username}} vous a mentionné dans sa story",
+    "storyMentionSent": "Vous avez mentionné @{{username}} dans votre story",
+    "storyMentionPreview": "Vous a mentionné dans sa story",
+    "storySharePreview": "A envoyé une story",
+    "storyUnavailable": "Cette story n'est plus disponible",
+    "addToYourStory": "Ajouter à votre story"
   },
   "settings": {
     "title": "Paramètres",

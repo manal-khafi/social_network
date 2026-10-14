@@ -25,12 +25,15 @@ import PostMedia from "./components/PostMedia";
 import PostActions from "./components/PostActions";
 import PostComments from "./components/PostComments";
 import { PATHS } from "../../routes/paths";
+import { renderMentionText } from "../../utils/mentionUtils";
 
 interface PostCardProps {
   post: Post;
+  /** Show the comment thread straight away (post opened from a comment / mention notification). */
+  initiallyShowComments?: boolean;
 }
 
-export default function PostCard({ post }: PostCardProps) {
+export default function PostCard({ post, initiallyShowComments = false }: PostCardProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -50,7 +53,7 @@ export default function PostCard({ post }: PostCardProps) {
   );
 
   const [comment, setComment] = useState("");
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(initiallyShowComments);
   const [showAllComments, setShowAllComments] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -186,7 +189,7 @@ export default function PostCard({ post }: PostCardProps) {
         )}
 
         {/* Post Content */}
-        <p className="mb-3 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[15px] leading-6">{post.content}</p>
+        <p className="mb-3 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[15px] leading-6">{renderMentionText(post.content)}</p>
 
         {/* Post Media */}
         <PostMedia post={post} media={media} handleDoubleTapLike={handleDoubleTapLike} />

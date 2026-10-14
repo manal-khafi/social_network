@@ -275,7 +275,8 @@
     "toggleFullscreen": "Alternar pantalla completa",
     "pauseVideo": "Pausar vídeo",
     "playVideo": "Reproducir vídeo",
-    "seekVideo": "Desplazarse por el vídeo"
+    "seekVideo": "Desplazarse por el vídeo",
+    "postNotFound": "Esta publicación no está disponible"
   },
   "time": {
     "justNow": "Ahora mismo",
@@ -680,7 +681,14 @@
     "micDenied": "Permite el acceso al micrófono para grabar un mensaje de voz",
     "recordingNotSupported": "La grabación de voz no es compatible con este navegador",
     "voiceSendFailed": "No se pudo enviar el mensaje de voz",
-    "voicePlayFailed": "Este mensaje de voz no se puede reproducir en este navegador"
+    "voicePlayFailed": "Este mensaje de voz no se puede reproducir en este navegador",
+    "mentionedYouInTheirStory": "te mencionó en su historia",
+    "storyMentionReceived": "@{{username}} te mencionó en su historia",
+    "storyMentionSent": "Mencionaste a @{{username}} en tu historia",
+    "storyMentionPreview": "Te mencionó en su historia",
+    "storySharePreview": "Envió una historia",
+    "storyUnavailable": "Esta historia ya no está disponible",
+    "addToYourStory": "Añadir a tu historia"
   },
   "settings": {
     "title": "Configuración",

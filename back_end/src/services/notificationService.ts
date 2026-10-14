@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import prisma from '../util/prisma';
 import { emitToUser } from '../realtime/io';
+import { parseMentions, MAX_MENTIONS } from '../util/mentions';
 import { logger } from '../util/logger';
 import { getBlockedUserIds } from './BlockService';
 
@@ -66,9 +67,10 @@ const ACTIVITY_TYPES: Record<
   },
   mention: {
     name: 'Mention',
-    description: 'Someone mentioned you in a comment',
+    description: 'Someone mentioned you in a post, a comment or a story',
     title: 'New mention',
-    text: (actor) => `${actor} mentioned you in a comment`,
+    text: (actor, target) =>
+      target === 'story' ? `${actor} mentioned you in their story` : `${actor} mentioned you in a ${target}`,
   },
 };
 
@@ -76,7 +78,6 @@ const ACTIVITY_TYPES: Record<
 // stack up notifications while the previous one is still unread.
 const DEDUPED_TYPES: ActivityNotificationType[] = ['like', 'repost', 'follow', 'follow_request'];
 
-const MAX_MENTIONS = 10;
 
 /** Socket event pushed when notifications are withdrawn (unlike, unfollow, ...). */
 export const NOTIFICATION_REMOVED_EVENT = 'notification_removed';
@@ -153,8 +154,10 @@ export class NotificationService {
       recipientId: string;
       actorId: string;
       sourceId: string;
-      sourceType: 'post' | 'comment' | 'user';
+      sourceType: 'post' | 'comment' | 'user' | 'story';
       metadata?: Record<string, unknown>;
+      /** What the action was about, in the message ("comment", "post", "story"). */
+      target?: 'post' | 'comment' | 'story';
     }
   ) {
     const { recipientId, actorId, sourceId, sourceType } = params;
@@ -194,7 +197,11 @@ export class NotificationService {
       where: { id: actorId },
       select: { username: true, display_name: true },
     });
-    const actorName = actor?.display_name || actor?.username || 'Someone';
+    // Mentions name the author by handle ("@alice mentioned you ...").
+    const actorName =
+      type === 'mention' && actor?.username
+        ? `@${actor.username}`
+        : actor?.display_name || actor?.username || 'Someone';
 
     await NotificationService.persist({
       data: {
@@ -203,7 +210,7 @@ export class NotificationService {
         source_id: sourceId,
         source_type: sourceType,
         title: def.title,
-        message: def.text(actorName, sourceType === 'comment' ? 'comment' : 'post'),
+        message: def.text(actorName, params.target ?? (sourceType === 'comment' ? 'comment' : 'post')),
         metadata: { actor_id: actorId, ...params.metadata },
       },
     });
@@ -230,6 +237,22 @@ export class NotificationService {
   }
 
   /**
+   * Users who may be notified about a mention: the @usernames that exist, are
+   * active and accept mentions, minus the author, `excludeUserIds` and anyone
+   * blocked either way.
+   */
+  static async resolveMentionedUsers(actorId: string, usernames: string[], excludeUserIds: string[] = []) {
+    if (usernames.length === 0) return [];
+    const blockedIds = await getBlockedUserIds(actorId);
+    const excluded = new Set([actorId, ...excludeUserIds, ...blockedIds]);
+    const users = await prisma.user.findMany({
+      where: { username: { in: usernames.slice(0, MAX_MENTIONS) }, is_active: true, allow_mentions: true },
+      select: { id: true, username: true },
+    });
+    return users.filter((u) => !excluded.has(u.id));
+  }
+
+  /**
    * Fire-and-forget: notifies every @username mentioned in a comment, except
    * the author, anyone in `excludeUserIds` (e.g. the post owner, who already
    * gets the comment notification), users who turned mentions off, and users
@@ -243,36 +266,61 @@ export class NotificationService {
     excludeUserIds?: string[];
   }): void {
     const run = async () => {
-      const usernames = [
-        ...new Set(Array.from(params.content.matchAll(/(?:^|[^\w@])@([A-Za-z0-9_.]{1,30})/g), (m) => m[1].replace(/\.+$/, '')).filter(Boolean)),
-      ].slice(0, MAX_MENTIONS);
-      if (usernames.length === 0) return;
-
-      const blockedIds = await getBlockedUserIds(params.actorId);
-      const excluded = new Set([params.actorId, ...(params.excludeUserIds ?? []), ...blockedIds]);
-
-      const users = await prisma.user.findMany({
-        where: { username: { in: usernames }, is_active: true, allow_mentions: true },
-        select: { id: true },
-      });
-
+      const users = await NotificationService.resolveMentionedUsers(
+        params.actorId,
+        parseMentions(params.content),
+        params.excludeUserIds
+      );
       await Promise.all(
-        users
-          .filter((u) => !excluded.has(u.id))
-          .map((u) =>
-            NotificationService.createActivity('mention', {
-              recipientId: u.id,
-              actorId: params.actorId,
-              sourceId: params.postId,
-              sourceType: 'post',
-              metadata: { post_id: params.postId, comment_id: params.commentId },
-            })
-          )
+        users.map((u) =>
+          NotificationService.createActivity('mention', {
+            recipientId: u.id,
+            actorId: params.actorId,
+            sourceId: params.postId,
+            sourceType: 'post',
+            target: 'comment',
+            metadata: { post_id: params.postId, comment_id: params.commentId },
+          })
+        )
       );
     };
 
     run().catch((err) => {
       logger.warn({ err, commentId: params.commentId }, 'failed to create mention notifications');
+    });
+  }
+
+  /** Fire-and-forget: notifies the users @mentioned in a new post's text. */
+  static notifyPostMentions(params: { actorId: string; content: string | null; postId: string }): void {
+    const run = async () => {
+      const users = await NotificationService.resolveMentionedUsers(params.actorId, parseMentions(params.content));
+      await Promise.all(
+        users.map((u) =>
+          NotificationService.createActivity('mention', {
+            recipientId: u.id,
+            actorId: params.actorId,
+            sourceId: params.postId,
+            sourceType: 'post',
+            target: 'post',
+            metadata: { post_id: params.postId },
+          })
+        )
+      );
+    };
+    run().catch((err) => {
+      logger.warn({ err, postId: params.postId }, 'failed to create post mention notifications');
+    });
+  }
+
+  /** Mention notification for a user tagged in a story (opens that story). */
+  static async createStoryMentionNotification(recipientId: string, actorId: string, storyId: string) {
+    await NotificationService.createActivity('mention', {
+      recipientId,
+      actorId,
+      sourceId: storyId,
+      sourceType: 'story',
+      target: 'story',
+      metadata: { story_id: storyId, story_owner_id: actorId },
     });
   }
 

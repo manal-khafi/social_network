@@ -14,6 +14,7 @@ import { deletePost } from "../Controllers/Posts/DeletePost";
 import { archivePost, unarchivePost } from "../Controllers/Posts/ArchiveController";
 
 import { blockGuard } from "../Middleware/Block/blockGuardMiddleware";
+import { getPost } from "../Controllers/Posts/GetPost";
 
 const postsRouter = Router();
 
@@ -24,6 +25,9 @@ postsRouter.get("/me/saved", authMiddleware, getMySavedPosts); // Blocking not a
 postsRouter.get("/me/archived", authMiddleware, getMyArchivedPosts); // Blocking not applicable to own archived posts
 postsRouter.get("/user/:userId", authMiddleware, blockGuard(), getUserPosts);
 postsRouter.get("/user/:userId/reposts", authMiddleware, blockGuard(), getUserReposts);
+// Only matches a post id (UUID), so GET /api/posts/mylikes etc. on the other
+// routers mounted at /api/posts still reach them.
+postsRouter.get("/:postId([0-9a-fA-F-]{36})", getPost);
 postsRouter.post("/", authMiddleware, createPost);
 postsRouter.put("/:postId", authMiddleware, updatePost);
 postsRouter.delete("/:postId", authMiddleware, blockGuard(), deletePost);
