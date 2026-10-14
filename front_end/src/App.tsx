@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Provider } from "react-redux";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { store } from "./store";
@@ -10,48 +10,57 @@ import MainLayout from "./layouts/MainLayout";
 import RequireAuth from "./guards/RequireAuth";
 import PersonalizeGuard from "./guards/PersonalizeGuard";
 
-// Views
+import PageLoader from "./Components/layout/PageLoader";
+
+// Eager: the auth screens are the first thing a signed-out visitor needs, and
+// the layout / guards wrap every other page.
 import AuthView from "./Views/authentification";
-import FeedView from "./Views/feed/FeedView";
-import CreatePostView from "./Views/post/CreatePostView";
-import StoryViewerView from "./Views/story/StoryViewerView";
-import HighlightViewerView from "./Views/story/HighlightViewerView";
-import InboxView from "./Views/inbox/InboxView";
-import ChatView from "./Views/inbox/ChatView";
-import NotificationsView from "./Views/notifications/NotificationsView";
-import SearchView from "./Views/search/SearchView";
-import MyProfileView from "./Views/profile/MyProfileView";
-import MyPostsView from "./Views/profile/MyPostsView";
-import UserProfileView from "./Views/profile/UserProfileView";
-import FollowersView from "./Views/profile/FollowersView";
-import EditProfileView from "./Views/profile/EditProfileView";
-import MyArchivedPostsView from "./Views/archive/MyArchivedPostsView";
-import LikedPostsView from "./Views/settings/LikedPostsView";
-
-// Settings Views
-import SettingsView from "./Views/settings/SettingsView";
-import AccountSettingsView from "./Views/settings/AccountSettingsView";
-import NotificationsSettingsView from "./Views/settings/NotificationsView";
-import PrivacyView from "./Views/settings/PrivacyView";
-import AppearanceView from "./Views/settings/AppearanceView";
-import BlockedContactsView from "./Views/settings/BlockedContactsView";
-import CloseFriendsView from "./Views/settings/CloseFriendsView";
-import LikedPostsSettingsView from "./Views/settings/LikedPostsSettingsView";
-import InfoSupportView from "./Views/settings/InfoSupportView";
-import HelpView from "./Views/settings/HelpView";
-import PrivacyCenterView from "./Views/settings/PrivacyCenterView";
-import AboutView from "./Views/settings/AboutView";
-import ArchivedPostsView from "./Views/settings/ArchivedPostsView";
-
-// Auth components
 import VerifyEmail from "./Components/Authentication/auth/verifyEmil";
 import { ForgotPasswordScreen } from "./Components/Authentication/auth/ForgotPasswordScreen";
 import { ResetPasswordScreen } from "./Components/Authentication/auth/resetPassword";
 
-// Community
-import { CommunityList } from "./Views/community/communityList";
-import { CommunityPageWrapper } from "./Views/community/communityPage";
-import { CreateCommunity } from "./Views/community/createCommunity";
+// Every other page is its own chunk, fetched the first time its route is opened.
+const FeedView = lazy(() => import("./Views/feed/FeedView"));
+const CreatePostView = lazy(() => import("./Views/post/CreatePostView"));
+const StoryViewerView = lazy(() => import("./Views/story/StoryViewerView"));
+const HighlightViewerView = lazy(() => import("./Views/story/HighlightViewerView"));
+const InboxView = lazy(() => import("./Views/inbox/InboxView"));
+const ChatView = lazy(() => import("./Views/inbox/ChatView"));
+const NotificationsView = lazy(() => import("./Views/notifications/NotificationsView"));
+const SearchView = lazy(() => import("./Views/search/SearchView"));
+const MyProfileView = lazy(() => import("./Views/profile/MyProfileView"));
+const MyPostsView = lazy(() => import("./Views/profile/MyPostsView"));
+const UserProfileView = lazy(() => import("./Views/profile/UserProfileView"));
+const FollowersView = lazy(() => import("./Views/profile/FollowersView"));
+const EditProfileView = lazy(() => import("./Views/profile/EditProfileView"));
+const MyArchivedPostsView = lazy(() => import("./Views/archive/MyArchivedPostsView"));
+const LikedPostsView = lazy(() => import("./Views/settings/LikedPostsView"));
+
+// Settings
+const SettingsView = lazy(() => import("./Views/settings/SettingsView"));
+const AccountSettingsView = lazy(() => import("./Views/settings/AccountSettingsView"));
+const NotificationsSettingsView = lazy(() => import("./Views/settings/NotificationsView"));
+const PrivacyView = lazy(() => import("./Views/settings/PrivacyView"));
+const AppearanceView = lazy(() => import("./Views/settings/AppearanceView"));
+const BlockedContactsView = lazy(() => import("./Views/settings/BlockedContactsView"));
+const CloseFriendsView = lazy(() => import("./Views/settings/CloseFriendsView"));
+const LikedPostsSettingsView = lazy(() => import("./Views/settings/LikedPostsSettingsView"));
+const InfoSupportView = lazy(() => import("./Views/settings/InfoSupportView"));
+const HelpView = lazy(() => import("./Views/settings/HelpView"));
+const PrivacyCenterView = lazy(() => import("./Views/settings/PrivacyCenterView"));
+const AboutView = lazy(() => import("./Views/settings/AboutView"));
+const ArchivedPostsView = lazy(() => import("./Views/settings/ArchivedPostsView"));
+
+// Community (named exports)
+const CommunityList = lazy(() =>
+  import("./Views/community/communityList").then((m) => ({ default: m.CommunityList }))
+);
+const CommunityPageWrapper = lazy(() =>
+  import("./Views/community/communityPage").then((m) => ({ default: m.CommunityPageWrapper }))
+);
+const CreateCommunity = lazy(() =>
+  import("./Views/community/createCommunity").then((m) => ({ default: m.CreateCommunity }))
+);
 
 function AppContent() {
   const navigate = useNavigate();
@@ -67,6 +76,9 @@ function AppContent() {
   }
 
   return (
+    // Fallback for lazily-loaded pages rendered outside MainLayout (which has
+    // its own boundary so the sidebar and header stay visible while loading).
+    <Suspense fallback={<PageLoader fullScreen />}>
     <Routes>
       {/* Public */}
       <Route path="/" element={<AuthView />} />
@@ -165,6 +177,7 @@ function AppContent() {
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
+    </Suspense>
   );
 }
 

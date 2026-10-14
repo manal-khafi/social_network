@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
+import PageLoader from '../Components/layout/PageLoader';
 import BottomNav from '../Components/layout/BottomNav';
 import Header from '../Components/layout/Header';
 import DesktopSidebar from '../Components/layout/DesktopSidebar';
@@ -18,7 +20,10 @@ export default function MainLayout() {
         <div className="flex-1 min-w-0">
           <Header />
           <main id="main-content" className="mx-auto max-w-2xl px-4 py-4 pb-24 lg:pb-4">
-            <Outlet />
+            {/* Page chunks load here; the shell around them stays mounted. */}
+            <Suspense fallback={<PageLoader />}>
+              <Outlet />
+            </Suspense>
           </main>
         </div>
 
