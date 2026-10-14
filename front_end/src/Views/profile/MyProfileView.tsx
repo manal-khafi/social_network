@@ -4,6 +4,7 @@ import { useAppSelector, useAppDispatch } from "../../hooks";
 import { logoutUser } from "../../features/auth/authSlice";
 import {
   fetchCurrentUserProfile,
+  selectMyAvatar,
   fetchFollowers,
   fetchFollowing,
   toggleFollow,
@@ -38,6 +39,7 @@ export default function MyProfileView() {
   const { t } = useTranslation();
 
   const { user: authUser, isAuthenticated, isLoggingOut } = useAppSelector((state) => state.auth);
+  const myAvatar = useAppSelector(selectMyAvatar);
   const { currentUser, followers, following, status: profileStatus } = useAppSelector(
     (state) => state.user
   );
@@ -107,7 +109,7 @@ export default function MyProfileView() {
     );
   }
 
-  const avatarUrl = (currentUser?.avatar_url ?? (authUser as any)?.avatar_url ?? null) as string | null;
+  const avatarUrl = myAvatar ?? null;
   const coverImageRaw = (currentUser?.cover_image ?? (authUser as any)?.cover_image ?? null) as string | null;
   const coverImage = makeUrl(coverImageRaw);
 

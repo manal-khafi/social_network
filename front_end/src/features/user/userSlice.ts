@@ -487,10 +487,17 @@ const userSlice = createSlice({
 
       // avatar (backend)
       .addCase(updateMyAvatar.fulfilled, (state, action) => {
-        // The endpoint returns only part of the profile: keep the rest (counts...).
-        state.currentUser = state.currentUser
-          ? { ...state.currentUser, ...action.payload }
-          : action.payload;
+        const { id, avatar_url } = action.payload;
+        // The endpoint returns only part of the profile: merge into a loaded
+        // one. With none loaded yet (onboarding), leave it to the full fetch;
+        // selectMyAvatar falls back to the session user, updated in authSlice.
+        if (state.currentUser) state.currentUser = { ...state.currentUser, ...action.payload };
+        // Own profile opened as a regular profile page (/profile/:id).
+        if (state.viewedUser?.id === id) state.viewedUser.avatar_url = avatar_url;
+        // Me in follower / following lists.
+        for (const person of [...state.followers, ...state.following]) {
+          if (person.id === id) person.avatar_url = avatar_url;
+        }
       })
 
       // cover image (backend)

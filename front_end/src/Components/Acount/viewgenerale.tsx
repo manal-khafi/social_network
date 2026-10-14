@@ -7,6 +7,7 @@ import PrivacySettings from "./privacy";
 import { Check, Sparkles, Loader } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { fetchMe } from "../../features/auth/authSlice";
+import { fetchCurrentUserProfile } from "../../features/user/userSlice";
 import api from "../../api/axios";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -138,6 +139,7 @@ const PersonalizationWizard: React.FC = () => {
     try {
       await api.patch("/authentication/onboarding/complete");
       dispatch(fetchMe());
+      dispatch(fetchCurrentUserProfile());
       navigate("/home");
     } catch (error) {
       console.error("Failed to mark onboarding as complete", error);
@@ -198,6 +200,7 @@ const PersonalizationWizard: React.FC = () => {
 
       await api.patch("/authentication/onboarding/complete");
       dispatch(fetchMe());
+      dispatch(fetchCurrentUserProfile());
 
       localStorage.removeItem("setupWizardData");
 
