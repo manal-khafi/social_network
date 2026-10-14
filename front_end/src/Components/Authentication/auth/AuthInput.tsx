@@ -19,14 +19,14 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
 
     return (
       <div className="w-full">
-        <label className="block text-sm text-[#18534f] mb-2">
+        <label className="block text-sm text-[#18534f] dark:text-[#9ad5ce] mb-2">
           {label}
         </label>
         <div className="relative">
           <motion.input
             ref={ref}
             type={inputType}
-            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white transition-all duration-200 focus:outline-none focus:border-[#226d68] focus:shadow-lg focus:shadow-[#226d68]/10"
+            className="w-full px-4 py-3 rounded-xl border-2 border-border bg-background text-foreground placeholder:text-muted-foreground transition-all duration-200 focus:outline-none focus:border-[#226d68] focus:shadow-lg focus:shadow-[#226d68]/10"
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             animate={{
@@ -39,7 +39,7 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#226d68] transition-colors"
+              className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-[#226d68] transition-colors"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>

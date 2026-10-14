@@ -57,14 +57,14 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className="inline-block mb-6"
           >
-            <CircleCheck size={80} className="text-[#226d68]" />
+            <CircleCheck size={80} className="text-[#226d68] dark:text-[#6fc0b8]" />
           </motion.div>
 
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-3xl mb-4 text-[#18534f]"
+            className="text-3xl mb-4 text-[#18534f] dark:text-[#9ad5ce]"
           >
             {t("auth.checkYourEmail")}
           </motion.h2>
@@ -73,10 +73,10 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-gray-600 mb-8"
+            className="text-muted-foreground mb-8"
           >
             {t("auth.resetLinkSent")} <br />
-            <span className="text-[#18534f]">{email}</span>
+            <span className="text-[#18534f] dark:text-[#9ad5ce]">{email}</span>
           </motion.p>
 
           <AuthButton variant="secondary" onClick={onSwitchToLogin}>
@@ -97,7 +97,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
     >
       <button
         onClick={onSwitchToLogin}
-        className="flex items-center gap-2 text-[#226d68] hover:text-[#18534f] transition-colors mb-6"
+        className="flex items-center gap-2 text-[#226d68] dark:text-[#6fc0b8] hover:text-[#18534f] dark:hover:text-[#b8e4de] transition-colors mb-6"
       >
         <ArrowLeft size={20} />
         <span>{t("auth.backToLogin")}</span>
@@ -108,7 +108,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-4xl mb-2 text-[#18534f]"
+          className="text-4xl mb-2 text-[#18534f] dark:text-[#9ad5ce]"
         >
           {t("auth.forgotPasswordTitle")}
         </motion.h1>
@@ -116,7 +116,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-gray-600"
+          className="text-muted-foreground"
         >
           {t("auth.forgotPasswordSubtitle")}
         </motion.p>

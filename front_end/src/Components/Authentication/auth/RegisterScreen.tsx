@@ -120,7 +120,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-gray-600"
+          className="text-muted-foreground"
         >
           {t("auth.joinCommunity")}
         </motion.p>
@@ -215,9 +215,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
       </form>
 
       <div className="my-6 flex items-center gap-4">
-        <div className="flex-1 h-px bg-gray-300" />
-        <span className="text-sm text-gray-500">{t("auth.or")}</span>
-        <div className="flex-1 h-px bg-gray-300" />
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-sm text-muted-foreground">{t("auth.or")}</span>
+        <div className="flex-1 h-px bg-border" />
       </div>
 
       <div className="space-y-3">
@@ -225,7 +225,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
       </div>
 
       <div className="mt-6 text-center">
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           {t("auth.haveAccount")}{" "}
           <button
             onClick={onSwitchToLogin}

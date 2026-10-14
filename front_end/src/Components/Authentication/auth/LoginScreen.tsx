@@ -207,7 +207,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       >
         <div className="text-center mb-8">
           <Logo />
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             {t("auth.twoFactorPrompt")}
           </p>
         </div>
@@ -237,7 +237,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         <div className="mt-6 text-center">
           <button
             onClick={cancelTwoFactor}
-            className="text-sm text-[#226d68] hover:text-[#18534f] transition-colors"
+            className="text-sm text-[#226d68] dark:text-[#6fc0b8] hover:text-[#18534f] dark:hover:text-[#b8e4de] transition-colors"
             type="button"
           >
             {t("auth.backToLogin")}
@@ -261,7 +261,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-gray-600"
+          className="text-muted-foreground"
         >
           {t("auth.welcomeBack")}
         </motion.p>
@@ -294,7 +294,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           <button
             type="button"
             onClick={onSwitchToForgotPassword}
-            className="text-sm text-[#226d68] hover:text-[#18534f] transition-colors"
+            className="text-sm text-[#226d68] dark:text-[#6fc0b8] hover:text-[#18534f] dark:hover:text-[#b8e4de] transition-colors"
           >
             {t("auth.forgotPassword")}
           </button>
@@ -306,9 +306,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       </form>
 
       <div className="my-6 flex items-center gap-4">
-        <div className="flex-1 h-px bg-gray-300" />
-        <span className="text-sm text-gray-500">{t("auth.or")}</span>
-        <div className="flex-1 h-px bg-gray-300" />
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-sm text-muted-foreground">{t("auth.or")}</span>
+        <div className="flex-1 h-px bg-border" />
       </div>
 
       <div className="space-y-3">
@@ -316,7 +316,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       </div>
 
       <div className="mt-6 text-center">
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           {t("auth.noAccount")}{" "}
           <button
             onClick={onSwitchToRegister}

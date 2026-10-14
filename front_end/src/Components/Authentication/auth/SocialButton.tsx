@@ -15,7 +15,7 @@ export const SocialButton: React.FC<SocialButtonProps> = ({ onClick }) => {
       whileHover={{ y: -3, scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="w-full py-3 px-6 rounded-xl border-2 border-gray-200 bg-white hover:border-[#226d68] hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3"
+      className="w-full py-3 px-6 rounded-xl border-2 border-border bg-background hover:border-[#226d68] hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3"
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
         <path
@@ -35,7 +35,7 @@ export const SocialButton: React.FC<SocialButtonProps> = ({ onClick }) => {
           fill="#EA4335"
         />
       </svg>
-      <span className="text-gray-700">{t("auth.continueWithGoogle")}</span>
+      <span className="text-foreground">{t("auth.continueWithGoogle")}</span>
     </motion.button>
   );
 };

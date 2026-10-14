@@ -109,18 +109,18 @@ export const ResetPasswordScreen: React.FC = () => {
 
   return (
     // Center container like LoginScreen
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-md bg-white p-8 rounded-xl shadow-md"
+        className="w-full max-w-md bg-card text-card-foreground border border-border p-8 rounded-xl shadow-md"
       >
         {/* Back button */}
         <button
           onClick={handleNavigate}
-          className="flex items-center gap-2 text-[#226d68] hover:text-[#18534f] transition-colors mb-6"
+          className="flex items-center gap-2 text-[#226d68] dark:text-[#6fc0b8] hover:text-[#18534f] dark:hover:text-[#b8e4de] transition-colors mb-6"
         >
           <ArrowLeft size={20} />
           <span>{t("auth.backToLogin")}</span>
@@ -136,7 +136,7 @@ export const ResetPasswordScreen: React.FC = () => {
               className="inline-block mb-6"
             >
               <div className="relative">
-                <CircleCheck size={80} className="text-[#226d68]" />
+                <CircleCheck size={80} className="text-[#226d68] dark:text-[#6fc0b8]" />
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -147,19 +147,19 @@ export const ResetPasswordScreen: React.FC = () => {
                 </motion.div>
               </div>
             </motion.div>
-            <h2 className="text-3xl mb-4 text-[#18534f]">{t("auth.resetSuccessTitle")}</h2>
-            <p className="text-gray-600 mb-8">{t("auth.resetSuccessBody")}<br />{t("auth.resetSuccessHint")}</p>
+            <h2 className="text-3xl mb-4 text-[#18534f] dark:text-[#9ad5ce]">{t("auth.resetSuccessTitle")}</h2>
+            <p className="text-muted-foreground mb-8">{t("auth.resetSuccessBody")}<br />{t("auth.resetSuccessHint")}</p>
             <AuthButton variant="primary" onClick={handleNavigate}>{t("auth.continueToLogin")}</AuthButton>
           </div>
         ) : (
           <>
             {/* Form Header */}
             <div className="text-center mb-8">
-              <motion.div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#ecf8f6] mb-4">
-                <Shield size={32} className="text-[#226d68]" />
+              <motion.div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#ecf8f6] dark:bg-muted mb-4">
+                <Shield size={32} className="text-[#226d68] dark:text-[#6fc0b8]" />
               </motion.div>
-              <h1 className="text-4xl mb-2 text-[#18534f]">{t("auth.resetPassword")}</h1>
-              <p className="text-gray-600">{t("auth.resetPasswordSubtitle")}</p>
+              <h1 className="text-4xl mb-2 text-[#18534f] dark:text-[#9ad5ce]">{t("auth.resetPassword")}</h1>
+              <p className="text-muted-foreground">{t("auth.resetPasswordSubtitle")}</p>
             </div>
 
             {/* Form */}
@@ -178,15 +178,15 @@ export const ResetPasswordScreen: React.FC = () => {
               {formData.password && (
                 <div className="mt-3">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-600">{t("auth.passwordStrength")}</span>
+                    <span className="text-sm text-muted-foreground">{t("auth.passwordStrength")}</span>
                     <span className="text-sm font-medium" style={{ color: strengthStyles.color }}>
                       {strengthStyles.label}
                     </span>
                   </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div className={`h-full ${strengthStyles.barColor} rounded-full`} style={{ width: strengthStyles.width }} />
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     {t("auth.passwordHint")}
                   </p>
                 </div>

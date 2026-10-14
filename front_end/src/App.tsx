@@ -17,7 +17,6 @@ import PageLoader from "./Components/layout/PageLoader";
 // the layout / guards wrap every other page.
 import AuthView from "./Views/authentification";
 import VerifyEmail from "./Components/Authentication/auth/verifyEmil";
-import { ForgotPasswordScreen } from "./Components/Authentication/auth/ForgotPasswordScreen";
 import { ResetPasswordScreen } from "./Components/Authentication/auth/resetPassword";
 import { useTranslation } from "react-i18next";
 
@@ -86,10 +85,8 @@ function AppContent() {
     <Routes>
       {/* Public */}
       <Route path="/" element={<AuthView />} />
-      <Route
-        path="/forgot-password"
-        element={<ForgotPasswordScreen onSwitchToLogin={() => {}} />}
-      />
+      {/* Same page as "/", opened on the forgot-password form */}
+      <Route path="/forgot-password" element={<AuthView initialScreen="forgotPassword" />} />
       <Route path="/reset-password" element={<ResetPasswordScreen />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
 

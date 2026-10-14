@@ -13,7 +13,7 @@ export const Logo: React.FC = () => {
       {/* Logo icon - stylized network nodes */}
       <LogoIcon />
       
-      <h1 className="text-4xl text-[#18534f]">
+      <h1 className="text-4xl text-[#18534f] dark:text-[#9ad5ce]">
         ANMOUGAR
       </h1>
     </motion.div>
