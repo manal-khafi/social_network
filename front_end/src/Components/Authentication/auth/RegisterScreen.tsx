@@ -7,7 +7,7 @@ import api from "../../../api/axios";
 import { AuthInput } from "./AuthInput";
 import { AuthButton } from "./AuthButton";
 import { SocialButton } from "./SocialButton";
-import { oauthErrorMessage, startSocialAuth, takeOAuthError, type SocialProvider } from "./socialAuth";
+import { oauthErrorMessage, showOAuthErrorToast, startSocialAuth, takeOAuthError, type SocialProvider } from "./socialAuth";
 import { Logo } from "./Logo";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -103,7 +103,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSwitchToLogin 
   useEffect(() => {
     const error = takeOAuthError();
     const msg = error && oauthErrorMessage(error.code, t);
-    if (msg) toast.error(msg);
+    if (msg) showOAuthErrorToast(msg);
   }, [t]);
 
   return (

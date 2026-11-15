@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import api from "../../../api/axios";
 
 export type SocialProvider = "google";
@@ -34,6 +35,10 @@ export const consumeOAuthRedirect = (): string | null => {
   const error = params.get("oauth_error");
   if (!token && !error) return null;
 
+  if (error) {
+    // Logged before the fragment is cleared so the code can be read in the console.
+    console.log("[oauth] sign-in failed:", { oauth_error: error, provider: params.get("provider") });
+  }
   window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
   if (error) {
     const provider = params.get("provider");
@@ -71,4 +76,16 @@ export const oauthErrorMessage = (code: string, t: (key: string) => string): str
     default:
       return t("auth.socialLoginFailed");
   }
+};
+
+/**
+ * Shows an OAuth failure as an error toast that stays until the user closes it
+ * (regular toasts vanish after a few seconds, too fast to read this one).
+ */
+export const showOAuthErrorToast = (message: string) => {
+  toast.error(message, {
+    id: "oauth-error", // one toast even if both auth screens mount
+    duration: Infinity,
+    closeButton: true,
+  });
 };

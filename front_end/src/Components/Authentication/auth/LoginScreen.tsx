@@ -13,6 +13,7 @@ import { AuthButton } from "./AuthButton";
 import { SocialButton } from "./SocialButton";
 import {
   oauthErrorMessage,
+  showOAuthErrorToast,
   peekOAuthError,
   startSocialAuth,
   takeOAuthError,
@@ -193,7 +194,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   useEffect(() => {
     const error = takeOAuthError();
     const msg = error && oauthErrorMessage(error.code, t);
-    if (msg) toast.error(msg);
+    if (msg) showOAuthErrorToast(msg);
   }, [t]);
 
   if (twoFactorToken) {
