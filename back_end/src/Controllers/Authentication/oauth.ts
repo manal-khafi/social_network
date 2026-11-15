@@ -23,10 +23,17 @@ const STATE_TTL_MS = 10 * 60 * 1000;
 
 const frontendUrl = () => (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
 
+/** Public base URL of the API as the browser sees it (the app's /api rewrite). */
+const publicApiBase = () => (process.env.OAUTH_REDIRECT_BASE_URL || `${frontendUrl()}/api`).replace(/\/+$/, "");
+
 /** Public URL Google sends the user back to (where /api is reachable). */
-const callbackUrl = () => {
-  const base = (process.env.OAUTH_REDIRECT_BASE_URL || `${frontendUrl()}/api`).replace(/\/+$/, "");
-  return `${base}/authentication/google/callback`;
+const callbackUrl = () => `${publicApiBase()}/authentication/google/callback`;
+
+/** Whether this request reached us through the public API domain (directly or via the rewrite). */
+const onPublicHost = (req: Request) => {
+  const publicHost = new URL(publicApiBase()).host.toLowerCase();
+  const forwarded = req.get("x-forwarded-host")?.split(",")[0]?.trim().toLowerCase();
+  return forwarded === publicHost || req.get("host")?.toLowerCase() === publicHost;
 };
 
 const credentials = () => ({ id: process.env.GOOGLE_CLIENT_ID, secret: process.env.GOOGLE_CLIENT_SECRET });
@@ -47,7 +54,20 @@ export const googleStart = (req: Request, res: Response) => {
   const { id } = credentials();
   if (!id) return failRedirect(res, "not_configured");
 
-  // CSRF protection: the callback must bring back the same random state.
+  // The state cookie must live on the domain Google calls back to, or the
+  // callback never sees it (invalid_state). If sign-in was started on another
+  // host (e.g. the backend's own *.onrender.com URL), hop once to the public
+  // domain first. "hop=1" marks the second pass: a rewrite proxy may pass the
+  // backend's own Host header, so the host check alone could loop forever.
+  if (!onPublicHost(req) && req.query.hop !== "1") {
+    const next = new URL(`${publicApiBase()}/authentication/google`);
+    next.searchParams.set("hop", "1");
+    if (req.query.reactivate === "1") next.searchParams.set("reactivate", "1");
+    return res.redirect(next.toString());
+  }
+
+  // CSRF protection: the callback must bring back the same random state,
+  // which only the browser that started sign-in holds in its cookie.
   const state = randomBytes(24).toString("hex");
   const reactivate = req.query.reactivate === "1" ? ":reactivate" : "";
   res.cookie(STATE_COOKIE, `google:${state}${reactivate}`, stateCookieOptions());

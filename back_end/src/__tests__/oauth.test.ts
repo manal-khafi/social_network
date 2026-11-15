@@ -30,7 +30,7 @@ const json = (body: unknown, status = 200) =>
 
 /** Starts the flow and returns the state + cookie the callback must bring back. */
 const start = async () => {
-  const res = await request(app).get("/api/authentication/google");
+  const res = await request(app).get("/api/authentication/google?hop=1");
   const location = new URL(res.headers.location);
   return { res, location, state: location.searchParams.get("state")!, cookie: res.headers["set-cookie"] };
 };
@@ -62,6 +62,21 @@ describe("GET /api/authentication/google", () => {
     );
     expect(state).toMatch(/^[0-9a-f]{48}$/);
     expect(String(cookie)).toContain(`oauth_state=google%3A${state}`);
+  });
+
+  it("first moves to the public domain so the state cookie is set where the callback reads it", async () => {
+    const res = await request(app).get("/api/authentication/google?reactivate=1");
+
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe("https://app.example.com/api/authentication/google?hop=1&reactivate=1");
+    expect(res.headers["set-cookie"]).toBeUndefined();
+  });
+
+  it("goes straight to Google when already on the public domain", async () => {
+    const res = await request(app).get("/api/authentication/google").set("X-Forwarded-Host", "app.example.com");
+
+    expect(new URL(res.headers.location).origin).toBe("https://accounts.google.com");
+    expect(String(res.headers["set-cookie"])).toContain("oauth_state=");
   });
 
   it("sends the user back to the app when Google is not configured", async () => {
