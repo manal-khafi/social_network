@@ -12,6 +12,23 @@ interface EmailOptions {
   text?: string;
 }
 
+/** Turns the most common Resend failures into an actionable fix for the logs. */
+const resendErrorHint = (name: string, message: string): string | undefined => {
+  if (name === "missing_api_key" || name === "invalid_api_key" || name === "restricted_api_key") {
+    return "RESEND_API_KEY is wrong or lacks send permission: create a key with 'Sending access' at https://resend.com/api-keys";
+  }
+  if (name === "invalid_from_address" || /domain is not verified/i.test(message)) {
+    return "EMAIL_FROM must use a domain verified in Resend (https://resend.com/domains)";
+  }
+  if (name === "validation_error" && /testing emails|own email address/i.test(message)) {
+    return "The resend.dev test sender only delivers to the Resend account owner: verify a domain and set EMAIL_FROM to it";
+  }
+  if (name === "daily_quota_exceeded" || name === "monthly_quota_exceeded" || name === "rate_limit_exceeded") {
+    return "Resend sending quota or rate limit reached";
+  }
+  return undefined;
+};
+
 export const sendEmail = async (options: EmailOptions) => {
   const client = await getEmailClient();
   if (!client) {
@@ -19,21 +36,34 @@ export const sendEmail = async (options: EmailOptions) => {
     throw new Error("Email service is not configured");
   }
 
-  // The Resend SDK reports failures in `error` instead of throwing.
-  const { data, error } = await client.emails.send({
-    from: EMAIL_FROM,
-    to: options.to,
-    subject: options.subject,
-    html: options.html,
-    text: options.text || options.html.replace(/<[^>]*>/g, ""),
-  });
+  // The Resend SDK reports API failures in `error` instead of throwing; it can
+  // still throw on network-level failures (DNS, TLS, timeouts).
+  let result: Awaited<ReturnType<typeof client.emails.send>>;
+  try {
+    result = await client.emails.send({
+      from: EMAIL_FROM,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      text: options.text || options.html.replace(/<[^>]*>/g, ""),
+    });
+  } catch (err) {
+    logger.error({ err, from: EMAIL_FROM, to: options.to }, "Email could not be sent: Resend request failed");
+    throw new Error(`Email could not be sent: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
+  const { data, error } = result;
   if (error) {
     logger.error(
-      { email: { name: error.name, message: error.message }, from: EMAIL_FROM, to: options.to },
-      "Email could not be sent"
+      {
+        resend: { name: error.name, statusCode: error.statusCode, message: error.message },
+        hint: resendErrorHint(error.name, error.message),
+        from: EMAIL_FROM,
+        to: options.to,
+      },
+      "Email could not be sent: Resend rejected the request"
     );
-    throw new Error(`Email could not be sent: ${error.message}`);
+    throw new Error(`Email could not be sent: ${error.name}: ${error.message}`);
   }
 
   return data;

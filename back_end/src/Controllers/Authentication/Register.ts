@@ -126,7 +126,7 @@ export const Register = async (req: Request, res: Response) => {
         await sendVerificationEmail(email, username, token);
         emailSent = true;
       } catch (mailErr) {
-        logger.error({ err: mailErr, userId: newUser.id }, "verification email failed to send");
+        logger.error({ err: mailErr, userId: newUser.id }, "verification email failed to send: registration rolled back (see the preceding \"Email could not be sent\" log for the cause)");
         await prisma.user.delete({ where: { id: newUser.id } });
         return res.status(503).json({
           success: false,

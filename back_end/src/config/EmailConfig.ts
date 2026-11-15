@@ -27,9 +27,32 @@ export const initializeEmailService = async () => {
   initialized = true;
 
   const apiKey = process.env.RESEND_API_KEY?.trim();
+  const autoVerify = process.env.AUTH_AUTO_VERIFY === "true";
   if (!apiKey) {
-    logger.warn("RESEND_API_KEY is not set: email sending is disabled");
+    if (autoVerify) {
+      logger.warn("RESEND_API_KEY is not set: email sending is disabled (AUTH_AUTO_VERIFY=true, sign-up still works)");
+    } else {
+      // Sign-up needs the verification email, so every registration will fail.
+      logger.error(
+        "RESEND_API_KEY is not set and AUTH_AUTO_VERIFY is not true: every sign-up will answer 503. " +
+          "Set RESEND_API_KEY (https://resend.com/api-keys) or AUTH_AUTO_VERIFY=true"
+      );
+    }
     return client;
+  }
+
+  if (!apiKey.startsWith("re_")) {
+    logger.warn("RESEND_API_KEY does not start with \"re_\": it is probably not a valid Resend API key");
+  }
+
+  // Resend's shared test sender only delivers to the Resend account owner's
+  // own address; any other recipient is rejected with a validation_error.
+  if (/@resend\.dev>?$/i.test(EMAIL_FROM) && process.env.NODE_ENV === "production") {
+    logger.warn(
+      { from: EMAIL_FROM },
+      "EMAIL_FROM uses Resend's test domain (resend.dev): emails to anyone but the Resend account owner will be rejected. " +
+        "Set EMAIL_FROM to an address on a domain verified in Resend"
+    );
   }
 
   client = new Resend(apiKey);
